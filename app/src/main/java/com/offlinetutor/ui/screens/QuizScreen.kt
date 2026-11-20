@@ -58,9 +58,20 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import android.os.SystemClock
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.filled.Healing
+import androidx.compose.material.icons.filled.Psychology
+import androidx.compose.material.icons.filled.SelfImprovement
 import com.offlinetutor.AppContainer
 import com.offlinetutor.R
+import com.offlinetutor.data.BrainResult
+import com.offlinetutor.data.Feature
 import com.offlinetutor.data.QuizQuestion
+import com.offlinetutor.domain.AttemptClass
+import com.offlinetutor.domain.Misconception
+import com.offlinetutor.domain.OptionMeta
+import com.offlinetutor.domain.OptionTag
 import com.offlinetutor.domain.AdaptiveDifficulty
 import com.offlinetutor.domain.ExplainLanguage
 import com.offlinetutor.llm.ModelMissingException
@@ -114,6 +125,12 @@ data class QuizUi(
     val wrongTick: Int = 0,
     /** +1 level up, -1 level down, 0 none: shown as a banner after an answer. */
     val levelDelta: Int = 0,
+    /** 1c: option picked but not yet submitted (waiting for Sure / Not sure). */
+    val selected: Int? = null,
+    /** elapsedRealtime when the question appeared, for responseMs. */
+    val shownAt: Long = 0,
+    /** Adaptive-brain reaction to the last answer. */
+    val brain: BrainResult? = null,
 )
 
 class QuizVm(private val c: AppContainer, initialCourse: String?, private val initialSubtopic: String?) : ViewModel() {
@@ -129,9 +146,13 @@ class QuizVm(private val c: AppContainer, initialCourse: String?, private val in
             applyCourse(p.id, course, keepSubtopic = true)
             // Resume an unanswered question (e.g. after the app was closed mid-quiz).
             val pending = c.quiz.pending(p.id)
-            if (pending != null && pending.course == course && initialSubtopic == null) ui.update { it.copy(question = pending) }
+            if (pending != null && pending.course == course && initialSubtopic == null && pending.purpose?.startsWith("FIX:") != true) {
+                ui.update { it.copy(question = pending, shownAt = SystemClock.elapsedRealtime()) }
+            }
         }
     }
+
+    val confidenceOn get() = c.flags.isOn(Feature.CONFIDENCE)
 
     fun setCourse(course: String) {
         val p = profile.value ?: return
@@ -140,7 +161,7 @@ class QuizVm(private val c: AppContainer, initialCourse: String?, private val in
     }
 
     private suspend fun applyCourse(profileId: Long, course: String, keepSubtopic: Boolean) {
-        val level = c.quiz.state(profileId, course).level
+        val level = c.quiz.displayLevel(profileId, course)
         ui.update {
             it.copy(course = course, level = level, question = null, explain = null, fallbackNote = null, error = null,
                 subtopic = if (keepSubtopic) it.subtopic else null, levelDelta = 0)
@@ -152,10 +173,10 @@ class QuizVm(private val c: AppContainer, initialCourse: String?, private val in
         val course = ui.value.course ?: return
         if (job?.isActive == true) return
         job = viewModelScope.launch {
-            ui.update { it.copy(loading = true, partial = "", error = null, noModel = false, explain = null, fallbackNote = null, question = null, levelDelta = 0) }
+            ui.update { it.copy(loading = true, partial = "", error = null, noModel = false, explain = null, fallbackNote = null, question = null, levelDelta = 0, selected = null, brain = null) }
             try {
-                val n = c.quiz.next(p, course, ui.value.subtopic) { partial -> ui.update { it.copy(partial = partial) } }
-                ui.update { it.copy(question = n.question, level = n.question.difficulty, fallbackNote = n.note, loading = false) }
+                val n = c.quiz.next(p, course, ui.value.subtopic, { partial -> ui.update { it.copy(partial = partial) } })
+                ui.update { it.copy(question = n.question, level = n.question.difficulty, fallbackNote = n.note, loading = false, shownAt = SystemClock.elapsedRealtime()) }
             } catch (e: CancellationException) {
                 ui.update { it.copy(loading = false) }
                 throw e
@@ -169,18 +190,26 @@ class QuizVm(private val c: AppContainer, initialCourse: String?, private val in
 
     fun stop() { job?.cancel() }
 
-    fun answer(index: Int) {
+    /** 1c: with confidence marking on, a tap only selects; Sure / Not sure submits. */
+    fun select(index: Int) {
         val q = ui.value.question ?: return
         if (q.chosenIndex != null) return
+        if (confidenceOn) ui.update { it.copy(selected = index) } else submit(index, null)
+    }
+
+    fun submit(index: Int, confident: Boolean?) {
+        val q = ui.value.question ?: return
+        if (q.chosenIndex != null) return
+        val p = profile.value ?: return
+        val responseMs = (SystemClock.elapsedRealtime() - ui.value.shownAt).takeIf { ui.value.shownAt > 0 }
         viewModelScope.launch {
             val before = ui.value.level
-            val a = c.quiz.answer(q, index)
-            val p = profile.value ?: return@launch
-            val newLevel = c.quiz.state(p.id, q.course).level
+            val (a, br) = c.quiz.answer(p, q, index, confident, responseMs)
+            val newLevel = if (c.flags.isOn(Feature.ELO_DIFFICULTY)) br.mastery.level else c.quiz.state(p.id, q.course).level
             val ok = a.correct == true
             ui.update {
                 it.copy(
-                    question = a, level = newLevel,
+                    question = a, level = newLevel, brain = br, selected = null,
                     sessionCorrect = it.sessionCorrect + if (ok) 1 else 0,
                     sessionTotal = it.sessionTotal + 1,
                     correctTick = it.correctTick + if (ok) 1 else 0,
@@ -213,7 +242,7 @@ class QuizVm(private val c: AppContainer, initialCourse: String?, private val in
 }
 
 @Composable
-fun QuizScreen(initialCourse: String?, initialSubtopic: String?, openChat: (String) -> Unit, openModels: () -> Unit) {
+fun QuizScreen(initialCourse: String?, initialSubtopic: String?, openChat: (String) -> Unit, openModels: () -> Unit, openFix: (Long) -> Unit = {}) {
     val vm = appViewModel(key = "quiz:$initialCourse:$initialSubtopic") { QuizVm(it, initialCourse, initialSubtopic) }
     val ui by vm.ui.collectAsStateWithLifecycle()
     val engine by vm.engine.collectAsStateWithLifecycle()
@@ -265,7 +294,9 @@ fun QuizScreen(initialCourse: String?, initialSubtopic: String?, openChat: (Stri
                             enabled = ui.course != null, icon = Icons.Filled.PlayArrow)
                     }
                     else -> ui.question?.let { q ->
-                        QuestionBlock(q, ui, lang, vm::answer, vm::next, vm::explain) { openChat("I didn't understand this question: ${q.stem}") }
+                        QuestionBlock(q, ui, lang, vm.confidenceOn, vm::select, vm::submit, vm::next, vm::explain, openFix) {
+                            openChat("I didn't understand this question: ${q.stem}")
+                        }
                     }
                 }
             }
@@ -313,19 +344,23 @@ private fun LevelBanner(delta: Int, level: Int) {
     }
 }
 
-private enum class OptState { NEUTRAL, CORRECT, WRONG, DIM }
+private enum class OptState { NEUTRAL, SELECTED, CORRECT, WRONG, DIM }
 
 @Composable
 private fun QuestionBlock(
     q: QuizQuestion,
     ui: QuizUi,
     lang: ExplainLanguage,
-    onAnswer: (Int) -> Unit,
+    confidenceOn: Boolean,
+    onSelect: (Int) -> Unit,
+    onSubmit: (Int, Boolean?) -> Unit,
     onNext: () -> Unit,
     onExplain: () -> Unit,
+    openFix: (Long) -> Unit,
     onAsk: () -> Unit,
 ) {
     val answered = q.chosenIndex != null
+    val tags = OptionMeta.parse(q.optionMeta)
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SoftCard {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -343,7 +378,7 @@ private fun QuestionBlock(
 
         q.optionList.forEachIndexed { i, opt ->
             val st = when {
-                !answered -> OptState.NEUTRAL
+                !answered -> if (ui.selected == i) OptState.SELECTED else OptState.NEUTRAL
                 i == q.answerIndex -> OptState.CORRECT
                 i == q.chosenIndex -> OptState.WRONG
                 else -> OptState.DIM
@@ -353,21 +388,72 @@ private fun QuestionBlock(
                 OptState.WRONG -> Modifier.shake(ui.wrongTick)
                 else -> Modifier
             }
-            OptionCard('A' + i, opt, st, enabled = !answered, modifier = mod) { onAnswer(i) }
+            // 1b: once answered, every wrong option shows the misconception that leads to it.
+            val tag = if (answered && i != q.answerIndex) tags.getOrNull(i) else null
+            OptionCard('A' + i, opt, st, enabled = !answered, tag = tag, modifier = mod) { onSelect(i) }
+        }
+
+        // 1c: confidence marking before submitting.
+        AnimatedVisibility(!answered && confidenceOn && ui.selected != null, enter = slideInVertically { it / 2 } + fadeIn()) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.how_sure), style = MaterialTheme.typography.titleMedium)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ChunkyOutlineButton(stringResource(R.string.not_sure), { ui.selected?.let { onSubmit(it, false) } },
+                        Modifier.weight(1f), icon = Icons.AutoMirrored.Filled.HelpOutline)
+                    ChunkyButton(stringResource(R.string.sure), { ui.selected?.let { onSubmit(it, true) } },
+                        Modifier.weight(1f), icon = Icons.Filled.Check)
+                }
+            }
         }
 
         AnimatedVisibility(answered, enter = slideInVertically { it / 2 } + fadeIn(tween(300))) {
-            FeedbackPanel(q, ui, lang, onNext, onExplain, onAsk)
+            FeedbackPanel(q, ui, lang, onNext, onExplain, openFix, onAsk)
         }
     }
 }
 
 @Composable
-private fun OptionCard(letter: Char, text: String, st: OptState, enabled: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun misconceptionLabel(code: Misconception): String = stringResource(
+    when (code) {
+        Misconception.SIGN_ERROR -> R.string.mis_sign_error
+        Misconception.UNIT_CONVERSION -> R.string.mis_unit_conversion
+        Misconception.FORMULA_SWAP -> R.string.mis_formula_swap
+        Misconception.OPERATION_SWAP -> R.string.mis_operation_swap
+        Misconception.CONCEPT_CONFUSION -> R.string.mis_concept_confusion
+        Misconception.PARTIAL_STEP -> R.string.mis_partial_step
+        Misconception.MISREAD_QUESTION -> R.string.mis_misread_question
+        Misconception.OVERGENERALISATION -> R.string.mis_overgeneralisation
+    },
+)
+
+@Composable
+private fun OptionCard(letter: Char, text: String, st: OptState, enabled: Boolean, tag: OptionTag?, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Column(modifier) {
+        OptionRow(letter, text, st, enabled, onClick)
+        if (tag != null) {
+            Row(Modifier.padding(start = 18.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Psychology, null, tint = if (st == OptState.WRONG) Palette.wrong else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    misconceptionLabel(tag.code) + " · " + tag.why,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = if (st == OptState.WRONG) FontWeight.Bold else FontWeight.Normal,
+                    color = if (st == OptState.WRONG) Palette.wrong else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun OptionRow(letter: Char, text: String, st: OptState, enabled: Boolean, onClick: () -> Unit) {
+    val modifier = Modifier
     val edge = LocalExtras.current.cardEdge
     val target = when (st) {
         OptState.CORRECT -> Palette.correct
         OptState.WRONG -> Palette.wrong
+        OptState.SELECTED -> MaterialTheme.colorScheme.primary
         else -> edge
     }
     val border by animateColorAsState(target, tween(250), label = "ob")
@@ -375,6 +461,7 @@ private fun OptionCard(letter: Char, text: String, st: OptState, enabled: Boolea
         when (st) {
             OptState.CORRECT -> Palette.correctBg
             OptState.WRONG -> Palette.wrongBg
+            OptState.SELECTED -> MaterialTheme.colorScheme.primaryContainer
             else -> MaterialTheme.colorScheme.surface
         }, tween(250), label = "obg",
     )
@@ -392,7 +479,11 @@ private fun OptionCard(letter: Char, text: String, st: OptState, enabled: Boolea
         Box(Modifier.size(36.dp).background(bubble.copy(alpha = if (st == OptState.NEUTRAL || st == OptState.DIM) 0.12f else 1f), CircleShape),
             contentAlignment = Alignment.Center) {
             Text("$letter", style = MaterialTheme.typography.titleMedium,
-                color = if (st == OptState.CORRECT || st == OptState.WRONG) Color.White else bubble)
+                color = when (st) {
+                    OptState.CORRECT, OptState.WRONG -> Color.White
+                    OptState.SELECTED -> MaterialTheme.colorScheme.onPrimary
+                    else -> bubble
+                })
         }
         Spacer(Modifier.width(14.dp))
         Text(text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f),
@@ -405,9 +496,66 @@ private fun OptionCard(letter: Char, text: String, st: OptState, enabled: Boolea
 }
 
 @Composable
-private fun FeedbackPanel(q: QuizQuestion, ui: QuizUi, lang: ExplainLanguage, onNext: () -> Unit, onExplain: () -> Unit, onAsk: () -> Unit) {
+private fun FeedbackPanel(q: QuizQuestion, ui: QuizUi, lang: ExplainLanguage, onNext: () -> Unit, onExplain: () -> Unit, openFix: (Long) -> Unit, onAsk: () -> Unit) {
     // AnimatedVisibility lays children out like a Box, so everything must sit in one Column.
-    Column { FeedbackContent(q, ui, lang, onNext, onExplain, onAsk) }
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        ui.brain?.let { BrainCards(it, openFix) }
+        FeedbackContent(q, ui, lang, onNext, onExplain, onAsk)
+    }
+}
+
+/** 1c–1f reactions: attempt class, misconception, fix step added, review/probe, frustration nudge. */
+@Composable
+private fun BrainCards(b: BrainResult, openFix: (Long) -> Unit) {
+    val (clsColor, clsText) = when (b.attemptClass) {
+        AttemptClass.MASTERY -> Palette.correct to stringResource(R.string.cls_mastery)
+        AttemptClass.FRAGILE -> Palette.marigold to stringResource(R.string.cls_fragile)
+        AttemptClass.DEEP_MISCONCEPTION -> Palette.wrong to stringResource(R.string.cls_deep)
+        AttemptClass.GAP -> MaterialTheme.colorScheme.onSurfaceVariant to stringResource(R.string.cls_gap)
+        AttemptClass.UNRATED -> Color.Unspecified to ""
+    }
+    if (clsText.isNotEmpty()) Pill(clsText, clsColor, icon = Icons.Filled.Psychology)
+    b.misconception?.let { m ->
+        SoftCard(color = MaterialTheme.colorScheme.tertiaryContainer) {
+            Text(stringResource(R.string.your_mistake, misconceptionLabel(m.code)), style = MaterialTheme.typography.titleMedium)
+            Text(m.why, style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+    b.fixStep?.let { s ->
+        SoftCard(color = MaterialTheme.colorScheme.secondaryContainer) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.Healing, null, tint = MaterialTheme.colorScheme.secondary)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.fix_added, s.misconception?.let { Misconception.of(it) }?.let { misconceptionLabel(it) } ?: s.title),
+                    style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            }
+            ChunkyButton(stringResource(R.string.fix_now), { openFix(s.id) }, Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.secondary, icon = Icons.Filled.Healing)
+        }
+    }
+    b.fixResolved?.let {
+        Pill(stringResource(R.string.fix_resolved), Palette.correct, icon = Icons.Filled.CheckCircle)
+    }
+    if (b.reviewStep != null && b.stuckTitle != null && b.shakyTitle != null) {
+        SoftCard(color = MaterialTheme.colorScheme.primaryContainer) {
+            Text(stringResource(R.string.stuck_because, b.stuckTitle, b.shakyTitle), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.review_added), style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+    if (b.probeTitle != null) {
+        SoftCard(color = MaterialTheme.colorScheme.primaryContainer) {
+            Text(stringResource(R.string.probe_added, b.probeTitle), style = MaterialTheme.typography.bodyMedium)
+        }
+    }
+    if (b.frustrated) {
+        SoftCard(color = MaterialTheme.colorScheme.surfaceVariant) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Filled.SelfImprovement, null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.break_nudge), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
 }
 
 @Composable

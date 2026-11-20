@@ -41,9 +41,29 @@ data class RoadmapStep(
     /** "llm" or "template" (fallback when the model output could not be parsed). */
     val source: String = "llm",
     val createdAt: Long = System.currentTimeMillis(),
+    // ---- v2 (adaptive brain). All nullable so v1 rows stay valid after the migration. ----
+    /** Stable concept id; null on v1 rows → derived from the title. */
+    val conceptId: String? = null,
+    /** NORMAL (null), MICRO_FIX or REVIEW. */
+    val kind: String? = null,
+    /** Prerequisite concept ids joined with '|'. */
+    val prereqs: String? = null,
+    /** MICRO_FIX: the misconception code being fixed. */
+    val misconception: String? = null,
+    /** Badge / explanation, e.g. "Stuck on Percentages because Fractions is shaky". */
+    val reason: String? = null,
+    /** MICRO_FIX: generated explanation + analogy (filled lazily when first opened). */
+    val body: String? = null,
+    /** MICRO_FIX / REVIEW: the concept this step repairs. */
+    val targetConcept: String? = null,
 ) {
     val subtopicList: List<String> get() = subtopics.split('|').map { it.trim() }.filter { it.isNotEmpty() }
+    val concept: String get() = conceptId?.takeIf { it.isNotBlank() } ?: com.offlinetutor.domain.Concepts.slug(title)
+    val stepKind: StepKind get() = StepKind.entries.firstOrNull { it.name == kind } ?: StepKind.NORMAL
+    val prereqList: List<String> get() = prereqs.orEmpty().split('|').map { it.trim() }.filter { it.isNotEmpty() }
 }
+
+enum class StepKind { NORMAL, MICRO_FIX, REVIEW }
 
 @Entity(
     tableName = "quiz_questions",
@@ -69,11 +89,75 @@ data class QuizQuestion(
     val correct: Boolean? = null,
     val askedAt: Long = System.currentTimeMillis(),
     val answeredAt: Long? = null,
+    // ---- v2 (adaptive brain). All nullable so v1 rows stay valid after the migration. ----
+    /** Concept id of the roadmap step this question tests. */
+    val concept: String? = null,
+    /** Per-option misconception tags, JSON array aligned with [options]: null for the correct one. */
+    val optionMeta: String? = null,
+    /** 1c: true = "Sure", false = "Not sure", null = not asked. */
+    val confident: Boolean? = null,
+    /** Time from the question appearing to the answer being submitted. */
+    val responseMs: Long? = null,
+    /** Misconception code of the wrong option the student picked. */
+    val misconception: String? = null,
+    /** QUIZ (null), PROBE or FIX:<stepId>. */
+    val purpose: String? = null,
 ) {
     val optionList: List<String> get() = options.split(OPTION_SEP)
 
     companion object { const val OPTION_SEP = '\u001F' }
 }
+
+/** 1d: per-concept Elo-style mastery and the current difficulty level for that concept. */
+@Entity(
+    tableName = "concept_mastery",
+    primaryKeys = ["profileId", "conceptId"],
+    foreignKeys = [ForeignKey(Profile::class, ["id"], ["profileId"], onDelete = ForeignKey.CASCADE)],
+)
+data class ConceptMastery(
+    val profileId: Long,
+    val conceptId: String,
+    val course: String,
+    val rating: Double,
+    val level: Int,
+    val attempts: Int,
+    val correct: Int,
+    val fastWrongStreak: Int,
+    val updatedAt: Long,
+)
+
+/** 1e: every time a tagged wrong option is chosen. */
+@Entity(
+    tableName = "misconception_hits",
+    foreignKeys = [ForeignKey(Profile::class, ["id"], ["profileId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index("profileId", "conceptId")],
+)
+data class MisconceptionHit(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val profileId: Long,
+    val course: String,
+    val conceptId: String,
+    val code: String,
+    val why: String,
+    val questionId: Long,
+    val confident: Boolean?,
+    val createdAt: Long = System.currentTimeMillis(),
+    val resolved: Boolean = false,
+)
+
+/** 1f: an untested prerequisite gets probe questions before backtracking decides. */
+@Entity(
+    tableName = "pending_probes",
+    primaryKeys = ["profileId", "conceptId"],
+    foreignKeys = [ForeignKey(Profile::class, ["id"], ["profileId"], onDelete = ForeignKey.CASCADE)],
+)
+data class PendingProbe(
+    val profileId: Long,
+    val conceptId: String,
+    val course: String,
+    val remaining: Int,
+    val stuckConcept: String,
+)
 
 @Entity(
     tableName = "chat_messages",

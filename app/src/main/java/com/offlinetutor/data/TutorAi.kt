@@ -91,8 +91,9 @@ class McqGenerator(private val ai: TutorAi) {
         historyNormalized: Collection<String>,
         meta: LogMeta,
         onPartial: (String) -> Unit = {},
+        focus: String? = null,
     ): Outcome {
-        val prompt = Prompts.mcq(grade, course, subtopic, level, recentStems, weak)
+        val prompt = Prompts.mcq(grade, course, subtopic, level, recentStems, weak, focus)
         val m = meta.copy(difficulty = level)
         val r = ai.engine.generate(GenRequest(TaskType.MCQ, prompt, assistantPrefix = Prompts.MCQ_PREFIX), onPartial)
         var parsed: McqParse = McqParser.parse(r.text)

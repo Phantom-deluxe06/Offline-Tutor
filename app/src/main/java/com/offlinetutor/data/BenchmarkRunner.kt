@@ -50,6 +50,8 @@ class BenchmarkRunner(
     private val engine: LlmEngine,
     private val ai: TutorAi,
     private val mcq: McqGenerator,
+    private val diag: DiagnosticGenerator,
+    private val flags: FeatureFlags,
     private val metrics: MetricsRepository,
 ) {
     private val _state = MutableStateFlow(RunnerState())
@@ -83,7 +85,9 @@ class BenchmarkRunner(
     }
 
     /** MCQ eval: perSubjectGrade questions for each of 5 subjects x 3 grades, difficulty cycling easy→hard. */
-    fun mcqEval(perCombo: Int) = launch("MCQ eval", Subjects.EVAL.size * grades.size * perCombo) { run ->
+    fun mcqEval(perCombo: Int) = launch(if (flags.isOn(Feature.DIAGNOSTIC_MCQ)) "MCQ diag eval" else "MCQ eval",
+        Subjects.EVAL.size * grades.size * perCombo) { run ->
+        val diagnostic = flags.isOn(Feature.DIAGNOSTIC_MCQ)
         var combo = 0
         for (subject in Subjects.EVAL) for (grade in grades) {
             val stems = ArrayList<String>()
@@ -93,9 +97,15 @@ class BenchmarkRunner(
                 // Rotate the start level per combo so easy, medium and hard are all covered even at 1-2 per combo.
                 val level = ((combo + k) % 3) + AdaptiveDifficulty.EASY
                 label("MCQ · $subject · Grade $grade · ${Prompts.difficultyText(level).substringBefore(':')}")
-                val o = mcq.attempt(grade, subject, subject, level, stems, emptyList(), history,
-                    LogMeta(run, subject, grade, level)) { p -> partial(p) }
-                o.mcq?.let { stems.add(0, it.question); history.add(QuestionDeduper.normalize(it.question)) }
+                // Diagnostic toggle on → eval the diagnostic schema (tagged wrong options), else the plain MCQ.
+                val question = if (diagnostic) {
+                    diag.attempt(grade, subject, subject, com.offlinetutor.domain.Concepts.slug(subject), subject, level, stems,
+                        emptyList(), history, LogMeta(run, subject, grade, level)) { p -> partial(p) }.mcq?.question
+                } else {
+                    mcq.attempt(grade, subject, subject, level, stems, emptyList(), history,
+                        LogMeta(run, subject, grade, level), onPartial = { p -> partial(p) }).mcq?.question
+                }
+                question?.let { stems.add(0, it); history.add(QuestionDeduper.normalize(it)) }
                 tick()
             }
         }

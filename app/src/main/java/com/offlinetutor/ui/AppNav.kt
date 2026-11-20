@@ -66,6 +66,7 @@ import androidx.navigation.navArgument
 import com.offlinetutor.R
 import com.offlinetutor.ui.screens.BenchmarkScreen
 import com.offlinetutor.ui.screens.ChatScreen
+import com.offlinetutor.ui.screens.FixScreen
 import com.offlinetutor.ui.screens.HomeScreen
 import com.offlinetutor.ui.screens.IntakeScreen
 import com.offlinetutor.ui.screens.ModelsScreen
@@ -93,6 +94,8 @@ object Routes {
     const val CHAT = "chat?prefill={prefill}"
     fun chat(prefill: String? = null) = "chat?prefill=${Uri.encode(prefill ?: "")}"
     const val PROGRESS = "progress"
+    const val FIX = "fix/{stepId}"
+    fun fix(stepId: Long) = "fix/$stepId"
 }
 
 // Screen transitions: pushed screens slide in from the side; tabs cross-fade with a slight zoom.
@@ -185,7 +188,10 @@ private fun MainScaffold(
         containerColor = Color.Transparent,
         topBar = {
             PaperTopBar(
-                title = stringResource(tabs.firstOrNull { it.base == currentBase && it.base != "home" }?.label ?: R.string.app_name),
+                title = stringResource(
+                    if (currentBase.startsWith("fix")) R.string.mini_lesson
+                    else tabs.firstOrNull { it.base == currentBase && it.base != "home" }?.label ?: R.string.app_name,
+                ),
                 actions = {
                     IconButton(onClick = openBenchmark) { Icon(Icons.Filled.Speed, stringResource(R.string.benchmark_title)) }
                     IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, stringResource(R.string.more)) }
@@ -242,6 +248,7 @@ private fun MainScaffold(
                     openQuiz = { course, sub -> inner.goTab(Routes.quiz(course, sub)) },
                     openChat = { q -> inner.goTab(Routes.chat(q)) },
                     openModels = openModels,
+                    openFix = { id -> inner.navigate(Routes.fix(id)) },
                 )
             }
             composable(
@@ -256,7 +263,11 @@ private fun MainScaffold(
                     initialSubtopic = e.arguments?.getString("subtopic").orEmpty().ifBlank { null },
                     openChat = { q -> inner.goTab(Routes.chat(q)) },
                     openModels = openModels,
+                    openFix = { id -> inner.navigate(Routes.fix(id)) },
                 )
+            }
+            composable(Routes.FIX, arguments = listOf(navArgument("stepId") { type = NavType.LongType })) { e ->
+                FixScreen(stepId = e.arguments?.getLong("stepId") ?: 0L, openModels = openModels)
             }
             composable(Routes.CHAT, arguments = listOf(navArgument("prefill") { type = NavType.StringType; defaultValue = "" })) { e ->
                 ChatScreen(prefill = e.arguments?.getString("prefill").orEmpty(), openModels = openModels)

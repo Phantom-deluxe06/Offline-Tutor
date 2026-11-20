@@ -2,6 +2,7 @@ package com.offlinetutor.data
 
 import android.content.Context
 import com.offlinetutor.domain.AdaptiveDifficulty
+import com.offlinetutor.domain.Concepts
 import com.offlinetutor.domain.ExplainLanguage
 import com.offlinetutor.domain.PinHasher
 import com.offlinetutor.domain.Prompts
@@ -94,19 +95,40 @@ class RoadmapRepository(private val dao: RoadmapDao, private val ai: TutorAi) {
                 onPartial = onPartial,
             )
             drafts?.let { d ->
-                dao.replaceCourse(profile.id, course, d.mapIndexed { i, s ->
-                    RoadmapStep(profileId = profile.id, course = course, stepIndex = i, title = s.title, goal = s.goal,
-                        subtopics = s.subtopics.joinToString("|"), source = "llm")
-                })
+                dao.replaceCourse(profile.id, course, toSteps(profile.id, course, d, "llm"))
                 return Outcome("llm", attempt + 1)
             }
         }
-        val t = RoadmapTemplates.forCourse(course)
-        dao.replaceCourse(profile.id, course, t.mapIndexed { i, s ->
-            RoadmapStep(profileId = profile.id, course = course, stepIndex = i, title = s.title, goal = s.goal,
-                subtopics = s.subtopics.joinToString("|"), source = "template")
-        })
+        dao.replaceCourse(profile.id, course, toSteps(profile.id, course, RoadmapTemplates.forCourse(course), "template"))
         return Outcome("template", 2)
+    }
+
+    companion object {
+        /**
+         * 1f: concept ids + prerequisite edges. The model's "Needs:" edges are validated as a DAG (unknown
+         * steps, self-loops and cycle-closing edges are dropped); with no usable edge, a linear chain is used.
+         */
+        fun toSteps(profileId: Long, course: String, drafts: List<com.offlinetutor.domain.RoadmapDraft>, source: String): List<RoadmapStep> {
+            val used = HashMap<String, Int>()
+            val ids = drafts.map { d ->
+                val base = Concepts.slug(d.title)
+                val n = (used[base] ?: 0) + 1
+                used[base] = n
+                if (n == 1) base else "$base-$n"
+            }
+            val proposed = RoadmapParser.proposedEdges(drafts).mapNotNull { (step, pre) ->
+                val a = ids.getOrNull(step - 1)
+                val b = ids.getOrNull(pre - 1)
+                if (a != null && b != null) a to b else null
+            }
+            val built = com.offlinetutor.domain.PrereqGraph.build(ids, proposed).graph
+            val graph = if (built.edgeCount == 0) com.offlinetutor.domain.PrereqGraph.linear(ids) else built
+            return drafts.mapIndexed { i, s ->
+                RoadmapStep(profileId = profileId, course = course, stepIndex = i, title = s.title, goal = s.goal,
+                    subtopics = s.subtopics.joinToString("|"), source = source,
+                    conceptId = ids[i], prereqs = graph.prereqs(ids[i]).joinToString("|"))
+            }
+        }
     }
 }
 
@@ -114,7 +136,11 @@ class QuizRepository(
     private val dao: QuizDao,
     private val roadmaps: RoadmapDao,
     private val generator: McqGenerator,
+    private val diag: DiagnosticGenerator,
     private val seeds: SeedBank,
+    private val brain: AdaptiveBrain,
+    private val probes: ProbeDao,
+    private val flags: FeatureFlags,
 ) {
     fun observeAnswered(profileId: Long) = dao.observeAnswered(profileId)
 
@@ -126,74 +152,153 @@ class QuizRepository(
 
     suspend fun pending(profileId: Long) = dao.pending(profileId)
 
+    /** Level shown in the UI for a course: per-concept Elo level when enabled, else the staircase. */
+    suspend fun displayLevel(profileId: Long, course: String): Int {
+        if (!flags.isOn(Feature.ELO_DIFFICULTY)) return state(profileId, course).level
+        val t = pickTarget(profileId, course, null, null, dao.answeredForCourse(profileId, course), emptyList(), null)
+        return brain.masteryState(profileId, t.concept)?.level ?: AdaptiveDifficulty.EASY
+    }
+
     data class Next(val question: QuizQuestion, val attempts: Int, val note: String?)
 
+    /** What the next question is about. [purpose]: null = normal quiz, PROBE, or FIX:<stepId>. */
+    data class Target(val subtopic: String, val concept: String, val conceptTitle: String, val purpose: String?)
+
     /**
-     * Adaptive next question: difficulty from the 2-up/1-down staircase, subtopic from the
-     * current roadmap step or a weak spot, then generate → validate → dedupe, retry once,
-     * and finally fall back to the seed bank.
+     * Adaptive next question. Target: a pending probe first, then a forced subtopic/concept, then the current
+     * roadmap step (NORMAL or REVIEW). Level: per-concept Elo rules (toggle) or the 2-up/1-down staircase.
+     * Generation: diagnostic MCQ (toggle) or plain MCQ, validate → dedupe, retry once, then the seed bank.
      */
-    suspend fun next(profile: Profile, course: String, forcedSubtopic: String?, onPartial: (String) -> Unit): Next {
+    suspend fun next(
+        profile: Profile,
+        course: String,
+        forcedSubtopic: String?,
+        onPartial: (String) -> Unit,
+        forcedConcept: String? = null,
+        purpose: String? = null,
+        focus: String? = null,
+    ): Next {
         dao.dropUnanswered(profile.id)
-        val level = state(profile.id, course).level
         val answered = dao.answeredForCourse(profile.id, course)
         val weak = WeakSpots.weak(answered.map { it.subtopic to (it.correct == true) })
-        val subtopic = forcedSubtopic ?: chooseSubtopic(roadmaps.forCourse(profile.id, course), weak, answered, course)
+        val t = pickTarget(profile.id, course, forcedSubtopic, forcedConcept, answered, weak, purpose)
+        val level = if (flags.isOn(Feature.ELO_DIFFICULTY)) {
+            brain.masteryState(profile.id, t.concept)?.level ?: AdaptiveDifficulty.EASY
+        } else {
+            state(profile.id, course).level
+        }
         val history = dao.allNormalizedStems(profile.id).toMutableSet()
         val recent = dao.recentStems(profile.id, course, 10).toMutableList()
 
+        fun store(
+            stem: String, options: List<String>, answer: Int, explanation: String, source: String, meta: String?,
+            subtopic: String = t.subtopic, difficulty: Int = level, concept: String = t.concept,
+        ) = QuizQuestion(
+            profileId = profile.id, course = course, subtopic = subtopic, difficulty = difficulty,
+            stem = stem, normalizedStem = QuestionDeduper.normalize(stem),
+            options = options.joinToString(QuizQuestion.OPTION_SEP.toString()),
+            answerIndex = answer, explanation = explanation, source = source,
+            concept = concept, optionMeta = meta, purpose = t.purpose,
+        )
+
         var lastReason: String? = null
         for (attempt in 1..2) {
-            val o = generator.attempt(profile.grade, course, subtopic, level, recent, weak, history, LogMeta(), onPartial)
-            val mcq = o.mcq
-            if (mcq != null) {
-                val shuffled = mcq.shuffled()
-                val q = QuizQuestion(
-                    profileId = profile.id, course = course, subtopic = subtopic, difficulty = level,
-                    stem = shuffled.question, normalizedStem = QuestionDeduper.normalize(shuffled.question),
-                    options = shuffled.options.joinToString(QuizQuestion.OPTION_SEP.toString()),
-                    answerIndex = shuffled.answer, explanation = shuffled.explanation, source = "llm",
-                )
-                return Next(q.copy(id = dao.insert(q)), attempt, null)
+            if (flags.isOn(Feature.DIAGNOSTIC_MCQ)) {
+                val o = diag.attempt(profile.grade, course, t.conceptTitle, t.concept, t.subtopic, level, recent, weak, history, LogMeta(), focus, onPartial)
+                o.mcq?.let { d ->
+                    val s = d.shuffled()
+                    val q = store(s.question, s.options.map { it.text }, s.answer, s.explanation, "llm", s.metaJson())
+                    return Next(q.copy(id = dao.insert(q)), attempt, null)
+                }
+                lastReason = o.reason
+            } else {
+                val o = generator.attempt(profile.grade, course, t.subtopic, level, recent, weak, history, LogMeta(), onPartial, focus)
+                o.mcq?.let { mcq ->
+                    val s = mcq.shuffled()
+                    val q = store(s.question, s.options, s.answer, s.explanation, "llm", null)
+                    return Next(q.copy(id = dao.insert(q)), attempt, null)
+                }
+                lastReason = o.reason
+                o.result.text.let { txt -> com.offlinetutor.domain.McqParser.parse(txt) }
+                    .let { (it as? com.offlinetutor.domain.McqParse.Ok)?.mcq?.question }
+                    ?.let { recent.add(0, it) }
             }
-            lastReason = o.reason
-            // On a duplicate, tell the model explicitly what not to ask again.
-            o.result.text.let { t -> com.offlinetutor.domain.McqParser.parse(t) }
-                .let { (it as? com.offlinetutor.domain.McqParse.Ok)?.mcq?.question }
-                ?.let { recent.add(0, it) }
         }
 
         val seed = seeds.pick(course, level, history)
             ?: throw IllegalStateException("Could not create a question ($lastReason) and the seed bank is used up.")
-        val m = seed.mcq.shuffled()
-        val q = QuizQuestion(
-            profileId = profile.id, course = course, subtopic = seed.topic, difficulty = seed.difficulty,
-            stem = m.question, normalizedStem = QuestionDeduper.normalize(m.question),
-            options = m.options.joinToString(QuizQuestion.OPTION_SEP.toString()),
-            answerIndex = m.answer, explanation = m.explanation, source = "seed",
-        )
+        // A bank question is credited to its own topic, not to the step that was targeted.
+        val seedConcept = Concepts.slug(seed.topic)
+        val d = seed.toDiag(seedConcept).shuffled()
+        val q = store(d.question, d.options.map { it.text }, d.answer, d.explanation, "seed",
+            d.metaJson().takeIf { d.options.any { it.code != null } }, subtopic = seed.topic, difficulty = seed.difficulty, concept = seedConcept)
         return Next(q.copy(id = dao.insert(q)), 2, lastReason)
     }
 
-    private fun chooseSubtopic(steps: List<RoadmapStep>, weak: List<String>, answered: List<QuizQuestion>, course: String): String {
-        if (weak.isNotEmpty() && Random.nextFloat() < 0.4f) return weak.random()
-        val current = steps.firstOrNull { !it.done } ?: steps.lastOrNull()
-        // No roadmap yet: use the built-in template's subtopics so the topic is concrete
-        // (a bare "Mathematics" made the 1B model drift back to recent questions).
-        val candidates = current?.subtopicList?.takeIf { it.isNotEmpty() }
-            ?: RoadmapTemplates.forCourse(course).flatMap { it.subtopics }
-        if (candidates.isEmpty()) return course
-        val counts = answered.groupingBy { it.subtopic }.eachCount()
-        val least = candidates.minOf { counts[it] ?: 0 }
-        return candidates.filter { (counts[it] ?: 0) == least }.random()
+    private suspend fun pickTarget(
+        profileId: Long,
+        course: String,
+        forcedSubtopic: String?,
+        forcedConcept: String?,
+        answered: List<QuizQuestion>,
+        weak: List<String>,
+        purpose: String?,
+    ): Target {
+        val steps = roadmaps.forCourse(profileId, course)
+        fun stepFor(concept: String) = steps.firstOrNull { it.stepKind == StepKind.NORMAL && it.concept == concept }
+        fun conceptOf(s: RoadmapStep) = if (s.stepKind == StepKind.REVIEW) s.targetConcept ?: s.concept else s.concept
+        fun leastAsked(cands: List<String>, fallback: String): String {
+            if (cands.isEmpty()) return fallback
+            val counts = answered.groupingBy { it.subtopic }.eachCount()
+            val least = cands.minOf { counts[it] ?: 0 }
+            return cands.filter { (counts[it] ?: 0) == least }.random()
+        }
+
+        if (forcedConcept != null) {
+            val s = stepFor(forcedConcept)
+            return Target(leastAsked(s?.subtopicList.orEmpty(), forcedConcept), forcedConcept, s?.title ?: forcedConcept, purpose)
+        }
+        // 1f: an untested prerequisite gets its probe questions before anything else.
+        if (purpose == null && forcedSubtopic == null && flags.isOn(Feature.BACKTRACKING)) {
+            probes.next(profileId, course)?.let { p ->
+                val s = stepFor(p.conceptId)
+                return Target(leastAsked(s?.subtopicList.orEmpty(), p.conceptId), p.conceptId, s?.title ?: p.conceptId, "PROBE")
+            }
+        }
+        if (forcedSubtopic != null) {
+            val s = steps.firstOrNull { forcedSubtopic in it.subtopicList && it.stepKind != StepKind.MICRO_FIX }
+            val c = s?.let { conceptOf(it) } ?: Concepts.slug(forcedSubtopic)
+            return Target(forcedSubtopic, c, stepFor(c)?.title ?: s?.title ?: forcedSubtopic, purpose)
+        }
+        if (weak.isNotEmpty() && Random.nextFloat() < 0.4f) {
+            val w = weak.random()
+            val s = steps.firstOrNull { w in it.subtopicList && it.stepKind == StepKind.NORMAL }
+            return Target(w, s?.concept ?: Concepts.slug(w), s?.title ?: w, purpose)
+        }
+        // Current step: fix steps are worked in the Fix screen, so the quiz follows NORMAL / REVIEW steps.
+        val current = steps.firstOrNull { !it.done && it.stepKind != StepKind.MICRO_FIX }
+            ?: steps.lastOrNull { it.stepKind == StepKind.NORMAL }
+        if (current == null) {
+            // No roadmap yet: concrete subtopics from the built-in template.
+            val sub = leastAsked(RoadmapTemplates.forCourse(course).flatMap { it.subtopics }, course)
+            return Target(sub, Concepts.slug(sub), sub, purpose)
+        }
+        val c = conceptOf(current)
+        val title = stepFor(c)?.title ?: current.title
+        return Target(leastAsked(current.subtopicList, title), c, title, purpose)
     }
 
-    suspend fun answer(q: QuizQuestion, chosen: Int): QuizQuestion {
+    /** Stores the answer (with confidence and response time) and runs the adaptive brain. */
+    suspend fun answer(profile: Profile, q: QuizQuestion, chosen: Int, confident: Boolean?, responseMs: Long?): Pair<QuizQuestion, BrainResult> {
         val correct = chosen == q.answerIndex
         val now = System.currentTimeMillis()
-        dao.answer(q.id, chosen, correct, now)
-        return q.copy(chosenIndex = chosen, correct = correct, answeredAt = now)
+        val code = if (correct) null else com.offlinetutor.domain.OptionMeta.parse(q.optionMeta).getOrNull(chosen)?.code?.name
+        dao.answerFull(q.id, chosen, correct, now, confident, responseMs, code)
+        val a = q.copy(chosenIndex = chosen, correct = correct, answeredAt = now, confident = confident, responseMs = responseMs, misconception = code)
+        return a to brain.onAnswer(profile, a)
     }
+
+    suspend fun latestForPurpose(profileId: Long, purpose: String) = dao.latestForPurpose(profileId, purpose)
 }
 
 class ChatRepository(private val dao: ChatDao, private val ai: TutorAi) {

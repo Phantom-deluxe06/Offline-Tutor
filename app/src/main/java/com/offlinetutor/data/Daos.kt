@@ -51,6 +51,73 @@ interface RoadmapDao {
         clearCourse(profileId, course)
         insertAll(steps)
     }
+
+    @Query("SELECT * FROM roadmap_steps WHERE id = :id")
+    suspend fun get(id: Long): RoadmapStep?
+
+    @Insert
+    suspend fun insert(step: RoadmapStep): Long
+
+    @Update
+    suspend fun update(step: RoadmapStep)
+
+    @Query("UPDATE roadmap_steps SET stepIndex = stepIndex + 1 WHERE profileId = :profileId AND course = :course AND stepIndex >= :from")
+    suspend fun shiftFrom(profileId: Long, course: String, from: Int)
+
+    /** Inserts [step] at [index] in its course, moving later steps down by one. */
+    @Transaction
+    suspend fun insertAt(step: RoadmapStep, index: Int): Long {
+        shiftFrom(step.profileId, step.course, index)
+        return insert(step.copy(stepIndex = index))
+    }
+
+    @Query("SELECT * FROM roadmap_steps WHERE profileId = :profileId AND course = :course ORDER BY stepIndex")
+    fun observeCourse(profileId: Long, course: String): Flow<List<RoadmapStep>>
+}
+
+@Dao
+interface MasteryDao {
+    @Query("SELECT * FROM concept_mastery WHERE profileId = :profileId AND conceptId = :conceptId")
+    suspend fun get(profileId: Long, conceptId: String): ConceptMastery?
+
+    @Query("SELECT * FROM concept_mastery WHERE profileId = :profileId")
+    suspend fun all(profileId: Long): List<ConceptMastery>
+
+    @Query("SELECT * FROM concept_mastery WHERE profileId = :profileId")
+    fun observe(profileId: Long): Flow<List<ConceptMastery>>
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun upsert(m: ConceptMastery)
+}
+
+@Dao
+interface MisconceptionDao {
+    @Insert
+    suspend fun insert(h: MisconceptionHit): Long
+
+    @Query("SELECT * FROM misconception_hits WHERE profileId = :profileId AND conceptId = :conceptId ORDER BY createdAt")
+    suspend fun forConcept(profileId: Long, conceptId: String): List<MisconceptionHit>
+
+    @Query("SELECT * FROM misconception_hits WHERE profileId = :profileId ORDER BY createdAt")
+    fun observe(profileId: Long): Flow<List<MisconceptionHit>>
+
+    @Query("UPDATE misconception_hits SET resolved = 1 WHERE profileId = :profileId AND conceptId = :conceptId AND code = :code")
+    suspend fun resolve(profileId: Long, conceptId: String, code: String)
+}
+
+@Dao
+interface ProbeDao {
+    @Query("SELECT * FROM pending_probes WHERE profileId = :profileId AND course = :course AND remaining > 0 LIMIT 1")
+    suspend fun next(profileId: Long, course: String): PendingProbe?
+
+    @Query("SELECT * FROM pending_probes WHERE profileId = :profileId AND conceptId = :conceptId")
+    suspend fun get(profileId: Long, conceptId: String): PendingProbe?
+
+    @Insert(onConflict = androidx.room.OnConflictStrategy.REPLACE)
+    suspend fun upsert(p: PendingProbe)
+
+    @Query("DELETE FROM pending_probes WHERE profileId = :profileId AND conceptId = :conceptId")
+    suspend fun delete(profileId: Long, conceptId: String)
 }
 
 @Dao
@@ -81,6 +148,21 @@ interface QuizDao {
 
     @Query("DELETE FROM quiz_questions WHERE profileId = :profileId AND correct IS NULL")
     suspend fun dropUnanswered(profileId: Long)
+
+    @Query(
+        "UPDATE quiz_questions SET chosenIndex = :chosen, correct = :correct, answeredAt = :at, confident = :confident, " +
+            "responseMs = :responseMs, misconception = :misconception WHERE id = :id",
+    )
+    suspend fun answerFull(id: Long, chosen: Int, correct: Boolean, at: Long, confident: Boolean?, responseMs: Long?, misconception: String?)
+
+    @Query("SELECT * FROM quiz_questions WHERE profileId = :profileId AND concept = :concept AND correct IS NOT NULL ORDER BY answeredAt")
+    suspend fun answeredForConcept(profileId: Long, concept: String): List<QuizQuestion>
+
+    @Query("SELECT * FROM quiz_questions WHERE profileId = :profileId AND purpose = :purpose ORDER BY askedAt DESC LIMIT 1")
+    suspend fun latestForPurpose(profileId: Long, purpose: String): QuizQuestion?
+
+    @Query("SELECT * FROM quiz_questions WHERE profileId = :profileId AND correct IS NOT NULL ORDER BY answeredAt")
+    suspend fun answered(profileId: Long): List<QuizQuestion>
 }
 
 @Dao

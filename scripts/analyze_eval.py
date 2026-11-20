@@ -23,7 +23,7 @@ def med(xs):
 db = sqlite3.connect(sys.argv[1])
 db.row_factory = sqlite3.Row
 rows = db.execute(
-    "select * from generation_logs where evalRun like 'mcq-eval-%' or evalRun like 'roadmap-eval-%' order by id"
+    "select * from generation_logs where evalRun like 'mcq-eval-%' or evalRun like 'mcq-diag-eval-%' or evalRun like 'roadmap-eval-%' or evalRun like 'template-eval-%' order by id"
 ).fetchall()
 
 runs = collections.OrderedDict()

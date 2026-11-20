@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.offlinetutor.R
+import com.offlinetutor.data.Feature
 import com.offlinetutor.domain.PinHasher
 import com.offlinetutor.ui.CourseEditor
 import com.offlinetutor.ui.GradePicker
@@ -58,6 +59,8 @@ fun SettingsScreen(onBack: () -> Unit, switchProfile: () -> Unit) {
     val profile by c.activeProfile.collectAsStateWithLifecycle()
     var pinDialog by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var seeded by remember { mutableStateOf(false) }
+    val flags by c.flags.state.collectAsStateWithLifecycle()
     val p = profile
 
     Scaffold(
@@ -105,6 +108,29 @@ fun SettingsScreen(onBack: () -> Unit, switchProfile: () -> Unit) {
                         if (p.hasPin) TextButton(onClick = { scope.launch { c.profiles.setPin(p, null) } }) { Text(stringResource(R.string.remove_pin)) }
                     }
                 }
+            }
+
+            // Every new feature can be turned off to demo / benchmark it on vs off.
+            SectionCard(stringResource(R.string.smart_features)) {
+                Feature.entries.filter { it.phase <= Feature.IMPLEMENTED_PHASE }.forEach { f ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(featureTitle(f), style = MaterialTheme.typography.titleSmall)
+                            Text(featureBody(f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        androidx.compose.material3.Switch(checked = flags[f] != false, onCheckedChange = { c.flags.set(f, it) })
+                    }
+                }
+            }
+
+            SectionCard(stringResource(R.string.debug)) {
+                Text(stringResource(R.string.seed_demo_body), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedButton(onClick = { scope.launch { withContext(Dispatchers.Default) { c.demo.seed() }; seeded = true } }) {
+                    Text(stringResource(R.string.seed_demo))
+                }
+                if (seeded) Text(stringResource(R.string.seed_demo_done), style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary)
             }
 
             SectionCard(stringResource(R.string.privacy)) {
@@ -158,3 +184,31 @@ fun SettingsScreen(onBack: () -> Unit, switchProfile: () -> Unit) {
         )
     }
 }
+
+@Composable
+private fun featureTitle(f: Feature): String = stringResource(
+    when (f) {
+        Feature.DIAGNOSTIC_MCQ -> R.string.ff_diag
+        Feature.CONFIDENCE -> R.string.ff_confidence
+        Feature.ELO_DIFFICULTY -> R.string.ff_elo
+        Feature.SELF_HEALING -> R.string.ff_healing
+        Feature.BACKTRACKING -> R.string.ff_backtracking
+        Feature.SKILL_TREE -> R.string.ff_tree
+        Feature.TEMPLATES -> R.string.ff_templates
+        Feature.VERIFIER -> R.string.ff_verifier
+    },
+)
+
+@Composable
+private fun featureBody(f: Feature): String = stringResource(
+    when (f) {
+        Feature.DIAGNOSTIC_MCQ -> R.string.ff_diag_body
+        Feature.CONFIDENCE -> R.string.ff_confidence_body
+        Feature.ELO_DIFFICULTY -> R.string.ff_elo_body
+        Feature.SELF_HEALING -> R.string.ff_healing_body
+        Feature.BACKTRACKING -> R.string.ff_backtracking_body
+        Feature.SKILL_TREE -> R.string.ff_tree_body
+        Feature.TEMPLATES -> R.string.ff_templates_body
+        Feature.VERIFIER -> R.string.ff_verifier_body
+    },
+)

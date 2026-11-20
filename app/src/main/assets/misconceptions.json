@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "note": "Fixed category codes. The model may describe topic-specific misconceptions, but each must map to one of these codes so the class heatmap can aggregate them.",
+  "categories": [
+    {"code": "SIGN_ERROR", "description": "A plus/minus sign or a direction was flipped.", "example": "Wrote -3 + 5 = -8."},
+    {"code": "UNIT_CONVERSION", "description": "Units were not converted, or were converted wrongly.", "example": "Added 2 m and 30 cm as 32."},
+    {"code": "FORMULA_SWAP", "description": "Used a related but wrong formula, or swapped its parts.", "example": "Speed = distance x time instead of distance / time."},
+    {"code": "OPERATION_SWAP", "description": "Did the wrong arithmetic operation.", "example": "Multiplied when the problem needed division."},
+    {"code": "CONCEPT_CONFUSION", "description": "Mixed up two related ideas or terms.", "example": "Confused mass with weight, or area with perimeter."},
+    {"code": "PARTIAL_STEP", "description": "Stopped one step early or skipped a step.", "example": "Found the discount but not the final price."},
+    {"code": "MISREAD_QUESTION", "description": "Answered a different question than the one asked.", "example": "Gave the total when the question asked for the difference."},
+    {"code": "OVERGENERALISATION", "description": "Applied a rule outside the cases where it is true.", "example": "Thought multiplying always makes a number bigger."}
+  ]
+}

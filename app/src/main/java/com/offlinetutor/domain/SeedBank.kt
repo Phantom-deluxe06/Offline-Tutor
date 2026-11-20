@@ -8,7 +8,17 @@ data class SeedQuestion(
     val topic: String,
     val difficulty: Int,
     val mcq: Mcq,
-)
+    /** Misconception tags aligned with the options (null for the correct option or when untagged). */
+    val tags: List<OptionTag?> = emptyList(),
+) {
+    fun toDiag(concept: String) = DiagMcq(
+        question = mcq.question, concept = concept, difficulty = difficulty, explanation = mcq.explanation,
+        options = mcq.options.mapIndexed { i, t ->
+            val tag = tags.getOrNull(i)
+            DiagOption(t, i == mcq.answer, tag?.code, tag?.why)
+        },
+    )
+}
 
 /** Maps free-text course names onto the five seed/eval subjects. */
 object Subjects {
@@ -35,11 +45,16 @@ class SeedBank(context: Context) {
         (0 until arr.length()).map { i ->
             val o = arr.getJSONObject(i)
             val opts = o.getJSONArray("options")
+            val tags = o.optJSONArray("tags")
             SeedQuestion(
                 subject = o.getString("subject"),
                 topic = o.getString("topic"),
                 difficulty = o.getInt("difficulty"),
                 mcq = Mcq(o.getString("question"), (0 until opts.length()).map { opts.getString(it) }, o.getInt("answer"), o.getString("explanation")),
+                tags = if (tags == null) emptyList() else (0 until tags.length()).map { k ->
+                    val t = tags.optJSONArray(k) ?: return@map null
+                    Misconception.of(t.optString(0))?.let { OptionTag(it, t.optString(1)) }
+                },
             )
         }
     }

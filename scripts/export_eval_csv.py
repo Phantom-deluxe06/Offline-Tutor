@@ -11,14 +11,15 @@ db = sqlite3.connect(sys.argv[1])
 db.row_factory = sqlite3.Row
 runs = sys.argv[3:]
 if not runs:
-    for kind in ("mcq-eval-%", "roadmap-eval-%"):
+    for kind in ("mcq-eval-%", "mcq-diag-eval-%", "roadmap-eval-%", "template-eval-%"):
         for (model,) in db.execute("select distinct model from generation_logs where evalRun like ?", (kind,)):
             r = db.execute(
-                "select evalRun from generation_logs where evalRun like ? and evalRun not like '%:answer' and model=? order by id desc limit 1",
+                "select evalRun from generation_logs where evalRun like ? and evalRun not like '%:%' and model=? order by id desc limit 1",
                 (kind, model),
             ).fetchone()
             if r:
-                runs += [r[0], r[0] + ":answer"]
+                # Sub-runs: ":answer" (answer follow-up) and ":tags" (misconception tagging).
+                runs += [r[0], r[0] + ":answer", r[0] + ":tags"]
 
 cols = ["id", "evalRun", "model", "task", "evalSubject", "evalGrade", "difficulty", "validJson", "duplicate",
         "stopReason", "guardReason", "generatedTokens", "ttftMs", "wallMs", "decodeTokPerSec", "peakRssKb", "output"]

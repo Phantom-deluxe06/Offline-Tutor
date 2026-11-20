@@ -6,8 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [Profile::class, RoadmapStep::class, QuizQuestion::class, ChatMessage::class, GenerationLog::class],
-    version = 1,
+    entities = [
+        Profile::class, RoadmapStep::class, QuizQuestion::class, ChatMessage::class, GenerationLog::class,
+        ConceptMastery::class, MisconceptionHit::class, PendingProbe::class,
+    ],
+    version = 2,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -16,11 +19,15 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun quiz(): QuizDao
     abstract fun chat(): ChatDao
     abstract fun logs(): LogDao
+    abstract fun mastery(): MasteryDao
+    abstract fun misconceptions(): MisconceptionDao
+    abstract fun probes(): ProbeDao
 
     companion object {
+        // Migrations only, never a destructive fallback: a student's history must survive app updates.
         fun build(context: Context): AppDatabase =
             Room.databaseBuilder(context, AppDatabase::class.java, "tutor.db")
-                .fallbackToDestructiveMigration(dropAllTables = true)
+                .addMigrations(*Migrations.ALL)
                 .build()
     }
 }

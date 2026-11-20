@@ -37,13 +37,21 @@ class AppContainer(app: Application) {
     val ai = TutorAi(engine, db.logs())
     val seeds = SeedBank(app)
     val mcqGenerator = McqGenerator(ai)
+    val flags = com.offlinetutor.data.FeatureFlags(app)
+    val taxonomy = com.offlinetutor.domain.MisconceptionTaxonomy.parse(
+        app.assets.open("misconceptions.json").bufferedReader().use { it.readText() },
+    )
+    val diagGenerator = com.offlinetutor.data.DiagnosticGenerator(ai, mcqGenerator)
+    val brain = com.offlinetutor.data.AdaptiveBrain(db.roadmaps(), db.quiz(), db.mastery(), db.misconceptions(), db.probes(), flags)
 
     val profiles = ProfileRepository(db.profiles(), session)
     val roadmaps = RoadmapRepository(db.roadmaps(), ai)
-    val quiz = QuizRepository(db.quiz(), db.roadmaps(), mcqGenerator, seeds)
+    val quiz = QuizRepository(db.quiz(), db.roadmaps(), mcqGenerator, diagGenerator, seeds, brain, db.probes(), flags)
+    val fixes = com.offlinetutor.data.FixService(db.roadmaps(), quiz, ai, taxonomy)
+    val demo = com.offlinetutor.data.DemoSeeder(profiles, db.roadmaps(), db.quiz(), brain)
     val chat = ChatRepository(db.chat(), ai)
     val metrics = MetricsRepository(db.logs())
-    val bench = BenchmarkRunner(app, appScope, engine, ai, mcqGenerator, metrics)
+    val bench = BenchmarkRunner(app, appScope, engine, ai, mcqGenerator, diagGenerator, flags, metrics)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val activeProfile: StateFlow<Profile?> = session.activeProfileId

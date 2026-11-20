@@ -9,6 +9,8 @@ data class Mcq(
     val options: List<String>,
     val answer: Int,
     val explanation: String,
+    /** Phase 2b: arithmetic for the answer when the model gives one (verified with exp4j). */
+    val expression: String? = null,
 ) {
     /** 1B models put the right answer first far too often; shuffle and remap the key. */
     fun shuffled(random: Random = Random.Default): Mcq {
@@ -144,7 +146,8 @@ object McqParser {
     }
 }
 
-data class RoadmapDraft(val title: String, val goal: String, val subtopics: List<String>)
+/** [needs] = 1-based numbers of earlier steps this one builds on (proposed by the model, validated later). */
+data class RoadmapDraft(val title: String, val goal: String, val subtopics: List<String>, val needs: List<Int> = emptyList())
 
 object RoadmapParser {
     private val numbered = Regex("^\\s*(?:step\\s*)?(\\d{1,2})\\s*[.):-]\\s*(.+)$", RegexOption.IGNORE_CASE)
@@ -159,7 +162,11 @@ object RoadmapParser {
             val m = numbered.find(line) ?: return@mapNotNull null
             // The model often repeats the number after the "1. " prefill ("1. 1. Title"), so strip it again.
             val body = m.groupValues[2].replace("**", "").replace(Regex("^(\\s*\\d{1,2}\\s*[.):]\\s*)+"), "")
-            val parts = body.split(fieldSep).map { it.trim() }.filter { it.isNotEmpty() }
+            val all = body.split(fieldSep).map { it.trim() }.filter { it.isNotEmpty() }
+            // Optional "Needs: 1, 2" / "Needs: none" field with prerequisite step numbers.
+            val needsPart = all.drop(1).firstOrNull { needsLabel.containsMatchIn(it) }
+            val needs = needsPart?.replace(needsLabel, "")?.let { n -> Regex("\\d{1,2}").findAll(n).map { it.value.toInt() }.toList() }.orEmpty()
+            val parts = all.filter { it !== needsPart }
             if (parts.isEmpty()) return@mapNotNull null
             val title = parts[0].removeSuffix(":").trim()
             if (title.length < 3) return@mapNotNull null
@@ -171,10 +178,16 @@ object RoadmapParser {
             val subs = subPart?.replace(subLabel, "")?.split(',', ';')
                 ?.map { it.trim().trimEnd('.').replace(Regex("^(and|or|&)\\s+", RegexOption.IGNORE_CASE), "") }
                 ?.filter { it.isNotEmpty() }?.distinct()?.take(4).orEmpty()
-            RoadmapDraft(title.take(80), goal.take(200), subs.ifEmpty { listOf(title) })
+            RoadmapDraft(title.take(80), goal.take(200), subs.ifEmpty { listOf(title) }, needs)
         }.distinctBy { QuestionDeduper.normalize(it.title) }
         return steps.takeIf { it.size >= 3 }?.take(6)
     }
+
+    private val needsLabel = Regex("^\\s*(needs|requires|prerequisites?|builds on)\\s*:?\\s*", RegexOption.IGNORE_CASE)
+
+    /** (step number, prerequisite step number) pairs, both 1-based, as proposed by the model. */
+    fun proposedEdges(drafts: List<RoadmapDraft>): List<Pair<Int, Int>> =
+        drafts.flatMapIndexed { i, d -> d.needs.map { (i + 1) to it } }
 
     fun parseJson(raw: String): List<RoadmapDraft>? {
         val json = JsonRepair.extractObject(raw) ?: return null

@@ -48,9 +48,10 @@ object Prompts {
             Write a step-by-step study roadmap for a Grade $grade student in India learning $course.
             Order the steps from basics to advanced and match the Grade $grade syllabus (NCERT level).
             Write exactly $ROADMAP_STEPS numbered lines and nothing else. Each line has this format:
-            number. Step title - one short sentence goal - Subtopics: subtopic, subtopic, subtopic
+            number. Step title - one short sentence goal - Subtopics: subtopic, subtopic - Needs: earlier step numbers it builds on, or none
             Example of the format for a music course (do not copy it):
-            1. Rhythm basics - Learn to keep a steady beat - Subtopics: beat, tempo, clapping patterns
+            1. Rhythm basics - Learn to keep a steady beat - Subtopics: beat, tempo, clapping patterns - Needs: none
+            2. Reading notes - Name notes on the staff - Subtopics: treble clef, note names - Needs: 1
         """.trimIndent()
         return Llama3Prompt.single(ROADMAP_SYSTEM, user, ROADMAP_PREFIX)
     }
@@ -79,6 +80,7 @@ object Prompts {
         level: Int,
         recentStems: List<String>,
         weakSubtopics: List<String>,
+        focus: String? = null,
     ): String {
         fun build(stems: List<String>): String {
             // On-device testing showed the 1B model copies full earlier questions verbatim when
@@ -86,8 +88,10 @@ object Prompts {
             val avoid = if (stems.isEmpty()) "" else
                 "\nAlready asked about (ask about something different): " +
                     stems.map { keywords(it) }.filter { it.isNotBlank() }.distinct().joinToString("; ")
-            val weak = if (weakSubtopics.isEmpty()) "" else
-                "\nThe student is weak at: ${weakSubtopics.joinToString(", ")}."
+            val weak = (if (weakSubtopics.isEmpty()) "" else
+                "\nThe student is weak at: ${weakSubtopics.joinToString(", ")}.") +
+                // 1e: a fix step's check question targets the misconception being repaired.
+                (focus?.let { "\nThe question must check whether the student still makes this mistake: $it" }.orEmpty())
             val user = """
                 Write ONE new multiple-choice question for a Grade $grade student in India.
                 Subject: $course
@@ -122,6 +126,56 @@ object Prompts {
         .filter { it.length > 1 && it !in stop }
         .take(4)
         .joinToString(" ")
+
+    // ---------- 1b: diagnostic MCQ ----------
+    // Measured on-device: the 1B model could not produce the nested diagnostic JSON in one shot (it copied
+    // "..."/"CODE" placeholders and invented options E–G). So a diagnostic MCQ is built in two steps:
+    // the plain MCQ (validated path), then this short line-format call that tags each wrong option.
+    /**
+     * Measured on-device: asked for "B) CODE - reason" lines, the 1B model wrote one block per option
+     * ("The mistake type: …" / "The reason: …"), so the prompt asks for exactly that block shape and the
+     * first block is prefilled up to "Mistake type: " so a code comes first.
+     */
+    fun tagPrefix(firstWrong: String) = "B) $firstWrong\nMistake type: "
+
+    fun diagnosticTagLines(question: String, correct: String, wrong: List<String>): String {
+        val user = buildString {
+            append("Question: $question\nCorrect answer: $correct\nWrong answers:\n")
+            wrong.forEachIndexed { i, w -> append("${'B' + i}) $w\n") }
+            append("Mistake types:\n")
+            append("SIGN_ERROR: a sign or direction was flipped\n")
+            append("UNIT_CONVERSION: units not converted, or converted wrongly\n")
+            append("FORMULA_SWAP: used a related but wrong formula\n")
+            append("OPERATION_SWAP: did the wrong operation (+, -, x, /)\n")
+            append("CONCEPT_CONFUSION: mixed up two related ideas\n")
+            append("PARTIAL_STEP: stopped one step early\n")
+            append("MISREAD_QUESTION: answered a different question\n")
+            append("OVERGENERALISATION: used a rule where it does not apply\n")
+            append("For each wrong answer, say which mistake type makes a student choose it. Answer with one block per wrong answer:\n")
+            append("B) <wrong answer>\nMistake type: <one type from the list>\nReason: <short reason>")
+        }
+        return Llama3Prompt.single(TAG_SYSTEM, user, tagPrefix(wrong.firstOrNull().orEmpty()))
+    }
+
+    /** Stop once the D tag is complete (its line has ended), in either the block or the one-line shape. */
+    fun tagLinesDone(text: String): Boolean = text.endsWith("\n") && DiagnosticParser.parseTagLines(text).getOrNull(2) != null
+
+    private const val TAG_SYSTEM = "You are an expert Indian school teacher who knows why students choose wrong answers."
+
+    /** 1e: the ~2-minute micro-fix lesson for one misconception. */
+    fun microFix(grade: Int, lang: ExplainLanguage, concept: String, codeDescription: String, why: String, question: String?): String {
+        val user = buildString {
+            append("A Grade $grade student learning \"$concept\" made this mistake: $codeDescription")
+            if (why.isNotBlank()) append(" (they $why)")
+            append(".\n")
+            question?.let { append("The question was: $it\n") }
+            append("Write a short lesson (about 120 words) that fixes this mistake:\n")
+            append("1. Say clearly what the mistake is and why it is wrong.\n")
+            append("2. Explain the right way step by step.\n")
+            append("3. Give ONE analogy from everyday Indian life, starting the line with \"Analogy:\".")
+        }
+        return Llama3Prompt.single(tutorSystem(grade, lang), user)
+    }
 
     const val ANSWER_PREFIX = "{\"answer\":\""
 
