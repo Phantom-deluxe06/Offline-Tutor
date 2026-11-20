@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Open book with a small lamp flame: offline learning. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M30,44 C38,40 46,40 53,45 L53,74 C46,69 38,69 30,73 Z" />
+    <path android:fillColor="#FFE8F4F2"
+        android:pathData="M78,44 C70,40 62,40 55,45 L55,74 C62,69 70,69 78,73 Z" />
+    <path android:fillColor="@color/launcher_fg"
+        android:pathData="M54,24 C58,30 60,33 60,37 C60,40.5 57.3,43 54,43 C50.7,43 48,40.5 48,37 C48,33 50,30 54,24 Z" />
+</vector>

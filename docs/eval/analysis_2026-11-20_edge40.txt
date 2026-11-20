@@ -1,0 +1,214 @@
+
+=== mcq-eval-1795188340680  model=tutor_1b_spinquant  n=30
+valid JSON      : 70% (21/30)
+duplicate       : 19% (4/21)
+median TTFT ms  : 2454.5
+median decode/s : 16.8
+median wall ms  : 6003.0
+median gen tok  : 63.5
+peak RSS MB     : 1370.83984375
+stop reasons    : {'JSON_COMPLETE': 26, 'END': 2, 'REPETITION': 2}
+max thermal     : 0
+valid by subject: {'Mathematics': '100% (6/6)', 'Science': '83% (5/6)', 'English': '83% (5/6)', 'Social Science': '50% (3/6)', 'Computer Science': '33% (2/6)'}
+valid by level  : {1: '73% (11/15)', 2: '67% (10/15)'}
+--- invalid samples
+  [Science g10 JSON_COMPLETE/None] '{"question":"What is the process by which water moves through a plant, from roots to leaves, and is then released into the air as water vapor?","A":"Transpiration","B":"Respiration","C":"Photosynthesis","D":"Evaporation"'
+  [English g6 END/None] '{"question":"What is the main feature of a novel that makes it different from a story?"","A":"The use of dialogue","B":"The use of dialogue","C":"The use of dialogue","D":"The use of dialogue"","answer":"B","explanation"'
+  [Social Science g8 REPETITION/repeated 6-gram] '{"question":"What is the main reason why the Indian Constitution was adopted in 1950?","A":"The Constitution was adopted to promote social justice and equality.","B":"The Constitution was adopted to promote economic grow'
+  [Social Science g10 JSON_COMPLETE/None] '{"question":"Who is the founder of the Indian National Congress?","A":"Shahjahan","B":"Lala Lajpat Rai","C":"Gandhiji","D":"Mahatma Gandhi","answer":"B","explanation":"B","Lala Lajpat Rai was a key figure in the Indian i'
+--- valid samples
+  [Mathematics g6 L1] '{"question":"What is the sum of 2 + 3?","A":"4","B":"5","C":"6","D":"7","answer":"B","explanation":"The sum of 2 and 3 is 5."}'
+  [Mathematics g6 L2] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"3","B":"4","C":"6","D":"9","answer":"B","explanation":"To solve for x, subtract 5 from both sides of the equation and then divide by 2."}'
+  [Mathematics g8 L1] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"3","B":"4","C":"6","D":"7","answer":"B","explanation":"To solve for x, subtract 5 from both sides and then divide by 2."}'
+
+=== roadmap-eval-1795188577764  model=tutor_1b_spinquant  n=15
+valid JSON      : 13% (2/15)
+duplicate       : -
+median TTFT ms  : 2142.0
+median decode/s : 15.8
+median wall ms  : 19870.0
+median gen tok  : 271.0
+peak RSS MB     : 1370.83984375
+stop reasons    : {'REPETITION': 8, 'MAX_TOKENS': 5, 'END': 1, 'JSON_COMPLETE': 1}
+max thermal     : 0
+valid by subject: {'Mathematics': '0% (0/3)', 'Science': '0% (0/3)', 'English': '0% (0/3)', 'Social Science': '33% (1/3)', 'Computer Science': '33% (1/3)'}
+--- invalid samples
+  [Mathematics g6 REPETITION/repeated 6-gram] '{"steps":[{"title":"Introduction to Numbers","goal":"To understand the basic concepts of numbers and their operations.","1. Numbers 1-9","2. Basic addition and subtraction","3. Understanding place value","4. Introduction'
+  [Mathematics g8 REPETITION/repeated 6-gram] '{"steps":[{"title":"Introduction to Ratios","goal":"To understand the concept of ratios and their applications in real-life scenarios.","1.","To define a ratio and its components.","2.","To calculate the ratio of two qua'
+  [Mathematics g10 REPETITION/repeated 6-gram] '{"steps":[{"title":"Introduction to Ratios and Proportions","goal":"Understand the concept of ratios and proportions","subtopics":["1.1 Ratios and Proportions in Real Life","1.2 Understanding Ratios and Proportions","1.3'
+  [Science g6 REPETITION/repeated 6-gram] '{"steps":[{"title":"Understanding the Five Elements","goal":"To understand the concept of the five elements in Indian science and their role in the natural world.","subtopics":["Understanding the characteristics of earth'
+--- valid samples
+  [Social Science g6 LNone] '{"steps":[{"title":"Introduction to Social Science","goal":"Understand the basics of social science","subtopics":["1. Social Science Basics","2. Types of Social Science","3. Importance of Social Science in Everyday Life"]},{"title":"Human Family and Community","goal":"Learn about the structure and d'
+  [Computer Science g8 LNone] '{"steps":[{"title":"Introduction to Programming","goal":"Learn the basics of programming to write simple code","subtopics":["1. Introduction to Programming Languages","2. Basic Syntax and Control Structures","3. Variables and Data Types","4. Basic Operators and Control Flow","5. Introduction to Cond'
+
+=== roadmap-eval-1795189003195  model=tutor_1b_spinquant  n=15
+valid JSON      : 0% (0/15)
+duplicate       : -
+median TTFT ms  : 2399.0
+median decode/s : 16.3
+median wall ms  : 13104.0
+median gen tok  : 187.0
+peak RSS MB     : 1430.10546875
+stop reasons    : {'REPETITION': 11, 'END': 2, 'MAX_TOKENS': 2}
+max thermal     : 0
+valid by subject: {'Mathematics': '0% (0/3)', 'Science': '0% (0/3)', 'English': '0% (0/3)', 'Social Science': '0% (0/3)', 'Computer Science': '0% (0/3)'}
+--- invalid samples
+  [Mathematics g6 REPETITION/repeated 10-gram] '{"steps":[{"title":"Introduction to Numbers","goal":"Understand the basic numbers 0-9","subtopics":"Learn the basic number names, understand zero as a placeholder","subtopics":"Understand the concept of one, two, three, '
+  [Mathematics g8 END/None] '{"steps":[{"title":"Introduction to Numbers","goal":"Understand the basic number concepts","subtopics":"Understanding one-digit numbers, Basic addition and subtraction","..."},{"steps":[{"title":"Basic Addition and Subtr'
+  [Mathematics g10 REPETITION/repeated 10-gram] '{"steps":[{"title":"Introduction to Ratios and Proportions","goal":"Understand the concept of ratios and proportions in mathematics","subtopics":"Learn the formula for ratios, understand the concept of equivalent ratios,'
+  [Science g6 REPETITION/repeated 10-gram] '{"steps":[{"title":"Understanding the Scientific Method","goal":"To understand the process of scientific inquiry and experimentation","Understanding the scientific method, the process of experimentation, observation, and'
+--- valid samples
+
+=== roadmap-eval-1795189479210  model=tutor_1b_spinquant  n=15
+valid JSON      : 100% (15/15)
+duplicate       : -
+median TTFT ms  : 2268.0
+median decode/s : 16.2
+median wall ms  : 11414.0
+median gen tok  : 147.0
+peak RSS MB     : 1433.15234375
+stop reasons    : {'END': 13, 'CONDITION': 2}
+max thermal     : 0
+valid by subject: {'Mathematics': '100% (3/3)', 'Science': '100% (3/3)', 'English': '100% (3/3)', 'Social Science': '100% (3/3)', 'Computer Science': '100% (3/3)'}
+--- invalid samples
+--- valid samples
+  [Mathematics g6 LNone] '1. 1. Understand the basics of numbers and operations - Learn to write numbers, understand place value, and perform basic operations - Subtopics: number lines, hundreds, tens, basic addition and subtraction facts\n2. 2. Develop an understanding of the decimal system - Learn to represent numbers in de'
+  [Mathematics g8 LNone] '1. 1. Introduction to Number System - Understand the concept of numbers, their place value, and basic arithmetic operations - Subtopics: one-digit numbers, tens, hundreds, basic addition and subtraction facts\n2. 2. Basic Arithmetic Operations - Learn to perform addition, subtraction, multiplication,'
+  [Mathematics g10 LNone] '1. 1. Review the basics of numbers and operations - Numbers, Place value, Basic arithmetic operations\n2. 2. Understand the concept of fractions - Fractions, Equivalent fractions, Simplifying fractions\n3. 3. Learn to solve simple algebraic expressions - Linear equations, Simple algebra, Solving linea'
+
+=== mcq-eval-1795189914901  model=tutor_1b_spinquant  n=30
+valid JSON      : 47% (14/30)
+duplicate       : 7% (1/14)
+median TTFT ms  : 2402.5
+median decode/s : 17.4
+median wall ms  : 6191.5
+median gen tok  : 66.5
+peak RSS MB     : 1430.95703125
+stop reasons    : {'JSON_COMPLETE': 20, 'END': 8, 'MAX_TOKENS': 2}
+max thermal     : 0
+valid by subject: {'Mathematics': '33% (2/6)', 'Science': '67% (4/6)', 'English': '50% (3/6)', 'Social Science': '67% (4/6)', 'Computer Science': '17% (1/6)'}
+valid by level  : {1: '50% (5/10)', 2: '50% (5/10)', 3: '40% (4/10)'}
+--- invalid samples
+  [Mathematics g6 JSON_COMPLETE/None] '{"question":"In a right-angled triangle, the sum of the squares of the lengths of the two shorter sides is equal to the square of the length of the longest side.","A":"Pythagoras\' Theorem","B":"Pythagoras\' Theorem","C":"'
+  [Mathematics g6 END/None] '{"question":"In a triangle, if the sum of the lengths of the two shorter sides is 10 cm and the longest side is 6 cm, what is the length of the longest side?"","A":"8 cm","B":"10 cm","C":"12 cm","D":"14 cm","answer":"B",'
+  [Mathematics g8 JSON_COMPLETE/None] '{"question":"A student is preparing for a mathematics competition and has 20 points to spend on 5 events. The events are: 30% chance of winning, 40% chance of winning a small prize, 10% chance of winning a large prize, 1'
+  [Mathematics g10 JSON_COMPLETE/None] '{"question":"What is the value of x in 4(x + 5) = 14?"}'
+--- valid samples
+  [Mathematics g8 L1] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"7","B":"8","C":"10","D":"9","answer":"B","explanation":"To solve for x, subtract 5 from both sides of the equation and then divide by 2."}'
+  [Mathematics g10 L1] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"3","B":"4","C":"5","D":"6","answer":"B","explanation":"To solve for x, subtract 5 from both sides of the equation and then divide by 2."}'
+  [Science g6 L2] '{"question":"What is the process by which plants make their own food from sunlight, water, and air?","A":"respiration","B":"photosynthesis","C":"transpiration","D":" Decomposition","answer":"B","explanation":"Plants use sunlight, water, and air to produce glucose and oxygen through photosynthesis."'
+
+=== mcq-eval-1795190244165  model=tutor_1b_8da4w  n=30
+valid JSON      : 33% (10/30)
+duplicate       : 10% (1/10)
+median TTFT ms  : 1986.0
+median decode/s : 19.7
+median wall ms  : 6481.0
+median gen tok  : 86.5
+peak RSS MB     : 1430.95703125
+stop reasons    : {'JSON_COMPLETE': 19, 'REPETITION': 10, 'END': 1}
+max thermal     : 0
+valid by subject: {'Mathematics': '50% (3/6)', 'Science': '50% (3/6)', 'English': '0% (0/6)', 'Social Science': '17% (1/6)', 'Computer Science': '50% (3/6)'}
+valid by level  : {1: '40% (4/10)', 2: '20% (2/10)', 3: '40% (4/10)'}
+--- invalid samples
+  [Mathematics g6 JSON_COMPLETE/None] '{"question":"Which of the following is the correct operation to find the value of 9x + 5 in mathematics?","A":"9x + 5","B":"9x - 5","C":"9x + 10","D":"9x - 10","answer":"B","explanation":"One or two sentences"}.'
+  [Mathematics g8 JSON_COMPLETE/None] '{"question":"Which of the following statements is correct about the value of x in the equation 2x + 5 = 11?\\\\A|x + 5 = 11\\\\B|x - 5 = 11\\\\C|x + 3 = 11\\\\D|x + 2 = 11\\\\answer:B\\\\explanation":"The correct answer is B. When y'
+  [Mathematics g10 REPETITION/repeated 10-gram] '{"question":"What is the value of x in the equation 4x + 12 = 30?","A":"(20/4=5, 12/4=3, 30/4=7.5)","B":"(20/4=5, 12/4=3, 30/4=7.5)","C":"(20/4=5, 12/4=3, 30/4=7.5)","D":"(20/4=5, 12/4=3, 30/4=7.5)","'
+  [Science g6 JSON_COMPLETE/None] '{"question":"Which of the following is the correct process of photosynthesis in a forest ecosystem in India?","A":"Chlorophyll is the primary pigment of plants that absorb sunlight for energy.","B":"Transpiration is the '
+--- valid samples
+  [Mathematics g6 L3] '{"question":"Which of the following statements is true about the area of a rectangle with a length of 10 cm and a width of 6 cm?","A":"The area is 60 square cm.","B":"The area is 30 square cm.","C":"The area is 50 square cm.","D":"The area is 20 square cm.","answer":"B","explanation":"One or two sen'
+  [Mathematics g8 L1] '{"question":"Which of the following is the correct definition of the word \'jugaar\'?","A":"A person who lives in the forest.","B":"A person who lives in the forest and is allowed to cut down trees.","C":"A person who lives in the forest and is allowed to cut down trees for the purpose of agriculture.'
+  [Mathematics g10 L1] '{"question":"What is the value of x in the equation 3x + 5 = 11?","A":"2x = 7","B":"x = 3","C":"x = 2","D":"x = 4","answer":"B","explanation":"One or two sentences"}.'
+
+=== roadmap-eval-1795190509460  model=tutor_1b_8da4w  n=15
+valid JSON      : 93% (14/15)
+duplicate       : -
+median TTFT ms  : 1888.0
+median decode/s : 19.5
+median wall ms  : 10829.0
+median gen tok  : 175.0
+peak RSS MB     : 1430.95703125
+stop reasons    : {'END': 8, 'CONDITION': 5, 'REPETITION': 2}
+max thermal     : 0
+valid by subject: {'Mathematics': '100% (3/3)', 'Science': '100% (3/3)', 'English': '67% (2/3)', 'Social Science': '100% (3/3)', 'Computer Science': '100% (3/3)'}
+--- invalid samples
+  [English g6 REPETITION/repeated 10-gram] '1.  Number. Identify the basic English phrases and vocabulary that are commonly used in everyday conversations in India.\n2.  Number. Learn basic English phrases and vocabulary that are commonly used in everyday conversat'
+--- valid samples
+  [Mathematics g6 LNone] '1.  Number. Define the concept of mathematics - Understand the importance of math in daily life - Subtopics: definition, examples, applications, role in society\n2.  Number. Introduce basic arithmetic operations - Learn to add, subtract, multiply, and divide numbers - Subtopics: basic concepts, examp'
+  [Mathematics g8 LNone] '1. 1. Introduction to Mathematics - Understand the basics of mathematics - Subtopics: Number system, Algebra, Geometry\n2. 2. Number System - Learn the basic concepts of numbers - Subtopics: Zero, One, Two, Three, etc.\n3. 3. Basic Algebra - Learn to solve simple equations - Subtopics: Addition, Subtr'
+  [Mathematics g10 LNone] '1. 1. Understand the basics of numbers and operations - Learn the four digits, basic addition, subtraction, multiplication, and division - Subtopics: digit recognition, basic arithmetic, mental math practice\n2. 2. Learn the concept of place value - Understand how to multiply and divide numbers using'
+
+=== mcq-eval-1795190916463  model=tutor_1b_spinquant  n=30
+valid JSON      : 93% (28/30)
+duplicate       : 4% (1/28)
+median TTFT ms  : 2462.5
+median decode/s : 16.2
+median wall ms  : 6055.0
+median gen tok  : 62.5
+peak RSS MB     : 1387.7265625
+stop reasons    : {'JSON_COMPLETE': 22, 'END': 6, 'MAX_TOKENS': 1, 'REPETITION': 1}
+max thermal     : 0
+valid by subject: {'Mathematics': '100% (6/6)', 'Science': '100% (6/6)', 'English': '83% (5/6)', 'Social Science': '100% (6/6)', 'Computer Science': '83% (5/6)'}
+valid by level  : {1: '100% (10/10)', 2: '90% (9/10)', 3: '90% (9/10)'}
+--- invalid samples
+  [English g8 JSON_COMPLETE/None] '{"question":"In a story, what is the main character\'s name, and why do they leave their home in India?","A":"Rohan","B":"Rahul","C":"Rajesh","D":"Rohan"}}'
+  [Computer Science g10 JSON_COMPLETE/None] '{"question":"What is the purpose of the \'Process of Execution\' in the context of Computer Science?","A":"The \'Process of Execution\' is used for input/output operations.","B":"The \'Process of Execution\' is used for memory'
+--- valid samples
+  [Mathematics g6 L2] '{"question":"In a triangle, if two sides are equal, what can be the measure of the third angle?","A":"90","B":"180","C":"60","D":"120","answer":"B","explanation":"In an isosceles triangle, the base angles are equal."}'
+  [Mathematics g6 L3] '{"question":"A rectangular garden has a length of 15 meters and a width of 8 meters. What is the greatest possible area that can be formed using the garden if the length is fixed at 15 meters?","A":"45 sq. m.","B":"40 sq. m.","C":"60 sq. m.","D":"80 sq. m.","answer":"B","explanation":"The area of a '
+  [Mathematics g8 L3] '{"question":"A group of friends want to share some sweets equally. If there are 18 sweets and 6 friends, how many sweets will each friend get if the sweets are shared in pairs?","A":"8","B":"6","C":"9","D":"12","answer":"B","explanation":"To find the number of sweets each friend gets, divide the tot'
+
+=== mcq-eval-1795190916463:answer  model=tutor_1b_spinquant  n=10
+valid JSON      : 100% (10/10)
+duplicate       : -
+median TTFT ms  : 2055.0
+median decode/s : 14.0
+median wall ms  : 2759.5
+median gen tok  : 9.0
+peak RSS MB     : 1387.7265625
+stop reasons    : {'JSON_COMPLETE': 10}
+max thermal     : 0
+valid by subject: {'Science': '100% (1/1)', 'English': '100% (3/3)', 'Social Science': '100% (2/2)', 'Computer Science': '100% (4/4)'}
+--- invalid samples
+--- valid samples
+  [Science g6 L3] '{"answer":"B","explanation":"Mitochondria are often referred to as the powerhouses of the cell because they generate most of the cell\'s supply of adenosine triphosphate (ATP), which is the primary energy source for the cell. They do this by converting glucose into ATP through a process called cellul'
+  [English g6 L2] '{"answer":"B","explanation":"one or two sentences"}'
+  [English g8 L1] '{"answer":"B","explanation":"one or two sentences"}'
+
+=== mcq-eval-1795191249552  model=tutor_1b_8da4w  n=30
+valid JSON      : 37% (11/30)
+duplicate       : 18% (2/11)
+median TTFT ms  : 1994.0
+median decode/s : 19.8
+median wall ms  : 5968.0
+median gen tok  : 73.0
+peak RSS MB     : 1387.7265625
+stop reasons    : {'JSON_COMPLETE': 16, 'REPETITION': 14}
+max thermal     : 0
+valid by subject: {'Mathematics': '100% (6/6)', 'Science': '33% (2/6)', 'English': '50% (3/6)', 'Social Science': '0% (0/6)', 'Computer Science': '0% (0/6)'}
+valid by level  : {1: '30% (3/10)', 2: '40% (4/10)', 3: '40% (4/10)'}
+--- invalid samples
+  [Science g8 JSON_COMPLETE/None] '{"question":"Which of the following processes occurs in the mitochondria of a cell?\\\\A)","B)","C)","D","answer":"B","explanation":"Mitophagy is the process where damaged mitochondria are degraded and recycled to help wit'
+  [Science g8 JSON_COMPLETE/None] '{"question":"The process of photosynthesis is called what?","A":"Chlorophyll synthesis","B":"Photosynthesis process","C":"Chlorophyll reaction","D":"Photosynthesis process"}}'
+  [Science g10 REPETITION/repeated 10-gram] '{"question":"The process of photosynthesis occurs in the ocean, not on land.","A":"The process of photosynthesis occurs in the ocean, not on land.","B":"The process of photosynthesis occurs in the ocean, not on land.","C'
+  [Science g10 REPETITION/repeated 10-gram] '{"question":"Which of the following is an example of natural selection in the context of evolution?\\\\n","A":"Which of the following is an example of natural selection in the context of evolution?\\\\n","B":"A plant that is'
+--- valid samples
+  [Mathematics g6 L2] '{"question":"Which of the following statements is correct about the value of x in the equation x + 2 = 7?","A":"x + 2 = 3","B":"x + 2 = 9","C":"x + 2 = 11","D":"x + 2 = 13","answer":"B","explanation":"One or two sentences"}'
+  [Mathematics g6 L3] '{"question":"Which of the following triangles has a base of 12 cm and a height of 8 cm, but its area is 36 \\u00DCm^2 and its base is 15 cm and its height is 9 cm, but its area is 24 \\u00DCm^2?","A":"Triangle with base 12 cm and height 8 cm has area 36 \\u00DCm^2","B":"Triangle with base 15 cm and hei'
+  [Mathematics g8 L3] '{"question":"Which of the following statements is correct regarding the concept of Zero in Indian numerals?<A> <B> <C> <D>","A":"Zero is a placeholder in Indian numerals, used to represent numbers that cannot be written with the digits 0-9.","B":"Zero is a digit in Indian numerals, used to represent'
+
+=== mcq-eval-1795191249552:answer  model=tutor_1b_8da4w  n=2
+valid JSON      : 100% (2/2)
+duplicate       : -
+median TTFT ms  : 2274.0
+median decode/s : 18.6
+median wall ms  : 3416.0
+median gen tok  : 19.5
+peak RSS MB     : 1387.7265625
+stop reasons    : {'JSON_COMPLETE': 2}
+max thermal     : 0
+valid by subject: {'Mathematics': '100% (1/1)', 'English': '100% (1/1)'}
+--- invalid samples
+--- valid samples
+  [Mathematics g8 L3] '{"answer":"B","explanation":"Zero is a digit in Indian numerals, used to represent numbers that cannot be written with the digits 0-9."}'
+  [English g8 L1] '{"answer":"B","explanation":"One or two sentences"}'

@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Guru · Offline Tutor</string>
+
+    <!-- Profiles & intake -->
+    <string name="profiles_title">Who is learning?</string>
+    <string name="profiles_subtitle">Profiles are saved only on this phone. No account, no internet.</string>
+    <string name="welcome_title">Welcome!</string>
+    <string name="welcome_body">Create a profile to get a study roadmap, adaptive quizzes and a tutor that works without internet.</string>
+    <string name="new_profile">New profile</string>
+    <string name="pin_locked">Locked with PIN</string>
+    <string name="enter_pin_for">Enter PIN for %1$s</string>
+    <string name="pin">PIN</string>
+    <string name="pin_wrong">Wrong PIN. Try again.</string>
+    <string name="unlock">Unlock</string>
+    <string name="intake_title">Tell us about you</string>
+    <string name="your_name">Your name</string>
+    <string name="which_grade">Which grade are you in?</string>
+    <string name="grade_n">Grade %1$d</string>
+    <string name="which_courses">Which subjects do you want to study?</string>
+    <string name="add_course">Add another subject</string>
+    <string name="explain_language">Explanation language</string>
+    <string name="beta_language_note">Tamil and Bengali answers are a beta: the AI model does not officially support these languages, so answers may have mistakes and are slower. Check important facts with your textbook.</string>
+    <string name="protect_with_pin">Protect with a PIN</string>
+    <string name="pin_note">Useful when brothers and sisters share one phone. The PIN is stored hashed.</string>
+    <string name="pin_4_6">PIN (4 to 6 digits)</string>
+    <string name="start_learning">Start learning</string>
+
+    <!-- Languages / levels / courses -->
+    <string name="lang_english">English</string>
+    <string name="lang_tamil">தமிழ் (Tamil)</string>
+    <string name="lang_bengali">বাংলা (Bengali)</string>
+    <string name="lang_system">Phone default</string>
+    <string name="beta">BETA</string>
+    <string name="level_easy">Easy</string>
+    <string name="level_medium">Medium</string>
+    <string name="level_hard">Hard</string>
+    <string name="course_mathematics">Mathematics</string>
+    <string name="course_science">Science</string>
+    <string name="course_english">English</string>
+    <string name="course_social">Social Science</string>
+    <string name="course_computer">Computer Science</string>
+    <string name="course_physics">Physics</string>
+    <string name="course_chemistry">Chemistry</string>
+    <string name="course_biology">Biology</string>
+    <string name="course_history">History</string>
+    <string name="course_geography">Geography</string>
+
+    <!-- Navigation -->
+    <string name="tab_home">Home</string>
+    <string name="tab_roadmap">Roadmap</string>
+    <string name="tab_quiz">Quiz</string>
+    <string name="tab_chat">Tutor</string>
+    <string name="tab_progress">Progress</string>
+    <string name="more">More</string>
+    <string name="back">Back</string>
+    <string name="switch_profile">Switch profile</string>
+    <string name="settings_title">Settings</string>
+    <string name="models_title">AI model</string>
+    <string name="benchmark_title">Benchmark</string>
+
+    <!-- Model state -->
+    <string name="model_missing_title">AI model not installed</string>
+    <string name="model_missing_body">Import the model file (.pte) and tokenizer.model once. After that everything works offline.</string>
+    <string name="model_failed_title">The model could not load</string>
+    <string name="open_models">Set up model</string>
+    <string name="engine_no_model">No model installed</string>
+    <string name="engine_unloaded">Model ready to load (loads on first use)</string>
+    <string name="engine_loading">Loading %1$s…</string>
+    <string name="engine_ready">Model loaded: %1$s</string>
+    <string name="engine_busy">Model is working (%1$s)…</string>
+    <string name="engine_failed">Model failed to load</string>
+
+    <!-- Home -->
+    <string name="hello_name">Hello, %1$s!</string>
+    <string name="next_step">Next: %1$s</string>
+    <string name="roadmap_empty_short">Create your step-by-step study plan.</string>
+    <string name="adaptive_quiz">Adaptive quiz</string>
+    <string name="quiz_card_body">Questions get harder as you improve and easier when you need help.</string>
+    <string name="ask_tutor">Ask the tutor</string>
+    <string name="chat_card_body">Ask any doubt, any time. Works without internet.</string>
+    <string name="progress_card_body">%1$d answered · %2$d%% correct</string>
+    <string name="no_answers_yet">No quiz answers yet. Take a quiz to see your progress.</string>
+
+    <!-- Roadmap -->
+    <string name="building_roadmap">Building your %1$s roadmap…</string>
+    <string name="stop">Stop</string>
+    <string name="roadmap_template_note">The AI answer could not be read, so a standard roadmap was used. You can try Regenerate.</string>
+    <string name="roadmap_empty">No roadmap for %1$s yet.</string>
+    <string name="generate_roadmap">Create my roadmap</string>
+    <string name="steps_done">%1$d of %2$d steps done</string>
+    <string name="regenerate">Regenerate</string>
+    <string name="quiz_me">Quiz me</string>
+
+    <!-- Quiz -->
+    <string name="topic_x">Topic: %1$s</string>
+    <string name="session_score">This session: %1$d / %2$d correct</string>
+    <string name="writing_question">Writing a new question for you…</string>
+    <string name="quiz_intro">Each question is new. Answer two in a row correctly to move up a level.</string>
+    <string name="start_quiz">Start quiz</string>
+    <string name="level">Level</string>
+    <string name="source_seed">Question bank</string>
+    <string name="source_ai">AI</string>
+    <string name="correct">Correct!</string>
+    <string name="not_quite">Not quite</string>
+    <string name="fallback_note">The AI question did not pass our checks, so this one is from the built-in question bank.</string>
+    <string name="explain_more">Explain step by step</string>
+    <string name="explain_in">Explain in %1$s</string>
+    <string name="next_question">Next question</string>
+
+    <!-- Chat -->
+    <string name="reply_language">Replies in %1$s</string>
+    <string name="clear_chat">Clear chat</string>
+    <string name="chat_empty">Ask a doubt, for example: Why do we see lightning before thunder?</string>
+    <string name="thinking">Thinking…</string>
+    <string name="ask_anything">Type your doubt…</string>
+    <string name="send">Send</string>
+
+    <!-- Progress -->
+    <string name="stat_answered">Answered</string>
+    <string name="stat_accuracy">Accuracy</string>
+    <string name="stat_streak">Streak / best</string>
+    <string name="chart_daily">Accuracy by day</string>
+    <string name="chart_daily_note">Dashed line: the 70% target the adaptive quiz aims for.</string>
+    <string name="chart_difficulty">Difficulty over the last 30 questions</string>
+    <string name="chart_by_level">Accuracy by level</string>
+    <string name="chart_by_course">Accuracy by subject</string>
+    <string name="chart_roadmap">Roadmap completed</string>
+    <string name="weak_spots">Topics to practise</string>
+    <string name="weak_spots_none">No weak topics yet. Keep going!</string>
+
+    <!-- Benchmark -->
+    <string name="device">Device</string>
+    <string name="device_model">Phone</string>
+    <string name="android_version">Android</string>
+    <string name="ram_total_avail">RAM total / free</string>
+    <string name="peak_rss">Peak RAM (VmHWM)</string>
+    <string name="current_rss">Current RAM (VmRSS)</string>
+    <string name="thermal">Thermal status</string>
+    <string name="model">Model</string>
+    <string name="status">Status</string>
+    <string name="file">File</string>
+    <string name="context_len">Context length</string>
+    <string name="load_time">Load time</string>
+    <string name="run">Run</string>
+    <string name="load_model">Load model</string>
+    <string name="quick_bench">Quick benchmark ×3</string>
+    <string name="mcq_eval">MCQ eval set</string>
+    <string name="roadmap_eval">Roadmap eval set</string>
+    <string name="per_combo">Questions per subject × grade:</string>
+    <string name="eval_note">Eval set: 5 subjects × grades 6, 8, 10. Every run is logged; export the CSV and fill in the review columns (answer key correct, difficulty match, roadmap 1–5).</string>
+    <string name="summary">Last run summary</string>
+    <string name="runs">Runs</string>
+    <string name="valid_json_rate">Valid JSON</string>
+    <string name="duplicate_rate">Duplicates</string>
+    <string name="avg_ttft">Avg time to first token</string>
+    <string name="avg_tps">Avg decode tok/s</string>
+    <string name="guard_stops">Repetition-guard stops</string>
+    <string name="report_tools">Report</string>
+    <string name="export_csv">Export CSV</string>
+    <string name="exported_rows">Exported %1$d rows</string>
+    <string name="clear_logs">Clear logs</string>
+    <string name="clear_logs_confirm">Delete all logged runs from this phone? This cannot be undone.</string>
+    <string name="dumpsys_hint">For the report, also capture memory from a computer with:</string>
+    <string name="recent_runs">Recent runs</string>
+    <string name="no_runs">No runs logged yet.</string>
+
+    <!-- Models -->
+    <string name="installed_models">Installed models</string>
+    <string name="no_pte">No .pte model found.</string>
+    <string name="app_storage">app storage</string>
+    <string name="tokenizer_ok">Tokenizer: %1$s ✓</string>
+    <string name="tokenizer_missing">Tokenizer missing: import tokenizer.model</string>
+    <string name="switch_model_note">The selected model is loaded on next use. Keep both the SpinQuant and 8da4w exports here to compare them on the Benchmark screen.</string>
+    <string name="import_title">Import from phone storage</string>
+    <string name="import_body">Pick the .pte file, then tokenizer.model. They are copied into private app storage; nothing is uploaded.</string>
+    <string name="import_pte">Import .pte</string>
+    <string name="import_tokenizer">Import tokenizer</string>
+    <string name="imported_x">Imported %1$s</string>
+    <string name="adb_title">Developer shortcut (adb)</string>
+    <string name="adb_body">From a computer with the phone connected by USB:</string>
+    <string name="rescan">Rescan</string>
+    <string name="delete_model">Delete model</string>
+    <string name="delete_model_confirm">Delete %1$s from this phone? You will need to import it again.</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Settings -->
+    <string name="app_language">App language</string>
+    <string name="profile_x">Profile: %1$s</string>
+    <string name="set_pin">Set PIN</string>
+    <string name="change_pin">Change PIN</string>
+    <string name="remove_pin">Remove PIN</string>
+    <string name="save">Save</string>
+    <string name="privacy">Privacy</string>
+    <string name="privacy_body">This app has no internet permission. Your profile, answers and chats never leave this phone, and they are excluded from cloud backup.</string>
+    <string name="delete_profile">Delete profile</string>
+    <string name="delete_profile_confirm">Delete %1$s with all roadmaps, quiz answers and chats? This cannot be undone.</string>
+
+    <!-- Redesign -->
+    <string name="ai_ready_offline">Offline AI ready</string>
+    <string name="todays_goal">Today\'s goal</string>
+    <string name="goal_body">%1$d more questions to go</string>
+    <string name="goal_done">Goal complete. Great work!</string>
+    <string name="day_streak">day streak</string>
+    <string name="continue_learning">Continue learning</string>
+    <string name="up_next">Up next</string>
+    <string name="step_x_of_y">%1$s · step %2$d of %3$d</string>
+    <string name="your_subjects">Your subjects</string>
+    <string name="subject_stats">%1$d answered · %2$d%%</string>
+    <string name="tap_to_start">Tap to start a quiz</string>
+    <string name="chat_card_short">Ask any doubt</string>
+    <string name="progress_card_short">See how you grow</string>
+    <string name="pct_correct">%1$d%% correct</string>
+    <string name="session_short">%1$d/%2$d</string>
+    <string name="think_q1">Picking a good topic…</string>
+    <string name="think_q2">Writing your question…</string>
+    <string name="think_q3">Checking the options…</string>
+    <string name="think_r1">Reading your syllabus…</string>
+    <string name="think_r2">Planning your steps…</string>
+    <string name="think_r3">Adding topics to each step…</string>
+    <string name="steps_written">%1$d steps written</string>
+    <string name="level_up">Level up! Now %1$s</string>
+    <string name="level_down">Let\'s practise at %1$s</string>
+    <string name="right_answer_was">Right answer: %1$s</string>
+    <string name="guru_explains">Guru explains</string>
+    <string name="explain_short">Explain</string>
+    <string name="roadmap_empty_body">Guru will plan your learning step by step, from basics to advanced.</string>
+    <string name="guru_name">Guru · your offline tutor</string>
+    <string name="chat_empty_title">Ask Guru anything</string>
+    <string name="sugg_example">Explain with an example</string>
+    <string name="sugg_simpler">Simpler please</string>
+    <string name="sugg_practice">Give me a practice question</string>
+    <string name="sugg_in_lang">Explain in %1$s</string>
+    <string name="no_answers_title">Your progress starts here</string>
+    <string name="this_week">This week</string>
+    <string name="week_summary">%1$d questions answered in the last 7 days</string>
+    <string name="practice">Practise</string>
+</resources>
