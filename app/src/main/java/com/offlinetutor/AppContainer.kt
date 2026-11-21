@@ -54,9 +54,11 @@ class AppContainer(app: Application) {
     val scheduler = com.offlinetutor.data.GenerationScheduler(appScope) { p -> backgroundPaused(p) }
     val quiz = QuizRepository(db.quiz(), db.roadmaps(), mcqGenerator, diagGenerator, templateGenerator, seeds, brain, db.probes(), flags,
         db.pool(), scheduler, thermal)
-    val fixes = com.offlinetutor.data.FixService(db.roadmaps(), quiz, ai, taxonomy)
+    // 4b: hand-curated analogy bank (concept area x world).
+    val analogies = com.offlinetutor.domain.AnalogyBank.parse(app.assets.open("analogies.json").bufferedReader().use { it.readText() })
+    val fixes = com.offlinetutor.data.FixService(db.roadmaps(), quiz, ai, taxonomy, analogies, flags)
     val demo = com.offlinetutor.data.DemoSeeder(profiles, db.roadmaps(), db.quiz(), brain)
-    val chat = ChatRepository(db.chat(), ai)
+    val chat = ChatRepository(db.chat(), ai, analogies, flags)
     val metrics = MetricsRepository(db.logs())
     // 3c: Night Shift (WorkManager while charging + idle, or Settings → Simulate night).
     val night = com.offlinetutor.data.NightShift(app, db.profiles(), db.mastery(), db.roadmaps(), quiz, fixes, diagGenerator,

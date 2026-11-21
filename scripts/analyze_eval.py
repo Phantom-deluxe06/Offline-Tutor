@@ -113,3 +113,11 @@ for run in sorted({r[0].rsplit(":", 1)[0] for r in db.execute("select evalRun fr
     print(f"identical output: {same}/{n}")
     print(f"TTFT median cold {med([r['ttftMs'] for r in cold[:n]])} ms, warm {med([r['ttftMs'] for r in warm[:n]])} ms")
     print(f"prompt tokens (est) median cold {med([r['promptTokensEst'] for r in cold[:n]])}; prewarm prefill median {med(pre)} ms over {len(pre)}")
+
+# 4d: tokens generated and generation time per explanation for each language mode.
+for run in sorted({r[0].rsplit(":", 1)[0] for r in db.execute("select evalRun from generation_logs where evalRun like 'lang-eval-%:%'")}):
+    print(f"\n=== {run} language modes")
+    for (mode,) in db.execute("select distinct substr(evalRun, length(?) + 2) from generation_logs where evalRun like ? || ':%'", (run, run)):
+        rs = db.execute("select * from generation_logs where evalRun=?", (f"{run}:{mode}",)).fetchall()
+        print(f"{mode:9s} n={len(rs)} median tokens {med([r['generatedTokens'] for r in rs])}, median wall {med([r['wallMs'] for r in rs])} ms, "
+              f"median decode {med([r['decodeTokPerSec'] for r in rs])} tok/s, stops {dict(collections.Counter(r['stopReason'] for r in rs))}")

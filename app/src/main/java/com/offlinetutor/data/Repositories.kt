@@ -45,11 +45,12 @@ class ProfileRepository(private val dao: ProfileDao, val session: SessionStore) 
     fun observe(id: Long): Flow<Profile?> = dao.observe(id)
     suspend fun get(id: Long) = dao.get(id)
 
-    suspend fun create(name: String, grade: Int, courses: List<String>, language: String, pin: String?): Long {
+    suspend fun create(name: String, grade: Int, courses: List<String>, language: String, pin: String?, world: String? = null): Long {
         val salt = pin?.let { PinHasher.newSalt() }
         val id = dao.insert(
             Profile(
                 name = name.trim(), grade = grade, courses = courses.joinToString("|"), language = language,
+                world = world,
                 pinSalt = salt, pinHash = if (pin != null && salt != null) PinHasher.hash(pin, salt) else null,
             ),
         )
@@ -450,7 +451,16 @@ class QuizRepository(
     suspend fun latestForPurpose(profileId: Long, purpose: String) = dao.latestForPurpose(profileId, purpose)
 }
 
-class ChatRepository(private val dao: ChatDao, private val ai: TutorAi) {
+class ChatRepository(
+    private val dao: ChatDao,
+    private val ai: TutorAi,
+    private val analogies: com.offlinetutor.domain.AnalogyBank? = null,
+    private val flags: FeatureFlags? = null,
+) {
+    /** 4b: analogy from the student's world for this text (toggle "Analogy worlds"). */
+    private fun analogyFor(profile: Profile, text: String, course: String?): String? =
+        if (flags?.isOn(Feature.ANALOGY_WORLDS) == false) null else analogies?.find(text, profile.world, course)
+
     fun observe(profileId: Long) = dao.observe(profileId)
     suspend fun clear(profileId: Long) = dao.clear(profileId)
 
@@ -458,14 +468,15 @@ class ChatRepository(private val dao: ChatDao, private val ai: TutorAi) {
         val lang = ExplainLanguage.of(profile.language)
         dao.insert(ChatMessage(profileId = profile.id, role = "user", text = text.trim(), language = lang.code))
         val history = dao.recent(profile.id, 8).reversed().map { Prompts.ChatTurn(it.role == "user", it.text) }
-        val r = ai.run(GenRequest(TaskType.CHAT, Prompts.chat(profile.grade, lang, course, history)), onPartial = onPartial)
+        val r = ai.run(GenRequest(TaskType.CHAT, Prompts.chat(profile.grade, lang, course, history, analogyFor(profile, text, course))), onPartial = onPartial)
         val reply = r.text.ifBlank { r.error?.let { "⚠ $it" } ?: "…" }
         val msg = ChatMessage(profileId = profile.id, role = "assistant", text = reply, language = lang.code)
         return msg.copy(id = dao.insert(msg))
     }
 
     suspend fun explain(profile: Profile, lang: ExplainLanguage, q: QuizQuestion, onPartial: (String) -> Unit): String {
-        val prompt = Prompts.explainAnswer(profile.grade, lang, q.stem, q.optionList.getOrElse(q.answerIndex) { "" }, q.explanation)
+        val analogy = analogyFor(profile, "${q.subtopic} ${q.stem}", q.course)
+        val prompt = Prompts.explainAnswer(profile.grade, lang, q.stem, q.optionList.getOrElse(q.answerIndex) { "" }, q.explanation, analogy)
         return ai.run(GenRequest(TaskType.EXPLAIN, prompt), onPartial = onPartial).text
     }
 }

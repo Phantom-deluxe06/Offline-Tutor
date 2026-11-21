@@ -84,6 +84,8 @@ fun BetaChip() {
 @Composable
 fun languageLabel(l: ExplainLanguage): String = when (l) {
     ExplainLanguage.EN -> stringResource(R.string.lang_english)
+    ExplainLanguage.TANGLISH -> stringResource(R.string.lang_tanglish)
+    ExplainLanguage.BENGLISH -> stringResource(R.string.lang_benglish)
     ExplainLanguage.TA -> stringResource(R.string.lang_tamil)
     ExplainLanguage.BN -> stringResource(R.string.lang_bengali)
 }
@@ -182,6 +184,26 @@ fun LanguagePicker(code: String, onChange: (String) -> Unit) {
                 if (l.beta) Box(Modifier.align(Alignment.TopEnd).padding(end = 2.dp)) { BetaChip() }
             }
         }
+    }
+}
+
+/** 4b: analogy worlds a student can pick at intake (keys match assets/analogies.json). */
+val WORLDS = listOf("village", "city", "cricket", "cinema", "kitchen", "farm", "festivals")
+
+@Composable
+fun worldLabel(w: String): String = stringResource(
+    when (w) {
+        "village" -> R.string.world_village; "city" -> R.string.world_city; "cricket" -> R.string.world_cricket
+        "cinema" -> R.string.world_cinema; "kitchen" -> R.string.world_kitchen; "farm" -> R.string.world_farm
+        else -> R.string.world_festivals
+    },
+)
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun WorldPicker(world: String?, onChange: (String) -> Unit) {
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        WORLDS.forEach { w -> ChoiceChip(worldLabel(w), w == world, { onChange(w) }, MaterialTheme.colorScheme.tertiary) }
     }
 }
 

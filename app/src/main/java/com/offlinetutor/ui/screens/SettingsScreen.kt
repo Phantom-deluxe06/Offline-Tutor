@@ -98,7 +98,9 @@ fun SettingsScreen(onBack: () -> Unit, switchProfile: () -> Unit) {
                     }
                     Text(stringResource(R.string.explain_language), style = MaterialTheme.typography.labelLarge)
                     LanguagePicker(p.language) { code -> scope.launch { c.profiles.update(p.copy(language = code)) } }
-                    if (p.language != "en") {
+                    Text(stringResource(R.string.pick_world), style = MaterialTheme.typography.titleSmall)
+                    com.offlinetutor.ui.WorldPicker(p.world) { w -> scope.launch { c.profiles.update(p.copy(world = w)) } }
+                    if (com.offlinetutor.domain.ExplainLanguage.of(p.language).beta) {
                         Text(stringResource(R.string.beta_language_note), style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -226,6 +228,7 @@ private fun featureTitle(f: Feature): String = stringResource(
         Feature.NIGHT_SHIFT -> R.string.ff_night
         Feature.PROMPT_PREFILL -> R.string.ff_prefill
         Feature.THERMAL_GOVERNOR -> R.string.ff_thermal
+        Feature.ANALOGY_WORLDS -> R.string.ff_analogy
     },
 )
 
@@ -244,5 +247,6 @@ private fun featureBody(f: Feature): String = stringResource(
         Feature.NIGHT_SHIFT -> R.string.ff_night_body
         Feature.PROMPT_PREFILL -> R.string.ff_prefill_body
         Feature.THERMAL_GOVERNOR -> R.string.ff_thermal_body
+        Feature.ANALOGY_WORLDS -> R.string.ff_analogy_body
     },
 )

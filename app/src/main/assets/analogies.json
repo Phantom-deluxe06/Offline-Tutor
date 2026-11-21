@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "areas": [
+    {
+      "area": "fractions",
+      "keywords": ["fraction", "numerator", "denominator", "half", "quarter", "equivalent fraction"],
+      "worlds": {
+        "village": "A dosa shared by a family: cut into 4 equal pieces, each child gets 1/4 of the dosa.",
+        "city": "A pizza cut into 8 slices; eating 3 slices means you ate 3/8 of it.",
+        "cricket": "An over has 6 balls; after 2 balls, 2/6 (= 1/3) of the over is done.",
+        "cinema": "A 3-hour film: after 1 hour you have watched 1/3 of it.",
+        "kitchen": "A dosa cut into equal slices: the denominator is how many slices, the numerator how many you take.",
+        "farm": "A field split into 5 equal strips; planting rice in 2 strips covers 2/5 of the field.",
+        "festivals": "A box of 12 laddoos at Diwali; giving 3 to a neighbour is 3/12 = 1/4 of the box."
+      }
+    },
+    {
+      "area": "percentages",
+      "keywords": ["percent", "percentage", "%", "discount", "profit", "loss"],
+      "worlds": {
+        "village": "Out of 100 mango trees in the village, 25 give fruit this year: 25 percent.",
+        "city": "A 20% off sale on a Rs 500 shirt takes Rs 100 off the price.",
+        "cricket": "A batter who scores 60 runs off 100 balls has a strike rate of 60 percent of a run per ball.",
+        "cinema": "If 75 of 100 seats in the theatre are full, the hall is 75 percent full.",
+        "kitchen": "If 10 of 100 grams of dal is salt-free spice mix, that is 10 percent.",
+        "farm": "If 30 of every 100 seeds do not sprout, the farmer loses 30 percent of the seeds.",
+        "festivals": "A Diwali discount of 10% on Rs 1,000 of crackers saves Rs 100."
+      }
+    },
+    {
+      "area": "ratio",
+      "keywords": ["ratio", "proportion", "proportional"],
+      "worlds": {
+        "village": "Mixing 1 part jaggery with 3 parts water for panakam: the ratio is 1:3.",
+        "city": "A metro has 2 ladies' coaches for every 6 coaches: ratio 2:6 = 1:3.",
+        "cricket": "A team wins 4 matches for every 1 it loses: the win-loss ratio is 4:1.",
+        "cinema": "A film with 3 songs for every 1 fight scene has a song-fight ratio of 3:1.",
+        "kitchen": "Idli batter uses 4 cups of rice for 1 cup of urad dal: ratio 4:1.",
+        "farm": "Mixing 2 bags of compost for every 5 bags of soil keeps the ratio 2:5.",
+        "festivals": "For rangoli, 1 cup of colour for every 2 cups of rice flour: ratio 1:2."
+      }
+    },
+    {
+      "area": "speed",
+      "keywords": ["speed", "velocity", "distance", "time taken", "km/h", "motion"],
+      "worlds": {
+        "village": "A bullock cart that covers 8 km to the market in 2 hours moves at 4 km per hour.",
+        "city": "An auto-rickshaw covering 30 km in 1 hour runs at 30 km/h; in traffic it covers less in the same time.",
+        "cricket": "A fast bowler's ball travels about 22 metres to the batter in under half a second.",
+        "cinema": "A chase scene: the hero's bike covers more distance than the villain's jeep in the same time, so it is faster.",
+        "kitchen": "Pouring a 1-litre jug in 10 seconds is faster than pouring it in 20 seconds: speed is amount per unit time.",
+        "farm": "A tractor ploughing 2 acres per hour works at twice the speed of one ploughing 1 acre per hour.",
+        "festivals": "A temple chariot pulled 1 km in 2 hours moves at half a km per hour."
+      }
+    },
+    {
+      "area": "area and perimeter",
+      "keywords": ["area", "perimeter", "rectangle", "square", "mensuration", "boundary"],
+      "worlds": {
+        "village": "The fence around a field is its perimeter; the land you can plant inside is its area.",
+        "city": "The skirting along the walls of a flat is the perimeter; the floor tiles cover the area.",
+        "cricket": "The boundary rope is the perimeter of the ground; the grass inside is the area.",
+        "cinema": "The border lights around a screen measure the perimeter; the picture fills the area.",
+        "kitchen": "The rim of a chapati tawa is its perimeter; the space where the chapati cooks is its area.",
+        "farm": "Walking once around a paddy field measures its perimeter; the seedlings planted inside fill its area.",
+        "festivals": "The border of a kolam is its perimeter; the coloured pattern inside covers its area."
+      }
+    },
+    {
+      "area": "symmetry",
+      "keywords": ["symmetry", "symmetric", "line of symmetry", "reflection", "mirror"],
+      "worlds": {
+        "village": "A kolam drawn at the doorstep looks the same on both sides of its middle line.",
+        "city": "The front of the Gateway of India is the same on the left and right of its centre.",
+        "cricket": "The stumps and bails look the same from the left and the right of the middle stump.",
+        "cinema": "A movie poster with the hero exactly in the centre and matching sides is symmetric.",
+        "kitchen": "A round roti folded in half has two halves that match: the fold is a line of symmetry.",
+        "farm": "A leaf folded along its middle vein: the two halves match.",
+        "festivals": "A kolam or rangoli for Pongal or Diwali: fold it along the middle and both halves match."
+      }
+    },
+    {
+      "area": "equations",
+      "keywords": ["equation", "algebra", "variable", "solve for", "unknown", "linear"],
+      "worlds": {
+        "village": "A weighing scale at the village shop: whatever you remove from one side you must remove from the other to keep it balanced.",
+        "city": "A bus ticket: total fare = fare per km x km; if you know the total and the rate, you can find the km.",
+        "cricket": "Runs needed: target - runs scored = runs still needed; the unknown is the runs still needed.",
+        "cinema": "Ticket money: number of tickets x price = total collection; find the tickets when you know the rest.",
+        "kitchen": "A balance scale with dal on one side: take the same weight off both sides and it stays balanced.",
+        "farm": "Bags of rice x weight per bag = total harvest; divide to find the number of bags.",
+        "festivals": "Sweets per box x boxes = total sweets; if 60 sweets fill 5 boxes, each box has the unknown 12."
+      }
+    },
+    {
+      "area": "electric current",
+      "keywords": ["current", "electricity", "circuit", "voltage", "resistance", "ohm", "ampere"],
+      "worlds": {
+        "village": "Current is like water flowing in a pipe from the village tank: voltage is how high the tank is, resistance is how narrow the pipe is.",
+        "city": "Current is like cars on a road: voltage pushes them, a narrow road (resistance) lets fewer through.",
+        "cricket": "Current is like runs flowing in: a good pitch (low resistance) lets more runs come.",
+        "cinema": "Current is like the crowd flowing through a theatre gate: a narrow gate (resistance) slows the flow.",
+        "kitchen": "Current is like water from a tap: open the tap wider (less resistance) and more flows.",
+        "farm": "Current is like water in an irrigation pipe: a pump (voltage) pushes it, a narrow pipe (resistance) slows it.",
+        "festivals": "Diwali serial lights in one circuit: if one bulb breaks, the path is broken and the current stops."
+      }
+    },
+    {
+      "area": "water cycle",
+      "keywords": ["water cycle", "evaporation", "condensation", "precipitation", "rain", "cloud"],
+      "worlds": {
+        "village": "The monsoon: the sun heats the ponds, the vapour forms clouds, and the rain refills the village tank.",
+        "city": "Water on a hot road dries up (evaporates), rises into clouds and falls again as monsoon rain.",
+        "cricket": "Covers on the pitch get droplets after a humid night: water vapour condensing, like clouds forming.",
+        "cinema": "The rain song in a film starts with the sea, the sun and the clouds: that is the water cycle.",
+        "kitchen": "Steam from a boiling pot hits the lid and drips back down: evaporation, condensation and 'rain'.",
+        "farm": "The monsoon brings rain to the fields, the sun dries the water, and it returns as clouds.",
+        "festivals": "Onam and Pongal follow the monsoon harvest: rain from clouds that formed from evaporated sea water."
+      }
+    },
+    {
+      "area": "photosynthesis",
+      "keywords": ["photosynthesis", "chlorophyll", "leaf", "plants make food", "sunlight"],
+      "worlds": {
+        "village": "A leaf is a small kitchen: it takes sunlight, water and air (carbon dioxide) and cooks sugar for the plant.",
+        "city": "Rooftop plants work like solar panels: they use sunlight to make their food.",
+        "cricket": "The grass on the outfield stays green by making food from sunlight, water and air.",
+        "cinema": "A plant is like a film studio powered by sunlight: the leaves are where the food is produced.",
+        "kitchen": "A leaf cooks sugar using sunlight as its stove, water and carbon dioxide as ingredients.",
+        "farm": "Paddy leaves use sunlight, water from the field and carbon dioxide to make the grain's food.",
+        "festivals": "Mango leaves on a toran stay green while fresh because they were making food from sunlight."
+      }
+    },
+    {
+      "area": "density",
+      "keywords": ["density", "mass and volume", "float", "sink", "buoyancy"],
+      "worlds": {
+        "village": "A coconut floats in the pond but a stone sinks: the stone packs more mass into the same space.",
+        "city": "A full steel tiffin is heavier than a plastic one of the same size: steel is denser.",
+        "cricket": "A leather cricket ball is heavier than a tennis ball of similar size: it is denser.",
+        "cinema": "In films, styrofoam 'rocks' float because their density is much lower than real rock.",
+        "kitchen": "Oil floats on water in the pan because oil is less dense than water.",
+        "farm": "Light chaff floats away when grain is winnowed; dense grain falls straight down.",
+        "festivals": "Diyas floated on the river at festivals stay up because they are less dense than water."
+      }
+    },
+    {
+      "area": "average",
+      "keywords": ["average", "mean", "data handling", "statistics"],
+      "worlds": {
+        "village": "If three families give 2, 4 and 6 kg of rice to the temple, the average is (2 + 4 + 6) / 3 = 4 kg.",
+        "city": "Your average bus fare over a week is the total fare divided by the number of trips.",
+        "cricket": "A batting average is total runs divided by the number of times the batter got out.",
+        "cinema": "A film's average daily collection is the total collection divided by the days it ran.",
+        "kitchen": "If three batches of idlis take 10, 12 and 14 minutes, the average is 12 minutes.",
+        "farm": "Average yield per acre is the total harvest divided by the number of acres.",
+        "festivals": "If you burst 10, 20 and 30 crackers over three nights, the average is 20 per night."
+      }
+    }
+  ]
+}

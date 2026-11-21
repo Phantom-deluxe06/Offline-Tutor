@@ -137,6 +137,25 @@ class BenchmarkRunner(
     }
 
     /**
+     * 4d language eval: the same 4 explanations in every explanation mode (English, Tanglish, Benglish, Tamil,
+     * Bengali). Logged as <run>:<mode>; tokens generated and wall time per mode come from onStats / the log.
+     */
+    fun languageEval() = launch("Lang eval", com.offlinetutor.domain.ExplainLanguage.entries.size * 4) { run ->
+        val qs = listOf(
+            Triple("What fraction of a dosa does each of 4 children get if it is shared equally?", "1/4", "4 equal parts, 1 each."),
+            Triple("Why does oil float on water?", "Oil is less dense than water", "Lower density floats."),
+            Triple("What is the speed of a bus that covers 120 km in 2 hours?", "60 km/h", "Speed = distance / time."),
+            Triple("What do plants need for photosynthesis?", "Sunlight, water and carbon dioxide", "Leaves make sugar using light."),
+        )
+        for (lang in com.offlinetutor.domain.ExplainLanguage.entries) for ((q, a, why) in qs) {
+            label("Lang ${lang.code} · ${q.take(30)}")
+            ai.run(GenRequest(TaskType.EXPLAIN, Prompts.explainAnswer(8, lang, q, a, why)), LogMeta("$run:${lang.code}", lang.englishName, 8)) { p -> partial(p) }
+            tick()
+        }
+        summarize("$run:en")
+    }
+
+    /**
      * 3d prefill A/B: the same prompts generated twice at temperature 0 (greedy): "cold" = reset + full prompt,
      * "warm" = the system prompt prefilled first (as when the phone is idle), then only the rest. Compares time to
      * first token and whether the output text is identical. Logged as <run>:cold / <run>:warm, plus one PREWARM note

@@ -13,11 +13,13 @@ data class Profile(
     val grade: Int,
     /** Courses joined with '|'. */
     val courses: String,
-    /** Explanation language: "en", "ta" or "bn". */
+    /** Explanation language: "en", "tanglish", "benglish", "ta" or "bn". */
     val language: String = "en",
     val pinHash: String? = null,
     val pinSalt: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
+    /** v6 (4b): analogy world picked at intake: village, city, cricket, cinema, kitchen, farm, festivals. */
+    val world: String? = null,
 ) {
     val courseList: List<String> get() = courses.split('|').map { it.trim() }.filter { it.isNotEmpty() }
     val hasPin: Boolean get() = pinHash != null

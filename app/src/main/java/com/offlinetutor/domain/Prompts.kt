@@ -5,6 +5,9 @@ import com.offlinetutor.llm.TokenEstimator
 
 enum class ExplainLanguage(val code: String, val englishName: String, val nativeName: String, val beta: Boolean) {
     EN("en", "English", "English", false),
+    // 4a: code-mixed modes — Tamil / Bengali in English letters mixed with English (explanations, hints, fixes only).
+    TANGLISH("tanglish", "Tanglish", "Tanglish", false),
+    BENGLISH("benglish", "Benglish", "Benglish", false),
     TA("ta", "Tamil", "தமிழ்", true),
     BN("bn", "Bengali", "বাংলা", true);
 
@@ -32,6 +35,16 @@ object Prompts {
         ExplainLanguage.EN -> ""
         ExplainLanguage.TA -> " Reply in Tamil (தமிழ்) using Tamil script. Keep scientific and maths terms in English inside brackets."
         ExplainLanguage.BN -> " Reply in Bengali (বাংলা) using Bengali script. Keep scientific and maths terms in English inside brackets."
+        ExplainLanguage.TANGLISH -> " Reply in Tanglish: Tamil written in English letters, mixed with English, the way students in Tamil Nadu talk. " +
+            "Keep every scientific term, formula, number and unit in English. Examples: " +
+            "\"Photosynthesis-la plants sunlight use panni food make pannum.\" " +
+            "\"Speed = distance / time, so 120 km-ah 2 hours-la divide pannunga, 60 km/h varum.\" " +
+            "\"Indha step simple dhaan, first denominator-ah same-ah aakkunga.\""
+        ExplainLanguage.BENGLISH -> " Reply in Benglish: Bengali written in English letters, mixed with English, the way students in West Bengal talk. " +
+            "Keep every scientific term, formula, number and unit in English. Examples: " +
+            "\"Photosynthesis-e plants sunlight use kore food banay.\" " +
+            "\"Speed = distance / time, tai 120 km ke 2 hours diye divide koro, 60 km/h hobe.\" " +
+            "\"Ei step ta easy, age denominator same koro.\""
     }
 
     private const val JSON_SYSTEM =
@@ -202,7 +215,7 @@ object Prompts {
     private const val TAG_SYSTEM = "You are an expert Indian school teacher who knows why students choose wrong answers."
 
     /** 1e: the ~2-minute micro-fix lesson for one misconception. */
-    fun microFix(grade: Int, lang: ExplainLanguage, concept: String, codeDescription: String, why: String, question: String?): String {
+    fun microFix(grade: Int, lang: ExplainLanguage, concept: String, codeDescription: String, why: String, question: String?, analogy: String? = null): String {
         val user = buildString {
             append("A Grade $grade student learning \"$concept\" made this mistake: $codeDescription")
             if (why.isNotBlank()) append(" (they $why)")
@@ -211,7 +224,8 @@ object Prompts {
             append("Write a short lesson (about 120 words) that fixes this mistake:\n")
             append("1. Say clearly what the mistake is and why it is wrong.\n")
             append("2. Explain the right way step by step.\n")
-            append("3. Give ONE analogy from everyday Indian life, starting the line with \"Analogy:\".")
+            append(analogy?.let { "3. Build ONE analogy on this idea, starting the line with \"Analogy:\": $it" }
+                ?: "3. Give ONE analogy from everyday Indian life, starting the line with \"Analogy:\".")
         }
         return Llama3Prompt.single(tutorSystem(grade, lang), user)
     }
@@ -267,12 +281,14 @@ object Prompts {
     }
 
     // ---------- Explanations ----------
-    fun explainAnswer(grade: Int, lang: ExplainLanguage, question: String, correctOption: String, explanation: String): String {
+    fun explainAnswer(grade: Int, lang: ExplainLanguage, question: String, correctOption: String, explanation: String, analogy: String? = null): String {
+        // 4b: a hand-curated analogy from the student's world, when the concept area has one.
+        val example = analogy?.let { "Build the explanation around this analogy: $it" } ?: "Use a simple Indian everyday example."
         val user = """
             Question: $question
             Correct answer: $correctOption
             Short reason: $explanation
-            Explain why this answer is correct, step by step, for a Grade $grade student. Use a simple Indian everyday example. Keep it under 120 words.
+            Explain why this answer is correct, step by step, for a Grade $grade student. $example Keep it under 120 words.
         """.trimIndent()
         return Llama3Prompt.single(tutorSystem(grade, lang), user)
     }
@@ -281,8 +297,9 @@ object Prompts {
     data class ChatTurn(val fromUser: Boolean, val text: String)
 
     /** Keeps the newest turns that fit the budget (Indic scripts cost ~4x more tokens). */
-    fun chat(grade: Int, lang: ExplainLanguage, course: String?, history: List<ChatTurn>): String {
-        val system = tutorSystem(grade, lang) + (course?.let { " The student is currently studying $it." } ?: "")
+    fun chat(grade: Int, lang: ExplainLanguage, course: String?, history: List<ChatTurn>, analogy: String? = null): String {
+        val system = tutorSystem(grade, lang) + (course?.let { " The student is currently studying $it." } ?: "") +
+            (analogy?.let { " If it helps, build your explanation around this analogy: $it" } ?: "")
         val budget = PROMPT_BUDGET_TOKENS - TokenEstimator.estimate(system) - 30
         val kept = ArrayList<ChatTurn>()
         var used = 0

@@ -160,3 +160,26 @@ class ThermalRulesTest {
         assertFalse(R.paused(Priority.P0, 4, 1.5f))
     }
 }
+
+class Phase4Test {
+    private val bank = com.offlinetutor.domain.AnalogyBank.parse(java.io.File("src/main/assets/analogies.json").readText())
+
+    @Test fun analogyBankMatchesAreaAndWorld() {
+        assertTrue(bank.size >= 10)
+        assertTrue(bank.find("Equivalent fractions", "kitchen", "Mathematics")!!.contains("dosa"))
+        assertTrue(bank.find("Line of symmetry", "festivals", "Mathematics")!!.contains("kolam", ignoreCase = true))
+        assertTrue(bank.find("The water cycle", "village", "Science")!!.contains("monsoon"))
+        assertTrue(bank.find("Electric current in a circuit", "farm", "Physics")!!.contains("pipe"))
+        assertNull(bank.find("Rural and urban area", "village", "Social Science"))
+        assertNull(bank.find("Tenses", "city", "English"))
+    }
+
+    @Test fun codeMixedModesKeepTermsInEnglish() {
+        val t = com.offlinetutor.domain.Prompts.tutorSystem(8, com.offlinetutor.domain.ExplainLanguage.TANGLISH)
+        assertTrue(t.contains("Tanglish") && t.contains("Keep every scientific term, formula, number and unit in English"))
+        val b = com.offlinetutor.domain.Prompts.tutorSystem(8, com.offlinetutor.domain.ExplainLanguage.BENGLISH)
+        assertTrue(b.contains("Benglish"))
+        assertFalse(com.offlinetutor.domain.ExplainLanguage.TANGLISH.beta)
+        assertEquals(com.offlinetutor.domain.ExplainLanguage.TANGLISH, com.offlinetutor.domain.ExplainLanguage.of("tanglish"))
+    }
+}

@@ -17,6 +17,8 @@ class FixService(
     private val quiz: QuizRepository,
     private val ai: TutorAi,
     private val taxonomy: List<MisconceptionInfo>,
+    private val analogies: com.offlinetutor.domain.AnalogyBank? = null,
+    private val flags: FeatureFlags? = null,
 ) {
     suspend fun step(id: Long) = roadmaps.get(id)
 
@@ -30,7 +32,8 @@ class FixService(
         val target = step.targetConcept?.let { c -> roadmaps.forCourse(profile.id, step.course).firstOrNull { it.concept == c }?.title } ?: step.course
         val r = ai.run(
             GenRequest(TaskType.MICRO_FIX, Prompts.microFix(profile.grade, ExplainLanguage.of(profile.language), target,
-                describe(step.misconception), step.goal, null)),
+                describe(step.misconception), step.goal, null,
+                if (flags?.isOn(Feature.ANALOGY_WORLDS) == false) null else analogies?.find("$target ${step.title}", profile.world, step.course))),
             onPartial = onPartial,
         )
         val text = r.text.trim()

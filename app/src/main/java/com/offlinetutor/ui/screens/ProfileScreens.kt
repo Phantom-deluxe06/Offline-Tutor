@@ -67,6 +67,7 @@ import com.offlinetutor.domain.PinHasher
 import com.offlinetutor.ui.CourseEditor
 import com.offlinetutor.ui.GradePicker
 import com.offlinetutor.ui.LanguagePicker
+import com.offlinetutor.ui.WorldPicker
 import com.offlinetutor.ui.PaperTopBar
 import com.offlinetutor.ui.container
 import com.offlinetutor.ui.design.ChunkyButton
@@ -208,6 +209,7 @@ fun IntakeScreen(onBack: () -> Unit, onDone: () -> Unit) {
     var grade by rememberSaveable { mutableStateOf(8) }
     var courses by remember { mutableStateOf(listOf("Mathematics", "Science")) }
     var language by rememberSaveable { mutableStateOf("en") }
+    var world by rememberSaveable { mutableStateOf("village") }
     var usePin by rememberSaveable { mutableStateOf(false) }
     var pin by rememberSaveable { mutableStateOf("") }
     var saving by remember { mutableStateOf(false) }
@@ -227,7 +229,7 @@ fun IntakeScreen(onBack: () -> Unit, onDone: () -> Unit) {
                 {
                     saving = true
                     scope.launch {
-                        withContext(Dispatchers.Default) { c.profiles.create(name, grade, courses, language, if (usePin) pin else null) }
+                        withContext(Dispatchers.Default) { c.profiles.create(name, grade, courses, language, if (usePin) pin else null, world) }
                         onDone()
                     }
                 },
@@ -253,12 +255,17 @@ fun IntakeScreen(onBack: () -> Unit, onDone: () -> Unit) {
             StepCard(3, stringResource(R.string.which_courses), 2) { CourseEditor(courses) { courses = it } }
             StepCard(4, stringResource(R.string.explain_language), 3) {
                 LanguagePicker(language) { language = it }
-                AnimatedVisibility(language != "en", enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                AnimatedVisibility(com.offlinetutor.domain.ExplainLanguage.of(language).beta, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
                     Text(stringResource(R.string.beta_language_note), style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            StepCard(5, stringResource(R.string.protect_with_pin), 4) {
+            StepCard(5, stringResource(R.string.pick_world), 4) {
+                WorldPicker(world) { world = it }
+                Text(stringResource(R.string.pick_world_note), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            StepCard(6, stringResource(R.string.protect_with_pin), 5) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.pin_note), style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))

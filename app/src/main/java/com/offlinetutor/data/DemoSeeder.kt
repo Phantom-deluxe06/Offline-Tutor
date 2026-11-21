@@ -21,7 +21,7 @@ class DemoSeeder(
 
     suspend fun seed(): Long {
         val course = "Mathematics"
-        val id = profiles.create("Demo Student", 7, listOf(course), "en", null)
+        val id = profiles.create("Demo Student", 7, listOf(course), "en", null, world = "cricket")
         val profile = profiles.get(id)!!
         val drafts = listOf(
             RoadmapDraft("Whole numbers", "Add, subtract, multiply and divide with confidence", listOf("Place value", "Operations"), emptyList()),
