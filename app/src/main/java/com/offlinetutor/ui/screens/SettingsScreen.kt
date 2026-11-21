@@ -225,6 +225,7 @@ private fun featureTitle(f: Feature): String = stringResource(
         Feature.SHADOW_PREGEN -> R.string.ff_shadow
         Feature.NIGHT_SHIFT -> R.string.ff_night
         Feature.PROMPT_PREFILL -> R.string.ff_prefill
+        Feature.THERMAL_GOVERNOR -> R.string.ff_thermal
     },
 )
 
@@ -242,5 +243,6 @@ private fun featureBody(f: Feature): String = stringResource(
         Feature.SHADOW_PREGEN -> R.string.ff_shadow_body
         Feature.NIGHT_SHIFT -> R.string.ff_night_body
         Feature.PROMPT_PREFILL -> R.string.ff_prefill_body
+        Feature.THERMAL_GOVERNOR -> R.string.ff_thermal_body
     },
 )

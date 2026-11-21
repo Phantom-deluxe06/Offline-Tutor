@@ -326,4 +326,9 @@
     <string name="ff_prefill">Prompt prefill (experimental)</string>
     <string name="ff_prefill_body">Reads the fixed part of the next prompt while the phone is idle, to start answers sooner. Off until measured.</string>
     <string name="prefill_ab_eval">Prefill A/B (TTFT)</string>
+    <string name="thermal_light">Phone warm</string>
+    <string name="thermal_moderate">Hot: shorter answers, night work paused</string>
+    <string name="thermal_severe">Very hot: background work paused</string>
+    <string name="ff_thermal">Thermal governor</string>
+    <string name="ff_thermal_body">When the phone gets hot, pauses background question making and shortens answers.</string>
 </resources>

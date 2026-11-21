@@ -17,7 +17,8 @@ enum class Feature(val phase: Int, /** Spec: default ON; 3d prefill stays off un
     READY_POOL(3),
     SHADOW_PREGEN(3),
     NIGHT_SHIFT(3),
-    PROMPT_PREFILL(3, defaultOn = false);
+    PROMPT_PREFILL(3, defaultOn = false),
+    THERMAL_GOVERNOR(3);
 
     companion object {
         /** Toggles for later phases stay hidden until that phase is built. */

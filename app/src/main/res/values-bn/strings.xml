@@ -311,4 +311,9 @@
     <string name="ff_prefill">প্রম্পট প্রিফিল (পরীক্ষামূলক)</string>
     <string name="ff_prefill_body">ফোন অলস থাকলে পরের প্রম্পটের স্থির অংশ আগেই পড়ে রাখে। মাপা না হওয়া পর্যন্ত বন্ধ।</string>
     <string name="prefill_ab_eval">প্রিফিল A/B (TTFT)</string>
+    <string name="thermal_light">ফোন একটু গরম</string>
+    <string name="thermal_moderate">গরম: ছোট উত্তর, রাতের কাজ বন্ধ</string>
+    <string name="thermal_severe">খুব গরম: পেছনের কাজ বন্ধ</string>
+    <string name="ff_thermal">তাপ নিয়ন্ত্রক</string>
+    <string name="ff_thermal_body">ফোন গরম হলে পেছনে প্রশ্ন তৈরি থামায় আর উত্তর ছোট করে।</string>
 </resources>

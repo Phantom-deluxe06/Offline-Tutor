@@ -146,3 +146,17 @@ class PrefillPrefixTest {
         assertNull(com.offlinetutor.llm.Llama3Prompt.systemPrefix("plain text"))
     }
 }
+
+class ThermalRulesTest {
+    @Test fun governorPausesByPriority() {
+        val R = com.offlinetutor.llm.ThermalRules
+        // cool
+        assertFalse(R.paused(Priority.P1, 0, 0.3f)); assertFalse(R.paused(Priority.P2, 1, null))
+        // MODERATE (status or headroom forecast): night batch paused, pool refill continues
+        assertTrue(R.paused(Priority.P2, 2, null)); assertFalse(R.paused(Priority.P1, 2, null))
+        assertTrue(R.paused(Priority.P2, 0, 0.9f))
+        // SEVERE: P1 and P2 paused; live requests never
+        assertTrue(R.paused(Priority.P1, 3, null)); assertTrue(R.paused(Priority.P1, 0, 1.0f))
+        assertFalse(R.paused(Priority.P0, 4, 1.5f))
+    }
+}

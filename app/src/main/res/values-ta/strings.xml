@@ -311,4 +311,9 @@
     <string name="ff_prefill">முன்-நிரப்பு (சோதனை)</string>
     <string name="ff_prefill_body">போன் சும்மா இருக்கும்போது அடுத்த கேள்வியின் மாறாத பகுதியை முன்பே படிக்கிறது. அளக்கும் வரை அணைக்கப்பட்டுள்ளது.</string>
     <string name="prefill_ab_eval">முன்-நிரப்பு A/B (TTFT)</string>
+    <string name="thermal_light">போன் சற்று சூடு</string>
+    <string name="thermal_moderate">சூடு: குறுகிய பதில்கள், இரவுப் பணி நிறுத்தம்</string>
+    <string name="thermal_severe">மிகச் சூடு: பின்னணி வேலை நிறுத்தம்</string>
+    <string name="ff_thermal">வெப்பக் கட்டுப்பாடு</string>
+    <string name="ff_thermal_body">போன் சூடானால், பின்னணியில் கேள்வி உருவாக்கத்தை நிறுத்தி பதில்களைச் சுருக்குகிறது.</string>
 </resources>

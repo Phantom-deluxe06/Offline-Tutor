@@ -91,3 +91,6 @@ class ThermalMonitor(context: Context) {
         }
     }
 }
+
+/** 3e: is background work of [priority] paused right now? */
+fun ThermalMonitor.paused(priority: Priority): Boolean = ThermalRules.paused(priority, currentStatus(), headroom())

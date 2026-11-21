@@ -258,3 +258,23 @@ fun Avatar(name: String, modifier: Modifier = Modifier) = com.offlinetutor.ui.de
 fun ScreenColumn(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
     Column(modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(14.dp), content = content)
 }
+
+/**
+ * 3e: thermal status chip. Hidden while the phone is cool; from LIGHT it shows the status, and what the governor
+ * is doing about it (MODERATE: shorter answers, night batch paused; SEVERE: all background work paused).
+ */
+@Composable
+fun ThermalChip(status: Int) {
+    if (status < 1) return
+    val (color, label) = when {
+        status >= com.offlinetutor.llm.ThermalMonitor.STATUS_SEVERE -> Palette.wrong to stringResource(R.string.thermal_severe)
+        status >= com.offlinetutor.llm.ThermalMonitor.STATUS_MODERATE -> Palette.marigold to stringResource(R.string.thermal_moderate)
+        else -> Palette.marigold to stringResource(R.string.thermal_light)
+    }
+    Row(
+        Modifier.padding(top = 4.dp).background(color.copy(alpha = 0.14f), RoundedCornerShape(50)).padding(horizontal = 10.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = MaterialTheme.typography.labelSmall, color = color, maxLines = 1)
+    }
+}

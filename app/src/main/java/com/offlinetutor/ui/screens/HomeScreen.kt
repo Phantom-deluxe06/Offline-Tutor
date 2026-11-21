@@ -108,7 +108,12 @@ fun HomeScreen(
                     maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(dateText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            EngineChip(engine, openModels)
+            Column(horizontalAlignment = Alignment.End) {
+                EngineChip(engine, openModels)
+                // 3e: thermal status chip (shown once the phone is warm).
+                val thermal by com.offlinetutor.ui.container().thermal.status.collectAsStateWithLifecycle()
+                com.offlinetutor.ui.ThermalChip(thermal)
+            }
         }
 
         HeroCard(

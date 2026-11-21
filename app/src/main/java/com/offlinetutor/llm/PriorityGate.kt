@@ -99,3 +99,28 @@ class PriorityGate {
 class GenPriority(val priority: Priority) : kotlin.coroutines.AbstractCoroutineContextElement(Key) {
     companion object Key : kotlin.coroutines.CoroutineContext.Key<GenPriority>
 }
+
+/**
+ * 3e: thermal governor rules (same thresholds as [ThermalMonitor.policy], which already shrinks maxNewTokens and adds
+ * cool-downs from MODERATE): MODERATE or above pauses P2 (night batch); SEVERE or above pauses P1 and P2. Live
+ * requests (P0) are never paused. Headroom (API 30+) forecasts throttling: >= 0.85 counts as MODERATE, >= 1.0 as SEVERE.
+ */
+object ThermalRules {
+    fun level(status: Int, headroom: Float?): Int {
+        val h = headroom ?: 0f
+        return when {
+            status >= ThermalMonitor.STATUS_SEVERE || h >= 1.0f -> ThermalMonitor.STATUS_SEVERE
+            status >= ThermalMonitor.STATUS_MODERATE || h >= 0.85f -> ThermalMonitor.STATUS_MODERATE
+            else -> status
+        }
+    }
+
+    fun paused(priority: Priority, status: Int, headroom: Float?): Boolean {
+        val l = level(status, headroom)
+        return when (priority) {
+            Priority.P0 -> false
+            Priority.P1 -> l >= ThermalMonitor.STATUS_SEVERE
+            Priority.P2 -> l >= ThermalMonitor.STATUS_MODERATE
+        }
+    }
+}

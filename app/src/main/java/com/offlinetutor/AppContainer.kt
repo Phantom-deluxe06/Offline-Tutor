@@ -51,7 +51,7 @@ class AppContainer(app: Application) {
     val profiles = ProfileRepository(db.profiles(), session)
     val roadmaps = RoadmapRepository(db.roadmaps(), ai)
     // 3a: background (P1/P2) generation queue in front of the single LLM worker.
-    val scheduler = com.offlinetutor.data.GenerationScheduler(appScope)
+    val scheduler = com.offlinetutor.data.GenerationScheduler(appScope) { p -> backgroundPaused(p) }
     val quiz = QuizRepository(db.quiz(), db.roadmaps(), mcqGenerator, diagGenerator, templateGenerator, seeds, brain, db.probes(), flags,
         db.pool(), scheduler, thermal)
     val fixes = com.offlinetutor.data.FixService(db.roadmaps(), quiz, ai, taxonomy)
@@ -60,8 +60,12 @@ class AppContainer(app: Application) {
     val metrics = MetricsRepository(db.logs())
     // 3c: Night Shift (WorkManager while charging + idle, or Settings → Simulate night).
     val night = com.offlinetutor.data.NightShift(app, db.profiles(), db.mastery(), db.roadmaps(), quiz, fixes, diagGenerator,
-        templateGenerator, ai)
+        templateGenerator, ai) { p -> backgroundPaused(p) }
     val bench = BenchmarkRunner(app, appScope, engine, ai, mcqGenerator, diagGenerator, templateGenerator, flags, metrics)
+
+    /** 3e: thermal governor (toggle) — hot phones pause background priorities; live requests are never paused. */
+    private fun backgroundPaused(p: com.offlinetutor.llm.Priority): Boolean =
+        flags.isOn(com.offlinetutor.data.Feature.THERMAL_GOVERNOR) && with(com.offlinetutor.llm.ThermalRules) { paused(p, thermal.currentStatus(), thermal.headroom()) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val activeProfile: StateFlow<Profile?> = session.activeProfileId
