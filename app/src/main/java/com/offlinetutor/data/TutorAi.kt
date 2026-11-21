@@ -76,6 +76,11 @@ class TutorAi(val engine: LlmEngine, private val logs: LogDao) {
         )
     }
 
+    /** A free-form row (e.g. the Night Shift summary JSON) so it is exported with the CSV. */
+    suspend fun logNote(task: String, run: String, output: String) {
+        logs.insert(GenerationLog(task = task, model = engine.activeModelName(), evalRun = run, output = output.take(4000)))
+    }
+
     suspend fun logLoad(model: String, loadMs: Long, peakKb: Long, rssKb: Long, availKb: Long, error: String?) {
         logs.insert(
             GenerationLog(

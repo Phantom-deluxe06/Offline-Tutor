@@ -58,6 +58,9 @@ class AppContainer(app: Application) {
     val demo = com.offlinetutor.data.DemoSeeder(profiles, db.roadmaps(), db.quiz(), brain)
     val chat = ChatRepository(db.chat(), ai)
     val metrics = MetricsRepository(db.logs())
+    // 3c: Night Shift (WorkManager while charging + idle, or Settings → Simulate night).
+    val night = com.offlinetutor.data.NightShift(app, db.profiles(), db.mastery(), db.roadmaps(), quiz, fixes, diagGenerator,
+        templateGenerator, ai)
     val bench = BenchmarkRunner(app, appScope, engine, ai, mcqGenerator, diagGenerator, templateGenerator, flags, metrics)
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -66,6 +69,13 @@ class AppContainer(app: Application) {
         .stateIn(appScope, SharingStarted.Eagerly, null)
 
     init {
+        // 3c: keep the nightly job scheduled while the toggle is on.
+        appScope.launch {
+            flags.state.collect { f ->
+                if (f[com.offlinetutor.data.Feature.NIGHT_SHIFT] != false) com.offlinetutor.data.NightShiftScheduler.schedule(app)
+                else com.offlinetutor.data.NightShiftScheduler.cancel(app)
+            }
+        }
         // 3b warm-up on app open: when a profile becomes active, start filling the ready pool for its courses.
         appScope.launch {
             activeProfile.filterNotNull().distinctUntilChangedBy { it.id }.collect { p ->

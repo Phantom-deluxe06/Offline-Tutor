@@ -315,4 +315,12 @@
     <string name="tagged_gen_time">Time per fully tagged question (median)</string>
     <string name="bg_queue">Background queue</string>
     <string name="zero_wait_note">Measured on this phone from %1 served questions (tap to question shown).</string>
+    <string name="ff_night">Night Shift</string>
+    <string name="ff_night_body">While the phone charges at night, prepares tomorrow\'s questions and fix lessons.</string>
+    <string name="night_shift">Night Shift</string>
+    <string name="night_shift_body">Runs automatically only while the phone is charging and idle. Use the buttons to run it now for a demo.</string>
+    <string name="simulate_night">Simulate night</string>
+    <string name="simulate_night_full">Night + full eval batch</string>
+    <string name="night_running">Working: %1 of %2 · %3</string>
+    <string name="night_last">Last night: %1</string>
 </resources>

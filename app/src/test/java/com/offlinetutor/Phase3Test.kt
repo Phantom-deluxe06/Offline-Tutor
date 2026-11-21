@@ -104,3 +104,31 @@ class PoolPolicyTest {
         assertNull(com.offlinetutor.domain.PoolPolicy.hitRate(emptyList()))
     }
 }
+
+class NightPlanTest {
+    @Test fun studentWorkFirstThenEvalBatch() {
+        val w = com.offlinetutor.domain.NightPlan.ProfileWork(4,
+            weak = (1..6).map { Triple("Mathematics", "c$it", 1) },
+            reviews = listOf(Triple("Mathematics", "fractions", 2), Triple("Mathematics", "c1", 1)), // c1 L1 already weak
+            pendingFixes = listOf(11L))
+        val plan = com.offlinetutor.domain.NightPlan.build(listOf(w), evalMcqs = 50, evalTemplates = 30)
+        val pools = plan.filterIsInstance<com.offlinetutor.domain.NightTask.Pool>()
+        assertEquals(5, pools.size) // 4 weakest + 1 new review target (the duplicate is dropped)
+        assertTrue(plan.indexOfFirst { it is com.offlinetutor.domain.NightTask.EvalMcq } > plan.indexOfFirst { it is com.offlinetutor.domain.NightTask.Fix })
+        assertEquals(50, plan.count { it is com.offlinetutor.domain.NightTask.EvalMcq })
+        assertEquals(30, plan.count { it is com.offlinetutor.domain.NightTask.EvalTemplate })
+        // Round-trips through the stored string form.
+        assertEquals(plan, plan.map { com.offlinetutor.domain.NightTask.decode(it.encode()) })
+    }
+
+    @Test fun evalSlotsCoverEveryCellAndLevel() {
+        val slots = (0 until 50).map { com.offlinetutor.domain.NightPlan.mcqSlot(it, 5, 3) }
+        assertEquals(15, slots.map { it.first to it.second }.toSet().size)
+        assertEquals(setOf(1, 2, 3), slots.map { it.third }.toSet())
+        val counts = slots.groupingBy { it.third }.eachCount()
+        assertTrue(counts.values.all { it in 16..17 })
+        val tpl = (0 until 30).map { com.offlinetutor.domain.NightPlan.templateSlot(it, 8) }
+        assertEquals(8, tpl.map { it.first }.toSet().size)
+        assertEquals(setOf(1, 2, 3), tpl.map { it.second }.toSet())
+    }
+}

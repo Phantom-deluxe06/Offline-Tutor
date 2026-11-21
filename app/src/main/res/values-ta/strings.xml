@@ -300,4 +300,12 @@
     <string name="tagged_gen_time">முழுமையாகக் குறியிட்ட கேள்விக்கு நேரம் (இடைநிலை)</string>
     <string name="bg_queue">பின்னணி வரிசை</string>
     <string name="zero_wait_note">இந்த போனில் %1 கேள்விகளில் அளந்தது (தட்டியது முதல் கேள்வி தோன்றும் வரை).</string>
+    <string name="ff_night">இரவுப் பணி</string>
+    <string name="ff_night_body">இரவில் போன் சார்ஜ் ஆகும்போது, நாளைய கேள்விகளையும் திருத்தப் பாடங்களையும் தயார் செய்கிறது.</string>
+    <string name="night_shift">இரவுப் பணி</string>
+    <string name="night_shift_body">போன் சார்ஜ் ஆகி, பயன்படுத்தப்படாமல் இருக்கும்போது மட்டுமே தானாக இயங்கும். டெமோவுக்கு இப்போதே இயக்க பொத்தான்களைப் பயன்படுத்துங்கள்.</string>
+    <string name="simulate_night">இரவை உருவகப்படுத்து</string>
+    <string name="simulate_night_full">இரவு + முழு மதிப்பீடு</string>
+    <string name="night_running">வேலை: %2 இல் %1 · %3</string>
+    <string name="night_last">கடந்த இரவு: %1</string>
 </resources>

@@ -10,6 +10,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ProfileDao {
+    @Query("SELECT * FROM profiles")
+    suspend fun all(): List<Profile>
+
     @Query("SELECT * FROM profiles ORDER BY createdAt")
     fun observeAll(): Flow<List<Profile>>
 

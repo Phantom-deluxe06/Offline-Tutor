@@ -60,6 +60,7 @@ fun SettingsScreen(onBack: () -> Unit, switchProfile: () -> Unit) {
     var pinDialog by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var seeded by remember { mutableStateOf(false) }
+    var nightJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     val flags by c.flags.state.collectAsStateWithLifecycle()
     val p = profile
 
@@ -120,6 +121,31 @@ fun SettingsScreen(onBack: () -> Unit, switchProfile: () -> Unit) {
                         }
                         androidx.compose.material3.Switch(checked = flags[f] != false, onCheckedChange = { c.flags.set(f, it) })
                     }
+                }
+            }
+
+            // 3c: Night Shift demo. The real run happens via WorkManager while charging + idle.
+            SectionCard(stringResource(R.string.night_shift)) {
+                val night by c.night.progress.collectAsStateWithLifecycle()
+                Text(stringResource(R.string.night_shift_body), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (night.running) {
+                    Text(stringResource(R.string.night_running, night.done, night.total, night.current ?: "…"),
+                        style = MaterialTheme.typography.bodyMedium)
+                    TextButton(onClick = { nightJob?.cancel() }) { Text(stringResource(R.string.stop)) }
+                } else {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(onClick = {
+                            nightJob = c.appScope.launch { c.night.reset(); runCatching { c.night.run(Long.MAX_VALUE, evalMcqs = 5, evalTemplates = 8) } }
+                        }) { Text(stringResource(R.string.simulate_night)) }
+                        OutlinedButton(onClick = {
+                            nightJob = c.appScope.launch { c.night.reset(); runCatching { c.night.run(Long.MAX_VALUE) } }
+                        }) { Text(stringResource(R.string.simulate_night_full)) }
+                    }
+                }
+                night.lastSummary?.let { s ->
+                    Text(stringResource(R.string.night_last, s), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -197,6 +223,7 @@ private fun featureTitle(f: Feature): String = stringResource(
         Feature.TEMPLATES -> R.string.ff_templates
         Feature.READY_POOL -> R.string.ff_pool
         Feature.SHADOW_PREGEN -> R.string.ff_shadow
+        Feature.NIGHT_SHIFT -> R.string.ff_night
     },
 )
 
@@ -212,5 +239,6 @@ private fun featureBody(f: Feature): String = stringResource(
         Feature.TEMPLATES -> R.string.ff_templates_body
         Feature.READY_POOL -> R.string.ff_pool_body
         Feature.SHADOW_PREGEN -> R.string.ff_shadow_body
+        Feature.NIGHT_SHIFT -> R.string.ff_night_body
     },
 )

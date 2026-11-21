@@ -339,23 +339,37 @@ class QuizRepository(
     ): Boolean {
         if (!flags.isOn(Feature.READY_POOL)) return false
         return scheduler.submit(GenerationScheduler.Job(priority, "pool:${profile.id}:$course:$concept:$level") {
-            repeat(items) {
-                if (pool.count(profile.id, concept, level) >= PoolPolicy.PER_LEVEL) return@Job
-                if (pool.countForProfile(profile.id) >= PoolPolicy.PROFILE_CAP) return@Job
-                val answered = dao.answeredForCourse(profile.id, course)
-                val weak = WeakSpots.weak(answered.map { it.subtopic to (it.correct == true) })
-                val t = pickTarget(profile.id, course, null, concept, answered, weak, null)
-                val history = (dao.allNormalizedStems(profile.id) + pool.stems(profile.id)).toSet()
-                val m = make(profile, course, t, level, history, weak, null) {}.first ?: return@repeat
-                pool.insert(PoolItem(
-                    profileId = profile.id, course = course, concept = concept, subtopic = t.subtopic, level = level,
-                    stem = m.stem, normalizedStem = QuestionDeduper.normalize(m.stem),
-                    options = m.options.joinToString(QuizQuestion.OPTION_SEP.toString()), answerIndex = m.answer,
-                    explanation = m.explanation, optionMeta = m.meta, source = m.source, verdict = m.verdict, genMs = m.genMs,
-                ))
-            }
+            fillPool(profile, course, concept, level, items)
         })
     }
+
+    /**
+     * Generates up to [maxItems] ready items for (concept, level) in the caller's priority context, stopping at
+     * [PoolPolicy.PER_LEVEL] for that level or [PoolPolicy.PROFILE_CAP] for the profile. Returns items added.
+     */
+    suspend fun fillPool(profile: Profile, course: String, concept: String, level: Int, maxItems: Int = PoolPolicy.PER_LEVEL): Int {
+        var added = 0
+        repeat(maxItems) {
+            if (pool.count(profile.id, concept, level) >= PoolPolicy.PER_LEVEL) return added
+            if (pool.countForProfile(profile.id) >= PoolPolicy.PROFILE_CAP) return added
+            val answered = dao.answeredForCourse(profile.id, course)
+            val weak = WeakSpots.weak(answered.map { it.subtopic to (it.correct == true) })
+            val t = pickTarget(profile.id, course, null, concept, answered, weak, null)
+            val history = (dao.allNormalizedStems(profile.id) + pool.stems(profile.id)).toSet()
+            val m = make(profile, course, t, level, history, weak, null) {}.first ?: return@repeat
+            pool.insert(PoolItem(
+                profileId = profile.id, course = course, concept = concept, subtopic = t.subtopic, level = level,
+                stem = m.stem, normalizedStem = QuestionDeduper.normalize(m.stem),
+                options = m.options.joinToString(QuizQuestion.OPTION_SEP.toString()), answerIndex = m.answer,
+                explanation = m.explanation, optionMeta = m.meta, source = m.source, verdict = m.verdict, genMs = m.genMs,
+            ))
+            added++
+        }
+        return added
+    }
+
+    /** Current level for a concept (Elo rules or staircase), for background planners. */
+    suspend fun currentLevel(profileId: Long, course: String, concept: String): Int = levelFor(profileId, course, concept)
 
     /** 3b warm-up (app open, roadmap shown): start refilling the pool for the current step at the student's level. */
     suspend fun warmUp(profile: Profile, course: String) {

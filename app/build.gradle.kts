@@ -79,6 +79,7 @@ dependencies {
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.exp4j) // Phase 2b: evaluates the model's answer expression (pure Java, no permissions)
+    implementation(libs.androidx.work.runtime.ktx) // 3c Night Shift: runs only while charging + idle
     implementation(libs.executorch.android)
 
     testImplementation(libs.junit)

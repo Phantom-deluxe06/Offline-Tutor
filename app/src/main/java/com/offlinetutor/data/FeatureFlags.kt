@@ -15,7 +15,8 @@ enum class Feature(val phase: Int) {
     SKILL_TREE(1),
     TEMPLATES(2),
     READY_POOL(3),
-    SHADOW_PREGEN(3);
+    SHADOW_PREGEN(3),
+    NIGHT_SHIFT(3);
 
     companion object {
         /** Toggles for later phases stay hidden until that phase is built. */
