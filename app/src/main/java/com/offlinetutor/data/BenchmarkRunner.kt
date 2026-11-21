@@ -117,8 +117,9 @@ class BenchmarkRunner(
      * 2a template eval: every template type x level once. Each row = one LLM wording attempt; "valid" means the
      * text kept every given number and added none (otherwise the app falls back to its own wording).
      */
-    fun templateEval() = launch("Template eval", com.offlinetutor.domain.TemplateType.entries.size * 3) { run ->
-        for (type in com.offlinetutor.domain.TemplateType.entries) for (level in 1..3) {
+    fun templateEval() = launch("Template eval", com.offlinetutor.domain.TemplateType.entries.size * 6) { run ->
+        // 2-fix-1: at least 5 samples per type → 2 per level x 3 levels.
+        for (type in com.offlinetutor.domain.TemplateType.entries) for (level in listOf(1, 1, 2, 2, 3, 3)) {
             label("Template · ${type.name.lowercase()} · L$level")
             templates.build(8, type, level, type.name.lowercase(), emptySet(), LogMeta(run, type.name, 8), onPartial = { p -> partial(p) })
             tick()

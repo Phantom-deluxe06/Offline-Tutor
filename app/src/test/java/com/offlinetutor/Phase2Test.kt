@@ -100,18 +100,43 @@ class TemplatesTest {
         assertFalse(ProblemTemplates.noExtraNumbers("An auto covers 120 km in 1.5 hours at 80 km/h. Speed?", givens))
     }
 
-    @Test fun cleansLlmText() {
-        val t = Prompts.cleanTemplateText("Word problem: \"An auto covers 120 km in 1.5 hours.\"\nAnswer: 80 km/h", "the speed in km/h")
-        assertNotNull(t)
-        assertTrue(t!!.startsWith("An auto covers 120 km"))
-        assertTrue(t.endsWith("What is the speed in km/h?"))
-        assertFalse(t.contains("80"))
-        assertNull(Prompts.cleanTemplateText("Sure!", "x"))
-        // On-device output: a preamble line that names the grade must not count as an extra number.
-        val ohm = Prompts.cleanTemplateText("Here is a word problem for a Grade 8 student in India:\n\nA torch bulb is connected " +
-            "to a 12.5 V power source. If the resistance of the bulb is 5 ohms, how many amperes of current will it draw?", "the current in amperes")!!
-        assertTrue(ohm.startsWith("A torch bulb"))
-        assertTrue(ProblemTemplates.noExtraNumbers(ohm, listOf("12.5 V", "5 ohm")))
-        assertTrue(ProblemTemplates.textKeepsNumbers(ohm, listOf("12.5 V", "5 ohm")))
+    @Test fun placeholderStoriesAreAcceptedOnlyWhenClean() {
+        val ok = "Rohan rides an auto-rickshaw {A} to the station, and the ride takes {B}."
+        assertEquals(ok, ProblemTemplates.acceptStory(ok, 2))
+        // Opener on its own line (measured on-device) is dropped; Kotlin owns the question, so a model question is cut.
+        assertEquals("A torch bulb is connected to a {A} supply through a {B} wire.",
+            ProblemTemplates.acceptStory("Here is a short setting for a middle-school student:\n\nA torch bulb is connected to a {A} " +
+                "supply through a {B} wire. What current flows?", 2))
+        assertNull(ProblemTemplates.acceptStory("Rohan rides {A} to the station.", 2))                       // {B} missing
+        assertNull(ProblemTemplates.acceptStory("Rohan rides {A}, then {A} again, in {B}.", 2))              // {A} twice
+        assertNull(ProblemTemplates.acceptStory("Rohan rides {A} in {B} with {C} friends.", 2))              // unknown placeholder
+        assertNull(ProblemTemplates.acceptStory("Rohan rides {A} in {B} with 2 friends.", 2))                // digit
+        assertNull(ProblemTemplates.acceptStory("Rohan rides {A} in {B} with five friends.", 2))             // number word
+        assertNull(ProblemTemplates.acceptStory("Rohan rides {A} in {B}, twice as fast as usual.", 2))       // number word
+        assertNull(ProblemTemplates.acceptStory("Sure!", 1))
+        assertEquals("contains the number word \"half\"", ProblemTemplates.storyProblem("He walks {A} in half the time.", 1))
+    }
+
+    @Test fun kotlinOwnsNumbersAndQuestion() {
+        for (type in TemplateType.entries) for (level in 1..3) {
+            val p = ProblemTemplates.generate(type, level, Random(level))
+            // Kotlin's own story must pass the same acceptance rules as the model's.
+            assertEquals("$type L$level", p.defaultStory, ProblemTemplates.acceptStory(p.defaultStory, p.slots.size))
+            val text = p.textFor(p.defaultStory)
+            assertTrue(text.endsWith(p.question))
+            assertTrue(ProblemTemplates.textKeepsNumbers(text, p.givens))
+            // The answer's number never appears unless it is also a given (e.g. equal by chance).
+            val num = Regex("\\d+(?:\\.\\d+)?")
+            val answerNum = num.find(p.answer)!!.value
+            val allowed = (p.givens + p.question).flatMap { g -> num.findAll(g).map { it.value }.toList() }
+            if (answerNum !in allowed) assertFalse("$type L$level leaks the answer: $text", num.findAll(text).any { it.value == answerNum })
+        }
+    }
+
+    @Test fun storyPromptHasNoDigits() {
+        for (type in TemplateType.entries) for (grade in listOf(6, 10)) {
+            val prompt = Prompts.templateStory(grade, ProblemTemplates.generate(type, 2, Random(3)))
+            assertFalse("$type prompt has digits: $prompt", prompt.any { it.isDigit() })
+        }
     }
 }

@@ -199,34 +199,35 @@ object Prompts {
     }
 
     // ---------- 2a: template word problems ----------
-    private const val TEMPLATE_SYSTEM = "You write short, clear school word problems set in everyday Indian life."
+    private const val TEMPLATE_SYSTEM =
+        "You write short story settings for school word problems set in everyday Indian life. You never write numbers."
 
-    fun templateText(grade: Int, p: TemplateProblem): String {
-        val user = """
-            Write a short word problem (one or two sentences) for a Grade $grade student in India, about ${p.setting}.
-            Use exactly these quantities: ${p.givens.joinToString(", ")}.
-            The question must ask for ${p.ask}.
-            Do not solve it, do not give the answer, and do not use any other numbers.
-        """.trimIndent()
+    private val storyExamples = listOf(
+        "Meena carries {A} home from the ration shop.",
+        "Meena carries {A} home from the ration shop, walking for {B}.",
+        "Meena's uncle keeps {A} in the village post office at {B} for {C}.",
+    )
+
+    /**
+     * 2-fix-1: the model writes only the setting, with placeholders for the quantities. No digits anywhere in the
+     * prompt (measured: "Grade 8" in the prompt was echoed into the story). Kotlin fills the numbers and appends
+     * its own question sentence.
+     */
+    fun templateStory(grade: Int, p: TemplateProblem): String {
+        val band = if (grade <= 8) "middle-school" else "high-school"
+        val user = buildList {
+            add("Write one or two sentences about ${p.setting} for a $band student.")
+            add("Use each of these placeholders exactly once, written exactly like this, instead of the quantities:")
+            p.slots.forEachIndexed { i, s -> add("${ProblemTemplates.placeholder(i)} = ${s.meaning}") }
+            add("Do not write any numbers or number words (like five, twice or half). Do not ask a question and do not solve anything.")
+            add("Example for a different problem: ${storyExamples[(p.slots.size - 1).coerceIn(0, storyExamples.lastIndex)]}")
+        }.joinToString("\n")
         return Llama3Prompt.single(TEMPLATE_SYSTEM, user)
     }
 
-    /**
-     * Keeps only the problem text: drops labels ("Word problem:"), quotes, anything after "Answer"/"Solution",
-     * and makes sure it ends as a question. Null if nothing usable is left.
-     */
-    fun cleanTemplateText(raw: String, ask: String): String? {
-        // Measured on-device: the model often opens with "Here is a word problem for a Grade 8 student in India:"
-        // on its own line; the grade number then counts as an extra number, so drop such a preamble line.
-        var t = raw.trim()
-            .let { s -> if ('\n' in s && s.substringBefore('\n').trimEnd().endsWith(':')) s.substringAfter('\n').trim() else s }
-            .replace(Regex("^(here is|here's )?(a |the )?(short )?(word )?problem\\s*:?\\s*", RegexOption.IGNORE_CASE), "")
-            .substringBefore("\nAnswer").substringBefore("Answer:").substringBefore("Solution")
-            .replace("\n", " ").replace(Regex("\\s+"), " ")
-            .trim().trim('"', '“', '”', '*').trim()
-        if (t.length < 15) return null
-        if (!t.contains('?')) t = "$t What is ${ask}?"
-        return t.substring(0, t.lastIndexOf('?') + 1)
+    /** Stop once every placeholder has been written and the sentence has ended. */
+    fun storyDone(p: TemplateProblem): (String) -> Boolean = { text ->
+        p.placeholders.all { it in text } && text.trimEnd().let { it.endsWith('.') || it.endsWith('!') }
     }
 
     // ---------- Explanations ----------

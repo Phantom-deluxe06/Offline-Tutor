@@ -5,26 +5,44 @@ import kotlin.math.round
 import kotlin.random.Random
 
 /**
- * 2a: Kotlin-owned problem templates (most reliable). Kotlin picks the numbers, computes the answer and builds
- * the wrong options from known error patterns, each tagged with its misconception. The LLM only writes the
- * word-problem text around the given numbers (checked to contain them exactly); otherwise [defaultText] is used.
+ * 2a: Kotlin-owned problem templates. Kotlin picks the numbers, computes the answer and builds the wrong options
+ * from known error patterns, each tagged with its misconception.
+ *
+ * 2-fix-1 (placeholder stories): the LLM writes only the setting, with placeholders {A}, {B}, … and no digits or
+ * number words; Kotlin substitutes the real quantities and appends its own [question] sentence. So an accepted
+ * story can neither change the numbers nor change what is asked. Otherwise [defaultStory] is used.
  */
 enum class TemplateType { SPEED, PERCENT, SIMPLE_INTEREST, AREA_PERIMETER, OHMS_LAW, DENSITY, UNIT_CONVERSION, AVERAGE }
 
+/** One quantity the story must mention, as placeholder {A}, {B}, … in slot order. */
+data class Slot(val value: String, val meaning: String)
+
 data class TemplateProblem(
     val type: TemplateType,
-    /** Quantities the word problem must state, exactly as written here (e.g. "120 km", "1.5 hours"). */
-    val givens: List<String>,
-    /** What the question asks for, e.g. "the speed of the bus in km/h". */
-    val ask: String,
-    /** Suggested local setting for the LLM text. */
+    /** Quantities the story must place, in placeholder order ({A} = slots[0], …). */
+    val slots: List<Slot>,
+    /** Kotlin-owned final question sentence, already with any numbers it needs. */
+    val question: String,
+    /** Suggested local setting for the LLM story. */
     val setting: String,
-    val defaultText: String,
+    /** Kotlin's own story, with placeholders. */
+    val defaultStory: String,
     val answer: String,
     val wrong: List<Pair<String, OptionTag>>,
     val explanation: String,
     val expression: String,
 ) {
+    val givens: List<String> get() = slots.map { it.value }
+    val placeholders: List<String> get() = slots.indices.map { ProblemTemplates.placeholder(it) }
+
+    /** Replaces {A}, {B}, … in a story with the real quantities. */
+    fun fill(story: String): String = slots.foldIndexed(story) { i, s, slot -> s.replace(ProblemTemplates.placeholder(i), slot.value) }
+
+    /** Full question text for an (accepted, placeholder) story: filled story + Kotlin's question. */
+    fun textFor(story: String): String = "${fill(story).trim()} $question"
+
+    val defaultText: String get() = textFor(defaultStory)
+
     fun toDiag(concept: String, question: String = defaultText): DiagMcq = DiagMcq(
         question = question, concept = concept, difficulty = null, explanation = explanation, expression = expression,
         options = listOf(DiagOption(answer, true)) + wrong.map { (t, tag) -> DiagOption(t, false, tag.code, tag.why) },
@@ -32,6 +50,8 @@ data class TemplateProblem(
 }
 
 object ProblemTemplates {
+    fun placeholder(i: Int) = "{${'A' + i}}"
+
     // Word-boundary patterns so "rural area", "current affairs", "unity" or "resistance movement" don't match.
     private val keywords = listOf(
         TemplateType.SPEED to listOf("\\bspeed", "\\bdistance\\b", "\\bvelocity", "\\bmotion\\b"),
@@ -52,10 +72,65 @@ object ProblemTemplates {
         return keywords.firstOrNull { (_, patterns) -> patterns.any { it.containsMatchIn(text) } }?.first
     }
 
-    /** Numbers in the text must all be given quantities (no extra numbers, and never the answer). */
-    fun noExtraNumbers(text: String, givens: List<String>): Boolean {
-        val allowed = givens.flatMap { g -> Regex("\\d+(?:\\.\\d+)?").findAll(g).map { it.value }.toList() }.toSet()
-        return Regex("\\d+(?:\\.\\d+)?").findAll(text).all { it.value in allowed }
+    /** True when [text] looks like an arithmetic/numeric topic that templates should own (2-fix-2). */
+    fun isNumericTopic(text: String, course: String): Boolean = forTopic(text, course) != null
+
+    // ---------- 2-fix-1: story acceptance ----------
+
+    private val numberWords = Regex(
+        "\\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|" +
+            "seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundreds?|thousands?|" +
+            "lakhs?|crores?|millions?|billions?|once|twice|thrice|half|halves|quarters?|double|triple|dozens?|" +
+            "first|second|third|fourth|fifth|tenth)\\b",
+        RegexOption.IGNORE_CASE,
+    )
+    private val anyPlaceholder = Regex("\\{[^}]*\\}")
+    private val opener = Regex("^(here is|here's|here are|sure|okay|ok)\\b", RegexOption.IGNORE_CASE)
+    private val inlinePreamble = Regex("^(here is |here's )?(a |the )?(short )?(word )?(problem|setting|story)\\s*:\\s*", RegexOption.IGNORE_CASE)
+
+    /** Why a story was rejected, or null if accepted (also used for logging). */
+    fun storyProblem(story: String?, slotCount: Int): String? {
+        if (story == null) return "no usable text"
+        val found = anyPlaceholder.findAll(story).map { it.value }.toList()
+        for (i in 0 until slotCount) {
+            val n = found.count { it == placeholder(i) }
+            if (n != 1) return "placeholder ${placeholder(i)} appears $n times"
+        }
+        found.firstOrNull { f -> (0 until slotCount).none { placeholder(it) == f } }?.let { return "unknown placeholder $it" }
+        if (story.any { it.isDigit() }) return "contains a digit"
+        numberWords.find(story)?.let { return "contains the number word \"${it.value}\"" }
+        return null
+    }
+
+    /**
+     * Cleans the model's story (drops "Here is…" openers on their own line or inline, labels, quotes, anything after
+     * an "Answer"/"Question" label, and any question sentence the model added) and returns it with placeholders, or
+     * null if nothing usable is left.
+     */
+    fun cleanStory(raw: String): String? {
+        var t = raw.trim()
+        // Opener on its own line ("Here is a short setting for a Grade 8 student:"), possibly followed by a blank line.
+        while ('\n' in t) {
+            val first = t.substringBefore('\n').trim()
+            if (first.endsWith(':') || (opener.containsMatchIn(first) && first.length < 90)) t = t.substringAfter('\n').trim() else break
+        }
+        t = t.replace(Regex("^(sure|okay|ok)[!.,]?\\s+", RegexOption.IGNORE_CASE), "")
+            .replace(inlinePreamble, "")
+            .substringBefore("\nAnswer").substringBefore("Answer:").substringBefore("Question:").substringBefore("Solution")
+            .replace("\n", " ").replace(Regex("\\s+"), " ")
+            .trim().trim('"', '“', '”', '*').trim()
+        // Kotlin owns the question: drop any sentence the model ended with '?'.
+        val sentences = Regex("[^.!?]+[.!?]?").findAll(t).map { it.value.trim() }.filter { it.isNotEmpty() }.toList()
+        t = sentences.filterNot { it.endsWith("?") }.joinToString(" ").trim()
+        if (t.length < 15) return null
+        if (!t.endsWith('.') && !t.endsWith('!')) t = "$t."
+        return t
+    }
+
+    /** Accepted story (with placeholders) or null. */
+    fun acceptStory(raw: String, slotCount: Int): String? {
+        val s = cleanStory(raw)
+        return if (storyProblem(s, slotCount) == null) s else null
     }
 
     fun fmt(v: Double): String {
@@ -83,8 +158,8 @@ object ProblemTemplates {
                 val t = if (level == 1) rnd.pick(listOf(2.0, 3.0, 4.0, 5.0)) else rnd.pick(listOf(1.5, 2.5, 0.5))
                 val v = rnd.pick(listOf(20.0, 30.0, 40.0, 50.0, 60.0, 80.0))
                 val d = v * t
-                TemplateProblem(type, listOf("${fmt(d)} km", "${fmt(t)} hours"), "the speed in km/h", setting,
-                    "A vehicle covers ${fmt(d)} km in ${fmt(t)} hours. What is its speed in km/h?",
+                TemplateProblem(type, listOf(Slot("${fmt(d)} km", "the distance travelled"), Slot("${fmt(t)} hours", "the time taken")),
+                    "What is the speed in km/h?", setting, "A vehicle covers {A} in {B}.",
                     "${fmt(v)} km/h",
                     listOf(
                         "${fmt(d * t)} km/h" to tag(Misconception.FORMULA_SWAP, "multiplied distance by time instead of dividing"),
@@ -96,8 +171,8 @@ object ProblemTemplates {
                 val mins = rnd.pick(listOf(30.0, 45.0, 90.0))
                 val v = rnd.pick(listOf(40.0, 60.0, 80.0))
                 val d = v * mins / 60
-                TemplateProblem(type, listOf("${fmt(d)} km", "${fmt(mins)} minutes"), "the speed in km/h", setting,
-                    "A vehicle covers ${fmt(d)} km in ${fmt(mins)} minutes. What is its speed in km/h?",
+                TemplateProblem(type, listOf(Slot("${fmt(d)} km", "the distance travelled"), Slot("${fmt(mins)} minutes", "the time taken")),
+                    "What is the speed in km/h?", setting, "A vehicle covers {A} in {B}.",
                     "${fmt(v)} km/h",
                     listOf(
                         "${fmt(d / mins)} km/h" to tag(Misconception.UNIT_CONVERSION, "divided by minutes without converting to hours"),
@@ -114,8 +189,8 @@ object ProblemTemplates {
                 val p = if (level == 1) rnd.pick(listOf(10.0, 20.0, 25.0, 50.0)) else rnd.pick(listOf(12.0, 15.0, 35.0, 40.0))
                 val n = (rnd.nextInt(2, 11) * 40).toDouble()
                 val ans = p * n / 100
-                TemplateProblem(type, listOf("${fmt(p)}%", "Rs ${fmt(n)}"), "${fmt(p)}% of the amount in rupees", setting,
-                    "What is ${fmt(p)}% of Rs ${fmt(n)}?", "Rs ${fmt(ans)}",
+                TemplateProblem(type, listOf(Slot("Rs ${fmt(n)}", "the amount of money")),
+                    "What is ${fmt(p)}% of this amount?", setting, "An item costs {A}.", "Rs ${fmt(ans)}",
                     listOf(
                         "Rs ${fmt(p * n)}" to tag(Misconception.UNIT_CONVERSION, "forgot to divide by 100"),
                         "Rs ${fmt(n / p)}" to tag(Misconception.FORMULA_SWAP, "divided the amount by the percent"),
@@ -126,8 +201,8 @@ object ProblemTemplates {
                 val p = rnd.pick(listOf(10.0, 20.0, 25.0))
                 val n = (rnd.nextInt(3, 13) * 100).toDouble()
                 val inc = p * n / 100
-                TemplateProblem(type, listOf("Rs ${fmt(n)}", "${fmt(p)}%"), "the new price in rupees after the increase", setting,
-                    "A price of Rs ${fmt(n)} goes up by ${fmt(p)}%. What is the new price?", "Rs ${fmt(n + inc)}",
+                TemplateProblem(type, listOf(Slot("Rs ${fmt(n)}", "the old price"), Slot("${fmt(p)}%", "the percentage increase")),
+                    "What is the new price?", setting, "A price of {A} goes up by {B}.", "Rs ${fmt(n + inc)}",
                     listOf(
                         "Rs ${fmt(inc)}" to tag(Misconception.PARTIAL_STEP, "found the increase but did not add it"),
                         "Rs ${fmt(n - inc)}" to tag(Misconception.SIGN_ERROR, "subtracted the increase instead of adding"),
@@ -142,9 +217,11 @@ object ProblemTemplates {
             val r = if (level == 1) rnd.pick(listOf(5.0, 10.0)) else rnd.pick(listOf(4.0, 6.0, 8.0, 12.0))
             val t = if (level < 3) rnd.pick(listOf(2.0, 3.0, 4.0)) else rnd.pick(listOf(1.5, 2.5))
             val si = pr * r * t / 100
-            TemplateProblem(type, listOf("Rs ${fmt(pr)}", "${fmt(r)}%", "${fmt(t)} years"), "the simple interest in rupees",
+            TemplateProblem(type,
+                listOf(Slot("Rs ${fmt(pr)}", "the money deposited"), Slot("${fmt(r)}% per year", "the interest rate"), Slot("${fmt(t)} years", "the time")),
+                "What is the simple interest earned?",
                 rnd.pick(listOf("a post office savings scheme", "a bank deposit for a farmer", "a loan for a sewing machine")),
-                "Find the simple interest on Rs ${fmt(pr)} at ${fmt(r)}% per year for ${fmt(t)} years.", "Rs ${fmt(si)}",
+                "Someone deposits {A} at {B} for {C}.", "Rs ${fmt(si)}",
                 listOf(
                     "Rs ${fmt(pr * r * t)}" to tag(Misconception.UNIT_CONVERSION, "forgot to divide by 100"),
                     "Rs ${fmt(pr * r / 100)}" to tag(Misconception.PARTIAL_STEP, "found one year's interest only"),
@@ -156,9 +233,10 @@ object ProblemTemplates {
             val l = rnd.nextInt(4, 21).toDouble()
             val w = rnd.nextInt(2, l.toInt()).toDouble()
             val setting = rnd.pick(listOf("a classroom floor", "a farm field", "a kitchen garden", "a rangoli border"))
+            val slots = listOf(Slot("${fmt(l)} m", "the length"), Slot("${fmt(w)} m", "the width"))
             if (level == 2) {
-                TemplateProblem(type, listOf("${fmt(l)} m", "${fmt(w)} m"), "the perimeter in metres", setting,
-                    "A rectangle is ${fmt(l)} m long and ${fmt(w)} m wide. What is its perimeter?", "${fmt(2 * (l + w))} m",
+                TemplateProblem(type, slots, "What is its perimeter in metres?", setting,
+                    "A rectangle is {A} long and {B} wide.", "${fmt(2 * (l + w))} m",
                     listOf(
                         "${fmt(l * w)} m" to tag(Misconception.CONCEPT_CONFUSION, "found the area instead of the perimeter"),
                         "${fmt(l + w)} m" to tag(Misconception.PARTIAL_STEP, "added only two sides"),
@@ -166,8 +244,8 @@ object ProblemTemplates {
                     ),
                     "Perimeter = 2 x (${fmt(l)} + ${fmt(w)}) = ${fmt(2 * (l + w))} m.", "2*(${fmt(l)}+${fmt(w)})")
             } else {
-                TemplateProblem(type, listOf("${fmt(l)} m", "${fmt(w)} m"), "the area in square metres", setting,
-                    "A rectangle is ${fmt(l)} m long and ${fmt(w)} m wide. What is its area?", "${fmt(l * w)} sq m",
+                TemplateProblem(type, slots, "What is its area in square metres?", setting,
+                    "A rectangle is {A} long and {B} wide.", "${fmt(l * w)} sq m",
                     listOf(
                         "${fmt(2 * (l + w))} sq m" to tag(Misconception.CONCEPT_CONFUSION, "found the perimeter instead of the area"),
                         "${fmt(l + w)} sq m" to tag(Misconception.OPERATION_SWAP, "added length and width"),
@@ -180,9 +258,10 @@ object ProblemTemplates {
             val i = if (level == 1) rnd.pick(listOf(1.0, 2.0, 3.0, 4.0)) else rnd.pick(listOf(0.5, 1.5, 2.5))
             val r = rnd.pick(listOf(2.0, 4.0, 5.0, 10.0, 20.0))
             val v = i * r
-            TemplateProblem(type, listOf("${fmt(v)} V", "${fmt(r)} ohm"), "the current in amperes",
+            TemplateProblem(type, listOf(Slot("${fmt(v)} V", "the voltage of the supply"), Slot("${fmt(r)} ohm", "the resistance")),
+                "What current flows through it, in amperes?",
                 rnd.pick(listOf("a torch bulb", "a mobile charger circuit", "a ceiling fan regulator")),
-                "A ${fmt(v)} V supply is connected across a ${fmt(r)} ohm resistor. What current flows?", "${fmt(i)} A",
+                "A {A} supply is connected across a {B} resistor.", "${fmt(i)} A",
                 listOf(
                     "${fmt(v * r)} A" to tag(Misconception.FORMULA_SWAP, "multiplied voltage and resistance"),
                     "${fmt(r / v)} A" to tag(Misconception.FORMULA_SWAP, "divided resistance by voltage"),
@@ -194,9 +273,10 @@ object ProblemTemplates {
             val d = rnd.pick(listOf(2.0, 4.0, 5.0, 8.0, 0.5))
             val vol = rnd.pick(listOf(10.0, 20.0, 25.0, 40.0))
             val m = d * vol
-            TemplateProblem(type, listOf("${fmt(m)} g", "${fmt(vol)} cm3"), "the density in g/cm3",
+            TemplateProblem(type, listOf(Slot("${fmt(m)} g", "the mass"), Slot("${fmt(vol)} cm3", "the volume")),
+                "What is its density in g/cm3?",
                 rnd.pick(listOf("a piece of metal", "a block of soap", "a stone from a river")),
-                "An object has a mass of ${fmt(m)} g and a volume of ${fmt(vol)} cm3. What is its density?", "${fmt(d)} g/cm3",
+                "An object has a mass of {A} and a volume of {B}.", "${fmt(d)} g/cm3",
                 listOf(
                     "${fmt(m * vol)} g/cm3" to tag(Misconception.FORMULA_SWAP, "multiplied mass and volume"),
                     "${fmt(vol / m)} g/cm3" to tag(Misconception.FORMULA_SWAP, "divided volume by mass"),
@@ -205,15 +285,17 @@ object ProblemTemplates {
                 "Density = mass / volume = ${fmt(m)} / ${fmt(vol)} = ${fmt(d)} g/cm3.", "${fmt(m)}/${fmt(vol)}")
         }
         TemplateType.UNIT_CONVERSION -> {
-            data class U(val from: String, val to: String, val factor: Double, val setting: String)
+            data class U(val from: String, val to: String, val factor: Double, val setting: String, val meaning: String)
             val u = rnd.pick(listOf(
-                U("km", "m", 1000.0, "a walk to the market"), U("kg", "g", 1000.0, "a bag of rice"),
-                U("litres", "mL", 1000.0, "a bottle of milk"), U("m", "cm", 100.0, "a length of cloth"),
+                U("km", "m", 1000.0, "a walk to the market", "the distance walked"),
+                U("kg", "g", 1000.0, "a bag of rice", "the weight of the bag"),
+                U("litres", "mL", 1000.0, "a bottle of milk", "the amount of milk"),
+                U("m", "cm", 100.0, "a length of cloth", "the length of the cloth"),
             ))
             val x = if (level == 1) rnd.nextInt(2, 10).toDouble() else rnd.pick(listOf(1.5, 2.5, 3.25, 0.75))
             val wrongFactor = if (u.factor == 1000.0) 100.0 else 1000.0
-            TemplateProblem(type, listOf("${fmt(x)} ${u.from}"), "the amount in ${u.to}", u.setting,
-                "How many ${u.to} are there in ${fmt(x)} ${u.from}?", "${fmt(x * u.factor)} ${u.to}",
+            TemplateProblem(type, listOf(Slot("${fmt(x)} ${u.from}", u.meaning)), "How many ${u.to} is that?", u.setting,
+                "The amount is {A}.", "${fmt(x * u.factor)} ${u.to}",
                 listOf(
                     "${fmt(x * wrongFactor)} ${u.to}" to tag(Misconception.UNIT_CONVERSION, "used ${fmt(wrongFactor)} instead of ${fmt(u.factor)}"),
                     "${fmt(x / u.factor)} ${u.to}" to tag(Misconception.OPERATION_SWAP, "divided instead of multiplying"),
@@ -230,9 +312,11 @@ object ProblemTemplates {
             val mean = sum / n
             val sorted = xs.sorted()
             val middle = sorted[n / 2].toDouble()
-            TemplateProblem(type, xs.map { it.toString() } + "$n matches", "the average runs per match",
-                "a batter's cricket scores in ${n} matches",
-                "A batter scores ${xs.joinToString(", ")} runs in $n matches. What is the average score?", fmt(mean),
+            val list = xs.dropLast(1).joinToString(", ") + " and " + xs.last() + " runs"
+            // One placeholder for the whole score list: the 1B model placed separate per-score placeholders poorly.
+            TemplateProblem(type, listOf(Slot(list, "the list of scores")),
+                "What is the average score per match over these $n matches?",
+                "a batter's cricket scores", "A batter scored {A} in recent matches.", fmt(mean),
                 listOf(
                     fmt(sum) to tag(Misconception.PARTIAL_STEP, "added the scores but did not divide"),
                     fmt(sum / (n - 1)) to tag(Misconception.MISREAD_QUESTION, "divided by one less than the number of matches"),
@@ -242,12 +326,19 @@ object ProblemTemplates {
         }
     }
 
-    /** The LLM's word-problem text must contain every given quantity exactly. */
+    /** The final text must contain every given quantity exactly (kept as a safety net after substitution). */
     fun textKeepsNumbers(text: String, givens: List<String>): Boolean {
         val norm = text.replace(Regex("\\s+"), " ")
         return givens.all { g ->
-            val num = Regex("-?\\d+(?:\\.\\d+)?").find(g)?.value ?: return@all norm.contains(g)
-            Regex("(?<![\\d.])" + Regex.escape(num) + "(?![\\d.]*\\d)").containsMatchIn(norm)
+            Regex("-?\\d+(?:\\.\\d+)?").findAll(g).map { it.value }.toList().ifEmpty { return@all norm.contains(g) }.all { num ->
+                Regex("(?<![\\d.])" + Regex.escape(num) + "(?![\\d.]*\\d)").containsMatchIn(norm)
+            }
         }
+    }
+
+    /** Numbers in the text must all be given quantities or appear in the Kotlin question (never the answer). */
+    fun noExtraNumbers(text: String, givens: List<String>): Boolean {
+        val allowed = givens.flatMap { g -> Regex("\\d+(?:\\.\\d+)?").findAll(g).map { it.value }.toList() }.toSet()
+        return Regex("\\d+(?:\\.\\d+)?").findAll(text).all { it.value in allowed }
     }
 }

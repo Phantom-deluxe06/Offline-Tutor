@@ -177,13 +177,14 @@ class TemplateGenerator(private val ai: TutorAi) {
             val p = ProblemTemplates.generate(type, level, random)
             val text = try {
                 val r = ai.engine.generate(
-                    GenRequest(TaskType.TEMPLATE_TEXT, Prompts.templateText(grade, p), stopWhen = { it.trimEnd().endsWith("?") }),
+                    GenRequest(TaskType.TEMPLATE_TEXT, Prompts.templateStory(grade, p), stopWhen = Prompts.storyDone(p)),
                     onPartial,
                 )
-                val t = Prompts.cleanTemplateText(r.text, p.ask)
-                val ok = t != null && ProblemTemplates.textKeepsNumbers(t, p.givens) && ProblemTemplates.noExtraNumbers(t, p.givens)
-                ai.log(r, TaskType.TEMPLATE_TEXT, meta.copy(difficulty = level), ok, null, Verdict.TEMPLATE.name)
-                if (ok) t else null
+                // 2-fix-1: accept the story only with every placeholder exactly once and no digits / number words;
+                // then Kotlin fills the numbers and appends its own question.
+                val story = ProblemTemplates.acceptStory(r.text, p.slots.size)
+                ai.log(r, TaskType.TEMPLATE_TEXT, meta.copy(difficulty = level), story != null, null, Verdict.TEMPLATE.name)
+                story?.let { p.textFor(it) }
             } catch (_: ModelMissingException) {
                 null // no model installed: Kotlin's own wording still gives a correct question
             }
