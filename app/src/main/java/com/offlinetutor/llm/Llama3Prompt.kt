@@ -25,6 +25,16 @@ object Llama3Prompt {
 
     fun single(system: String, user: String, assistantPrefix: String = ""): String =
         build(system, listOf(Turn(Role.USER, user)), assistantPrefix)
+
+    /**
+     * 3d: the static part of a prompt — BOS + system message up to and including its <|eot_id|>. Splitting right
+     * after a special token keeps tokenization identical, so it can be prefilled ahead of time.
+     */
+    fun systemPrefix(prompt: String): String? {
+        if (!prompt.startsWith(BOS + header(Role.SYSTEM))) return null
+        val end = prompt.indexOf(EOT)
+        return if (end < 0 || end + EOT.length >= prompt.length) null else prompt.substring(0, end + EOT.length)
+    }
 }
 
 /** Special tokens that may leak into the streamed text. */

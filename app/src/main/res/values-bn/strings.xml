@@ -308,4 +308,7 @@
     <string name="simulate_night_full">রাত + পুরো মূল্যায়ন</string>
     <string name="night_running">কাজ চলছে: %2-এর মধ্যে %1 · %3</string>
     <string name="night_last">গত রাত: %1</string>
+    <string name="ff_prefill">প্রম্পট প্রিফিল (পরীক্ষামূলক)</string>
+    <string name="ff_prefill_body">ফোন অলস থাকলে পরের প্রম্পটের স্থির অংশ আগেই পড়ে রাখে। মাপা না হওয়া পর্যন্ত বন্ধ।</string>
+    <string name="prefill_ab_eval">প্রিফিল A/B (TTFT)</string>
 </resources>

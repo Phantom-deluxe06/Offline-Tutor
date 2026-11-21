@@ -74,6 +74,13 @@ class AppContainer(app: Application) {
             flags.state.collect { f ->
                 if (f[com.offlinetutor.data.Feature.NIGHT_SHIFT] != false) com.offlinetutor.data.NightShiftScheduler.schedule(app)
                 else com.offlinetutor.data.NightShiftScheduler.cancel(app)
+                engine.prefillEnabled = f[com.offlinetutor.data.Feature.PROMPT_PREFILL] == true
+            }
+        }
+        // 3d: when the worker goes idle, prefill the last system prompt (P2) so a repeat task starts faster.
+        appScope.launch {
+            engine.state.collect { s ->
+                if (s is com.offlinetutor.llm.EngineState.Ready && engine.prefillEnabled) runCatching { engine.prewarm() }
             }
         }
         // 3b warm-up on app open: when a profile becomes active, start filling the ready pool for its courses.

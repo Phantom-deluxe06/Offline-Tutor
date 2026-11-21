@@ -52,6 +52,8 @@ data class GenRequest(
     val stopWhen: ((String) -> Boolean)? = null,
     /** 3a: P0 = live user request (default), P1 = pool refill, P2 = night batch. */
     val priority: Priority = Priority.P0,
+    /** 3d: null = engine default (Settings toggle); true / false forces prefix reuse on / off (prefill A/B). */
+    val prefill: Boolean? = null,
 )
 
 enum class StopReason { END, MAX_TOKENS, REPETITION, JSON_COMPLETE, CONDITION, CANCELLED, ERROR, PREEMPTED }
@@ -74,6 +76,8 @@ data class GenResult(
     val thermalStatus: Int,
     val thermalPolicy: String,
     val error: String?,
+    /** 3d: the system prompt was already in the KV cache (prefilled while idle), only the rest was prefilled now. */
+    val prefixReused: Boolean = false,
 ) {
     val ttftMs: Long? get() = stats?.ttftMs ?: appTtftMs
     val generatedTokens: Int get() = stats?.generatedTokens ?: callbackTokens
@@ -112,6 +116,16 @@ class LlmEngine(
     private val dispatcher = executor.asCoroutineDispatcher()
     // 3a: priority-ordered, preempting lock in front of the single worker (replaces a FIFO Mutex).
     private val gate = PriorityGate()
+
+    // 3d: static system-prompt prefix currently held in the KV cache (prefilled while idle), and the last one used.
+    @Volatile private var warmPrefix: String? = null
+    @Volatile var lastPrefix: String? = null
+        private set
+    /** 3d: Settings toggle; reuse is only attempted when on (or forced per request). */
+    @Volatile var prefillEnabled: Boolean = false
+    /** Time the last prewarm spent in prefillPrompt (ms), for the benchmark. */
+    @Volatile var lastPrewarmMs: Long = -1
+        private set
 
     /** Generations stopped for a more urgent request (requeued by their callers). */
     val preemptions = AtomicInteger(0)
@@ -155,6 +169,7 @@ class LlmEngine(
             }
             module = null
             loaded = null
+            warmPrefix = null
             val t0 = SystemClock.elapsedRealtime()
             try {
                 val m = LlmModule(sel.pte.absolutePath, sel.tokenizer.absolutePath, 0.5f)
@@ -198,6 +213,12 @@ class LlmEngine(
         }
 
         val fullPrompt = req.prompt
+        // 3d: reuse a prefilled system prompt when this request starts with it; otherwise reset and send everything.
+        val warm = warmPrefix
+        val reuse = (req.prefill ?: prefillEnabled) && warm != null && fullPrompt.startsWith(warm) && fullPrompt.length > warm.length
+        val toSend = if (reuse) fullPrompt.substring(warm!!.length) else fullPrompt
+        warmPrefix = null // after this generation the cache holds this request, not the bare prefix
+        lastPrefix = Llama3Prompt.systemPrefix(fullPrompt)
         val promptTokensEst = TokenEstimator.estimate(fullPrompt)
         val scaled = max(32, (req.maxNewTokens * policy.tokenScale).toInt())
         val room = contextLength - promptTokensEst - 16
@@ -279,8 +300,8 @@ class LlmEngine(
         val done = CompletableDeferred<Unit>()
         executor.execute {
             try {
-                m.resetContext() // every task sends its full prompt; never reuse a stale KV cache
-                m.generate(fullPrompt, config, callback)
+                if (!reuse) m.resetContext() // every task sends its full prompt unless the prefilled prefix is reused
+                m.generate(toSend, config, callback)
             } catch (t: Throwable) {
                 Log.e(TAG, "generate failed", t)
                 nativeError = t.message ?: t.javaClass.simpleName
@@ -326,7 +347,26 @@ class LlmEngine(
             thermalStatus = thermal.currentStatus(),
             thermalPolicy = policy.label,
             error = nativeError,
+            prefixReused = reuse,
         )
+    }
+
+    /**
+     * 3d: prefills [prefix] (a static system-prompt prefix) into a fresh KV cache while the worker is free, so the
+     * next request that starts with it only prefills its own part. Runs at P2 unless called in a GenPriority context.
+     * prefillPrompt() cannot be stopped, but it covers only the short system prompt.
+     */
+    suspend fun prewarm(prefix: String? = lastPrefix): Boolean {
+        val p = prefix ?: return false
+        return gate.withPermit(currentCoroutineContext()[GenPriority]?.priority ?: Priority.P2) { holder ->
+            if (holder.preempted) return@withPermit false
+            val (m, _) = loadLocked()
+            if (warmPrefix == p) return@withPermit true
+            val t0 = SystemClock.elapsedRealtime()
+            val ok = withContext(NonCancellable + dispatcher) { runCatching { m.resetContext(); m.prefillPrompt(p) }.isSuccess }
+            if (ok) { warmPrefix = p; lastPrewarmMs = SystemClock.elapsedRealtime() - t0 }
+            ok
+        }
     }
 
     /** Stops any generation, waits for it, then frees native memory. */
@@ -338,6 +378,7 @@ class LlmEngine(
             }
             module = null
             loaded = null
+            warmPrefix = null
         }
         refreshAvailability()
     }

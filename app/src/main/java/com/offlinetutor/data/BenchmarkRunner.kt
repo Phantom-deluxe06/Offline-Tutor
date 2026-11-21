@@ -137,6 +137,37 @@ class BenchmarkRunner(
     }
 
     /**
+     * 3d prefill A/B: the same prompts generated twice at temperature 0 (greedy): "cold" = reset + full prompt,
+     * "warm" = the system prompt prefilled first (as when the phone is idle), then only the rest. Compares time to
+     * first token and whether the output text is identical. Logged as <run>:cold / <run>:warm, plus one PREWARM note
+     * per pair with the prefill time.
+     */
+    fun prefillAbEval(pairs: Int = 8) = launch("Prefill AB eval", pairs) { run ->
+        val qs = listOf(
+            Triple("Why do we see lightning before we hear thunder?", "Light travels faster than sound", "Light is much faster than sound."),
+            Triple("What is the main function of red blood cells?", "Carry oxygen", "Haemoglobin binds oxygen."),
+            Triple("Which part of speech describes a noun?", "Adjective", "Adjectives describe nouns."),
+            Triple("Why did the Indian National Congress start the Quit India Movement?", "To demand an end to British rule", "It was launched in 1942."),
+            Triple("What does a CPU do in a computer?", "Processes instructions", "The CPU executes program instructions."),
+            Triple("Why is 7 a prime number?", "It has only two factors, 1 and 7", "A prime has exactly two factors."),
+            Triple("What happens to water at 100 degrees Celsius at sea level?", "It boils", "Water boils at 100 C at sea level."),
+            Triple("What is the opposite of 'ancient'?", "Modern", "Ancient means very old."),
+        )
+        for (i in 0 until pairs) {
+            val (q, a, why) = qs[i % qs.size]
+            label("Prefill A/B ${i + 1}/$pairs")
+            val prompt = Prompts.explainAnswer(8, com.offlinetutor.domain.ExplainLanguage.EN, q, a, why)
+            val req = GenRequest(TaskType.EXPLAIN, prompt, maxNewTokens = 48, temperature = 0f)
+            ai.run(req.copy(prefill = false), LogMeta("$run:cold", "prefill", 8)) { p -> partial(p) }
+            val prefix = com.offlinetutor.llm.Llama3Prompt.systemPrefix(prompt)
+            if (engine.prewarm(prefix)) ai.logNote("PREWARM", "$run:prewarm", engine.lastPrewarmMs.toString())
+            ai.run(req.copy(prefill = true), LogMeta("$run:warm", "prefill", 8)) { p -> partial(p) }
+            tick()
+        }
+        summarize("$run:warm")
+    }
+
+    /**
      * 2a template eval: every template type x level once. Each row = one LLM wording attempt; "valid" means the
      * text kept every given number and added none (otherwise the app falls back to its own wording).
      */

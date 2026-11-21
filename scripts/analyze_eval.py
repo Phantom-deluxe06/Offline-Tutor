@@ -101,3 +101,15 @@ for run in [k for k in runs if k.startswith("mcq-diag-eval-") and ":" not in k]:
         tasks = collections.Counter(t["task"] for i in reached for t in i["tags"])
         print(f"tag calls by task: {dict(tasks)}; pipe-only complete: "
               f"{sum(1 for i in reached if i['tags'][0]['task'] == 'MCQ_TAGS_PIPE' and i['tags'][0]['validJson'])}/{len(reached)}")
+
+# 3d prefill A/B: pairs of greedy generations, cold (reset + full prompt) vs warm (system prompt prefilled first).
+for run in sorted({r[0].rsplit(":", 1)[0] for r in db.execute("select evalRun from generation_logs where evalRun like 'prefill-ab-eval-%:cold'")}):
+    cold = db.execute("select * from generation_logs where evalRun=? order by id", (run + ":cold",)).fetchall()
+    warm = db.execute("select * from generation_logs where evalRun=? order by id", (run + ":warm",)).fetchall()
+    pre = [int(r["output"]) for r in db.execute("select output from generation_logs where evalRun=?", (run + ":prewarm",)) if r["output"].strip().lstrip("-").isdigit()]
+    n = min(len(cold), len(warm))
+    same = sum(1 for a, b in zip(cold, warm) if a["output"] == b["output"])
+    print(f"\n=== {run} prefill A/B: {n} pairs")
+    print(f"identical output: {same}/{n}")
+    print(f"TTFT median cold {med([r['ttftMs'] for r in cold[:n]])} ms, warm {med([r['ttftMs'] for r in warm[:n]])} ms")
+    print(f"prompt tokens (est) median cold {med([r['promptTokensEst'] for r in cold[:n]])}; prewarm prefill median {med(pre)} ms over {len(pre)}")

@@ -132,3 +132,17 @@ class NightPlanTest {
         assertEquals(setOf(1, 2, 3), tpl.map { it.second }.toSet())
     }
 }
+
+class PrefillPrefixTest {
+    @Test fun systemPrefixEndsAfterTheSystemMessage() {
+        val p = com.offlinetutor.llm.Llama3Prompt.single("You are a tutor.", "Explain fractions.", "{\"q\":")
+        val prefix = com.offlinetutor.llm.Llama3Prompt.systemPrefix(p)!!
+        assertTrue(p.startsWith(prefix))
+        assertTrue(prefix.endsWith("You are a tutor.<|eot_id|>"))
+        assertTrue(p.substring(prefix.length).startsWith("<|start_header_id|>user"))
+        // Two prompts with the same system message share the prefix (what makes idle prefill reusable).
+        val q = com.offlinetutor.llm.Llama3Prompt.single("You are a tutor.", "Explain percentages.")
+        assertEquals(prefix, com.offlinetutor.llm.Llama3Prompt.systemPrefix(q))
+        assertNull(com.offlinetutor.llm.Llama3Prompt.systemPrefix("plain text"))
+    }
+}

@@ -133,6 +133,7 @@ fun BenchmarkScreen(onBack: () -> Unit, openModels: () -> Unit) {
                     Button(onClick = { c.bench.roadmapEval() }, enabled = !runner.running) { Text(stringResource(R.string.roadmap_eval)) }
                     Button(onClick = { c.bench.templateEval() }, enabled = !runner.running) { Text(stringResource(R.string.template_eval)) }
                     Button(onClick = { c.bench.mcqAbEval() }, enabled = !runner.running) { Text(stringResource(R.string.mcq_ab_eval)) }
+                    Button(onClick = { c.bench.prefillAbEval() }, enabled = !runner.running) { Text(stringResource(R.string.prefill_ab_eval)) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.per_combo), Modifier.padding(top = 8.dp))
