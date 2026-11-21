@@ -301,4 +301,5 @@
     <string name="verdict_fixed">Answer key corrected</string>
     <string name="verdict_template">Answer computed by the app</string>
     <string name="template_eval">Template eval set</string>
+    <string name="mcq_ab_eval">MCQ A/B (expression field)</string>
 </resources>

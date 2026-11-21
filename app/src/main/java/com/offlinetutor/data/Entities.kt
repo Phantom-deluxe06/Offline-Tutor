@@ -212,4 +212,6 @@ data class GenerationLog(
     val rawStats: String? = null,
     /** v3: verifier verdict for MCQ runs (VERIFIED / FIXED / DISCARD / UNVERIFIABLE) or TEMPLATE. */
     val verdict: String? = null,
+    /** v4 (2-fix-3): why the output was rejected ("parse: …", "truncated: …", "rule: …", "duplicate", …). */
+    val failReason: String? = null,
 )

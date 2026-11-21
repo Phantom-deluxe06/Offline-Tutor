@@ -286,4 +286,5 @@
     <string name="verdict_fixed">விடைக் குறிப்பு திருத்தப்பட்டது</string>
     <string name="verdict_template">விடையைச் செயலியே கணக்கிட்டது</string>
     <string name="template_eval">வார்ப்புரு மதிப்பீட்டுத் தொகுப்பு</string>
+    <string name="mcq_ab_eval">MCQ A/B (expression புலம்)</string>
 </resources>

@@ -114,6 +114,29 @@ class BenchmarkRunner(
     }
 
     /**
+     * 2-fix-3 A/B: the same 15 (subject, grade, level) pairs, plain MCQs (no tagging), three arms interleaved per
+     * pair so thermal state is shared: "expr" = old prompt with the expression field, "noexpr" = same prompt
+     * without it, "prod" = current prompt (no expression, conceptual rule). Each arm logs under "<run>:<arm>".
+     */
+    fun mcqAbEval() = launch("MCQ AB eval", Subjects.EVAL.size * grades.size * 3) { run ->
+        data class Arm(val name: String, val withExpression: Boolean, val conceptual: Boolean)
+        val arms = listOf(Arm("expr", true, false), Arm("noexpr", false, false), Arm("prod", false, true))
+        var combo = 0
+        for (subject in Subjects.EVAL) for (grade in grades) {
+            combo++
+            val level = (combo % 3) + AdaptiveDifficulty.EASY // 5 pairs per level
+            for (arm in arms) {
+                label("A/B ${arm.name} · $subject · Grade $grade · L$level")
+                mcq.attempt(grade, subject, subject, level, emptyList(), emptyList(), emptySet(),
+                    LogMeta("$run:${arm.name}", subject, grade, level), onPartial = { p -> partial(p) },
+                    withExpression = arm.withExpression, conceptualOverride = arm.conceptual)
+                tick()
+            }
+        }
+        summarize("$run:prod")
+    }
+
+    /**
      * 2a template eval: every template type x level once. Each row = one LLM wording attempt; "valid" means the
      * text kept every given number and added none (otherwise the app falls back to its own wording).
      */

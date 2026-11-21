@@ -57,7 +57,9 @@ class DiagnosticGenerator(private val ai: TutorAi, private val mcq: McqGenerator
             )
             DiagnosticParser.parseTagLines(t.text).forEachIndexed { i, tag -> if (tags[i] == null && tag != null) tags[i] = tag }
             val complete = tags.all { it != null }
-            ai.log(t, TaskType.MCQ_TAGS, tagMeta, complete, null)
+            val missing = tags.indices.filter { tags[it] == null }.map { 'B' + it }
+            ai.log(t, TaskType.MCQ_TAGS, tagMeta, complete, null,
+                failReason = if (complete) null else "rule: no valid tag for option ${missing.joinToString(", ")}")
             if (complete) break
             // Resume at the first untagged option, replaying the tagged ones before it as the prefix.
             val next = tags.indexOfFirst { it == null }

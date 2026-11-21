@@ -286,4 +286,5 @@
     <string name="verdict_fixed">উত্তর-চাবি সংশোধিত</string>
     <string name="verdict_template">উত্তর অ্যাপ নিজেই হিসাব করেছে</string>
     <string name="template_eval">টেমপ্লেট মূল্যায়ন সেট</string>
+    <string name="mcq_ab_eval">MCQ A/B (expression ক্ষেত্র)</string>
 </resources>

@@ -1,6 +1,8 @@
 package com.offlinetutor
 
 import com.offlinetutor.domain.ExpressionVerifier
+import com.offlinetutor.domain.FailReasons
+import com.offlinetutor.domain.McqParser
 import com.offlinetutor.domain.ProblemTemplates
 import com.offlinetutor.domain.Prompts
 import com.offlinetutor.domain.TemplateType
@@ -55,6 +57,20 @@ class VerifierTest {
 
     @Test fun roundedOptionsAreAccepted() {
         assertEquals(Verdict.VERIFIED, ExpressionVerifier.verify("400/15*100", listOf("2666.67", "60", "385", "6"), 0).verdict)
+    }
+}
+
+class FailReasonsTest {
+    @Test fun classifiesEveryRejection() {
+        assertNull(FailReasons.forMcq(null, "JSON_COMPLETE", null, false))
+        assertEquals("duplicate", FailReasons.forMcq(null, "JSON_COMPLETE", null, true))
+        // Truncation and the repetition guard explain a parse failure better than the parse error itself.
+        assertEquals(FailReasons.TRUNCATED, FailReasons.forMcq("no JSON object", "MAX_TOKENS", null, false))
+        assertEquals("repetition: repeated 6-gram", FailReasons.forMcq("bad JSON: x", "REPETITION", "repeated 6-gram", false))
+        assertEquals("parse: no JSON object", FailReasons.forMcq("no JSON object", "END", null, false))
+        assertEquals("rule: need 4 options, got 3", FailReasons.forMcq("need 4 options, got 3", "JSON_COMPLETE", null, false))
+        assertEquals(McqParser.RULE_ARITHMETIC, FailReasons.forMcq(McqParser.RULE_ARITHMETIC, "JSON_COMPLETE", null, false))
+        assertEquals("truncated", FailReasons.category(FailReasons.TRUNCATED))
     }
 }
 

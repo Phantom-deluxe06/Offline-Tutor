@@ -2,6 +2,7 @@ package com.offlinetutor.data
 
 import com.offlinetutor.domain.DiagMcq
 import com.offlinetutor.domain.ExpressionVerifier
+import com.offlinetutor.domain.FailReasons
 import com.offlinetutor.domain.McqParse
 import com.offlinetutor.domain.McqParser
 import com.offlinetutor.domain.Mcq
@@ -38,7 +39,7 @@ class TutorAi(val engine: LlmEngine, private val logs: LogDao) {
         return r
     }
 
-    suspend fun log(r: GenResult, task: TaskType, meta: LogMeta, validJson: Boolean?, duplicate: Boolean?, verdict: String? = null) {
+    suspend fun log(r: GenResult, task: TaskType, meta: LogMeta, validJson: Boolean?, duplicate: Boolean?, verdict: String? = null, failReason: String? = null) {
         logs.insert(
             GenerationLog(
                 task = task.name,
@@ -70,6 +71,7 @@ class TutorAi(val engine: LlmEngine, private val logs: LogDao) {
                 output = r.text.take(4000),
                 rawStats = r.rawStats,
                 verdict = verdict,
+                failReason = failReason,
             ),
         )
     }
@@ -109,9 +111,11 @@ class McqGenerator(private val ai: TutorAi, private val flags: FeatureFlags) {
         focus: String? = null,
         /** Eval A/B only (2-fix-3): ask for the old "expression" field. */
         withExpression: Boolean = false,
+        /** Eval A/B only: force the conceptual rule on/off instead of following the templates toggle. */
+        conceptualOverride: Boolean? = null,
     ): Outcome {
         // 2-fix-2: with templates on, arithmetic belongs to Kotlin templates; LLM MCQs stay conceptual.
-        val conceptual = flags.isOn(Feature.TEMPLATES)
+        val conceptual = conceptualOverride ?: flags.isOn(Feature.TEMPLATES)
         val prompt = Prompts.mcq(grade, course, subtopic, level, recentStems, weak, focus, withExpression, conceptual)
         val m = meta.copy(difficulty = level)
         val r = ai.engine.generate(GenRequest(TaskType.MCQ, prompt, assistantPrefix = Prompts.MCQ_PREFIX), onPartial)
@@ -128,7 +132,8 @@ class McqGenerator(private val ai: TutorAi, private val flags: FeatureFlags) {
                 )
                 parsed = McqParser.completeWith(stem, f.text)
                 ai.log(f, TaskType.MCQ_ANSWER, m.copy(evalRun = m.evalRun?.let { "$it:answer" }),
-                    parsed is McqParse.Ok, null)
+                    parsed is McqParse.Ok, null,
+                    failReason = FailReasons.forMcq((parsed as? McqParse.Invalid)?.reason, f.stopReason.name, f.guardReason, false))
             }
         }
         // 2-fix-2: the expression checker (ExpressionVerifier) no longer runs at generation time. Measured: the 1B
@@ -144,12 +149,14 @@ class McqGenerator(private val ai: TutorAi, private val flags: FeatureFlags) {
 
         val ok = parsed as? McqParse.Ok
         val dup = ok != null && QuestionDeduper.isDuplicate(ok.mcq.question, historyNormalized)
-        // The main row records the final outcome (after any follow-up) for the eval metrics.
-        ai.log(r, TaskType.MCQ, m, ok != null, if (ok != null) dup else null, verdict?.name)
+        // The main row records the final outcome (after any follow-up) for the eval metrics, with a failure
+        // reason (2-fix-3) for every rejected MCQ.
+        val failReason = FailReasons.forMcq((parsed as? McqParse.Invalid)?.reason, r.stopReason.name, r.guardReason, dup)
+        ai.log(r, TaskType.MCQ, m, ok != null, if (ok != null) dup else null, verdict?.name, failReason)
 
         return when (val p = parsed) {
-            is McqParse.Ok -> Outcome(if (dup) null else p.mcq, true, dup, if (dup) "duplicate of an earlier question" else null, r, verdict)
-            is McqParse.Invalid -> Outcome(null, false, false, p.reason, r, verdict)
+            is McqParse.Ok -> Outcome(if (dup) null else p.mcq, true, dup, failReason, r, verdict)
+            is McqParse.Invalid -> Outcome(null, false, false, failReason, r, verdict)
         }
     }
 }
@@ -182,8 +189,11 @@ class TemplateGenerator(private val ai: TutorAi) {
                 )
                 // 2-fix-1: accept the story only with every placeholder exactly once and no digits / number words;
                 // then Kotlin fills the numbers and appends its own question.
-                val story = ProblemTemplates.acceptStory(r.text, p.slots.size)
-                ai.log(r, TaskType.TEMPLATE_TEXT, meta.copy(difficulty = level), story != null, null, Verdict.TEMPLATE.name)
+                val cleaned = ProblemTemplates.cleanStory(r.text)
+                val problem = ProblemTemplates.storyProblem(cleaned, p.slots.size)
+                val story = cleaned.takeIf { problem == null }
+                ai.log(r, TaskType.TEMPLATE_TEXT, meta.copy(difficulty = level), story != null, null, Verdict.TEMPLATE.name,
+                    problem?.let { "rule: $it" })
                 story?.let { p.textFor(it) }
             } catch (_: ModelMissingException) {
                 null // no model installed: Kotlin's own wording still gives a correct question

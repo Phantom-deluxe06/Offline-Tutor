@@ -349,7 +349,7 @@ class MetricsRepository(private val dao: LogDao) {
             "id", "time", "task", "model", "eval_run", "eval_subject", "eval_grade", "difficulty",
             "prompt_chars", "prompt_tokens_est", "prompt_tokens", "generated_tokens", "max_new_tokens", "temperature",
             "ttft_ms", "wall_ms", "decode_tok_s", "prefill_tok_s", "peak_rss_mb", "rss_mb", "device_avail_mb",
-            "thermal_status", "thermal_policy", "stop_reason", "guard_reason", "valid_json", "duplicate", "error", "verdict",
+            "thermal_status", "thermal_policy", "stop_reason", "guard_reason", "valid_json", "duplicate", "error", "verdict", "fail_reason",
             "output", "raw_stats", "review_answer_correct", "review_difficulty_match", "review_roadmap_score_1to5",
         )
         out.bufferedWriter().use { w ->
@@ -361,7 +361,7 @@ class MetricsRepository(private val dao: LogDao) {
                     l.ttftMs, l.wallMs, l.decodeTokPerSec?.let { "%.2f".format(Locale.US, it) },
                     l.prefillTokPerSec?.let { "%.2f".format(Locale.US, it) },
                     mb(l.peakRssKb), mb(l.rssKb), mb(l.deviceAvailKb), l.thermalStatus, l.thermalPolicy, l.stopReason,
-                    l.guardReason, l.validJson, l.duplicate, l.error, l.verdict, l.output, l.rawStats, "", "", "",
+                    l.guardReason, l.validJson, l.duplicate, l.error, l.verdict, l.failReason, l.output, l.rawStats, "", "", "",
                 )
                 w.write(cells.joinToString(",") { csv(it) }); w.write("\n")
             }

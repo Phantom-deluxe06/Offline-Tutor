@@ -23,7 +23,7 @@ def med(xs):
 db = sqlite3.connect(sys.argv[1])
 db.row_factory = sqlite3.Row
 rows = db.execute(
-    "select * from generation_logs where evalRun like 'mcq-eval-%' or evalRun like 'mcq-diag-eval-%' or evalRun like 'roadmap-eval-%' or evalRun like 'template-eval-%' order by id"
+    "select * from generation_logs where evalRun like 'mcq-eval-%' or evalRun like 'mcq-diag-eval-%' or evalRun like 'roadmap-eval-%' or evalRun like 'template-eval-%' or evalRun like 'mcq-ab-eval-%' order by id"
 ).fetchall()
 
 runs = collections.OrderedDict()
@@ -61,6 +61,16 @@ for run, rs in runs.items():
         verdicts = collections.Counter(r["verdict"] for r in rs if r["verdict"])
         if verdicts:
             print("verdicts        :", dict(verdicts))
+    # 2-fix-3: failure reasons (DB schema v4+), overall and for hard questions only.
+    if "failReason" in rs[0].keys():
+        bad = [r for r in rs if not r["validJson"] or r["duplicate"]]
+        cats = collections.Counter((r["failReason"] or "(none logged)").split(":")[0] for r in bad)
+        print("fail categories :", dict(cats))
+        print("fail reasons    :", dict(collections.Counter(r["failReason"] or "(none logged)" for r in bad)))
+        hard = [r for r in bad if r["difficulty"] == 3]
+        if hard:
+            print("hard fail cats  :", dict(collections.Counter((r["failReason"] or "(none logged)").split(":")[0] for r in hard)),
+                  f"(hard usable {sum(1 for r in rs if r['difficulty'] == 3 and r['validJson'] and not r['duplicate'])}/{sum(1 for r in rs if r['difficulty'] == 3)})")
 
 # Per-item view of diagnostic runs: each base MCQ row, then the :tags rows logged after it (id order).
 for run in [k for k in runs if k.startswith("mcq-diag-eval-") and ":" not in k]:
