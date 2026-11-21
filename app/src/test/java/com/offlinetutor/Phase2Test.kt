@@ -58,6 +58,23 @@ class VerifierTest {
     }
 }
 
+class McqPromptSwitchTest {
+    @Test fun expressionFieldOnlyForTheAbEval() {
+        val plain = Prompts.mcq(8, "Science", "Photosynthesis", 2, emptyList(), emptyList())
+        assertFalse(plain.contains("expression"))
+        val ab = Prompts.mcq(8, "Science", "Photosynthesis", 2, emptyList(), emptyList(), withExpression = true)
+        assertTrue(ab.contains("\"expression\":\"\"}"))
+    }
+
+    @Test fun conceptualRuleAndArithmeticRejection() {
+        val p = Prompts.mcq(8, "Mathematics", "Fractions", 2, emptyList(), emptyList(), conceptual = true)
+        assertTrue(p.contains("Do not ask a calculation question"))
+        // The generator rejects all-numeric option sets when templates own arithmetic.
+        assertTrue(listOf("12", "Rs 40", "3/4", "0.5 km").all { ExpressionVerifier.optionValue(it) != null })
+        assertFalse(listOf("12", "Rs 40", "a third", "0.5 km").all { ExpressionVerifier.optionValue(it) != null })
+    }
+}
+
 class TemplatesTest {
     /** Every template's Kotlin answer is independently confirmed by exp4j, and distractors never collide. */
     @Test fun everyTemplateIsSelfConsistent() {

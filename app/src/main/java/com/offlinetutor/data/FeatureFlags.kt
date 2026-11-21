@@ -13,8 +13,7 @@ enum class Feature(val phase: Int) {
     SELF_HEALING(1),
     BACKTRACKING(1),
     SKILL_TREE(1),
-    TEMPLATES(2),
-    VERIFIER(2);
+    TEMPLATES(2);
 
     companion object {
         /** Toggles for later phases stay hidden until that phase is built. */

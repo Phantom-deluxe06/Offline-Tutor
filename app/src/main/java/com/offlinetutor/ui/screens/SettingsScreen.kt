@@ -195,7 +195,6 @@ private fun featureTitle(f: Feature): String = stringResource(
         Feature.BACKTRACKING -> R.string.ff_backtracking
         Feature.SKILL_TREE -> R.string.ff_tree
         Feature.TEMPLATES -> R.string.ff_templates
-        Feature.VERIFIER -> R.string.ff_verifier
     },
 )
 
@@ -209,6 +208,5 @@ private fun featureBody(f: Feature): String = stringResource(
         Feature.BACKTRACKING -> R.string.ff_backtracking_body
         Feature.SKILL_TREE -> R.string.ff_tree_body
         Feature.TEMPLATES -> R.string.ff_templates_body
-        Feature.VERIFIER -> R.string.ff_verifier_body
     },
 )

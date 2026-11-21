@@ -81,8 +81,18 @@ object Prompts {
         recentStems: List<String>,
         weakSubtopics: List<String>,
         focus: String? = null,
+        // 2-fix-2: off in the app; only the eval A/B (2-fix-3) asks for the expression field.
+        withExpression: Boolean = false,
+        // 2-fix-2: numeric questions come from Kotlin templates, so free-form LLM MCQs stay conceptual.
+        conceptual: Boolean = false,
     ): String {
         fun build(stems: List<String>): String {
+            val exprRule = if (withExpression)
+                "\nIf the answer is a number, \"expression\" is the arithmetic that gives it, for example 120/1.5; otherwise leave it empty." else ""
+            val conceptRule = if (conceptual)
+                "\nAsk about an idea, definition, reason or example. Do not ask a calculation question." else ""
+            val shape = "{\"question\":\"...\",\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\",\"answer\":\"B\",\"explanation\":\"one or two sentences\"" +
+                (if (withExpression) ",\"expression\":\"\"}" else "}")
             // On-device testing showed the 1B model copies full earlier questions verbatim when
             // they are in the prompt, so only their keywords are passed as "already covered".
             val avoid = if (stems.isEmpty()) "" else
@@ -96,12 +106,11 @@ object Prompts {
                 Write ONE new multiple-choice question for a Grade $grade student in India.
                 Subject: $course
                 Topic: $subtopic
-                Difficulty: ${difficultyText(level)}$weak$avoid
+                Difficulty: ${difficultyText(level)}$weak$avoid$conceptRule
                 Rules: options A, B, C and D are all different and only one is correct. Never ask the same question twice.
-                "answer" is the letter of the correct option.
-                If the answer is a number, "expression" is the arithmetic that gives it, for example 120/1.5; otherwise leave it empty.
+                "answer" is the letter of the correct option.$exprRule
                 Return ONLY JSON in exactly this shape:
-                {"question":"...","A":"...","B":"...","C":"...","D":"...","answer":"B","explanation":"one or two sentences","expression":""}
+                $shape
             """.trimIndent()
             return Llama3Prompt.single(JSON_SYSTEM, user, MCQ_PREFIX)
         }

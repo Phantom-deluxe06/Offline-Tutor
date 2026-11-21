@@ -29,6 +29,9 @@ sealed interface McqParse {
  * unique non-empty options, answer index in range, non-empty explanation.
  */
 object McqParser {
+    /** 2-fix-2: all four options are numbers → an arithmetic question, which Kotlin templates own. */
+    const val RULE_ARITHMETIC = "rule: arithmetic question (templates own numeric questions)"
+
     private val optionPrefix = Regex("^\\s*(\\(?[A-Da-d1-4][).:\\-]\\s+|option\\s+[A-Da-d1-4][).:\\-]?\\s*)")
 
     fun parse(raw: String): McqParse {

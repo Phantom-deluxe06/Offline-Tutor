@@ -294,8 +294,6 @@
     <string name="ff_tree_body">Shows the roadmap as a tree of topics.</string>
     <string name="ff_templates">Verified number problems</string>
     <string name="ff_templates_body">Maths and science problems where the app computes the answer itself.</string>
-    <string name="ff_verifier">Answer checker</string>
-    <string name="ff_verifier_body">Recomputes numeric answers, fixes wrong answer keys or rejects the question.</string>
 
     <!-- Phase 2: symbolic verifier -->
     <string name="source_template">App-computed</string>

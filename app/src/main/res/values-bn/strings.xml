@@ -280,8 +280,6 @@
     <string name="ff_tree_body">পরিকল্পনাকে বিষয়গুলোর গাছ হিসেবে দেখায়।</string>
     <string name="ff_templates">যাচাই করা অঙ্ক</string>
     <string name="ff_templates_body">গণিত ও বিজ্ঞানের অঙ্ক, যার উত্তর অ্যাপ নিজেই হিসাব করে।</string>
-    <string name="ff_verifier">উত্তর যাচাইকারী</string>
-    <string name="ff_verifier_body">সংখ্যার উত্তর আবার হিসাব করে, ভুল উত্তর-চাবি ঠিক করে বা প্রশ্ন বাতিল করে।</string>
 
     <string name="source_template">অ্যাপের হিসাব</string>
     <string name="verdict_checked">উত্তর যাচাই করা হয়েছে</string>
