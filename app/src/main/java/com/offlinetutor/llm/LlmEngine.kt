@@ -8,12 +8,11 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import org.pytorch.executorch.extension.llm.LlmCallback
 import org.pytorch.executorch.extension.llm.LlmGenerationConfig
@@ -51,9 +50,11 @@ data class GenRequest(
     val temperature: Float = task.temperature,
     /** Optional early stop on the accumulated text (e.g. "5 roadmap steps written"). */
     val stopWhen: ((String) -> Boolean)? = null,
+    /** 3a: P0 = live user request (default), P1 = pool refill, P2 = night batch. */
+    val priority: Priority = Priority.P0,
 )
 
-enum class StopReason { END, MAX_TOKENS, REPETITION, JSON_COMPLETE, CONDITION, CANCELLED, ERROR }
+enum class StopReason { END, MAX_TOKENS, REPETITION, JSON_COMPLETE, CONDITION, CANCELLED, ERROR, PREEMPTED }
 
 data class GenResult(
     val text: String,
@@ -109,7 +110,14 @@ class LlmEngine(
         Thread(r, "llm-worker").apply { isDaemon = true }
     }
     private val dispatcher = executor.asCoroutineDispatcher()
-    private val mutex = Mutex()
+    // 3a: priority-ordered, preempting lock in front of the single worker (replaces a FIFO Mutex).
+    private val gate = PriorityGate()
+
+    /** Generations stopped for a more urgent request (requeued by their callers). */
+    val preemptions = AtomicInteger(0)
+
+    /** Priority of the generation running now (null when idle); used by the UI and the scheduler. */
+    val runningPriority: Priority? get() = gate.holderPriority
 
     private var module: LlmModule? = null
     private var loaded: ModelSelection? = null
@@ -129,7 +137,7 @@ class LlmEngine(
     }
 
     /** Loads (or reloads when the active model changed). Returns load time in ms, 0 if already loaded. */
-    suspend fun ensureLoaded(): Long = mutex.withLock { loadLocked().second }
+    suspend fun ensureLoaded(): Long = gate.withPermit(Priority.P0) { loadLocked().second }
 
     private suspend fun loadLocked(): Pair<LlmModule, Long> {
         val sel = store.activeModel() ?: run {
@@ -172,13 +180,22 @@ class LlmEngine(
 
     fun activeModelName(): String = loaded?.name ?: store.activeModel()?.name ?: "none"
 
-    suspend fun generate(req: GenRequest, onPartial: (String) -> Unit = {}): GenResult = mutex.withLock {
+    suspend fun generate(req: GenRequest, onPartial: (String) -> Unit = {}): GenResult =
+        gate.withPermit(currentCoroutineContext()[GenPriority]?.priority ?: req.priority) { holder ->
+        if (holder.preempted) throw PreemptedException()
         val (m, _) = loadLocked()
         val sel = loaded!!
 
         // Thermal policy: shorten outputs and cool down when the phone is hot.
         val policy = thermal.policy()
-        if (policy.coolDownMs > 0) delay(policy.coolDownMs)
+        if (policy.coolDownMs > 0) {
+            // Cool down in short steps so a more urgent request can still take over.
+            var waited = 0L
+            while (waited < policy.coolDownMs) {
+                if (holder.preempted) throw PreemptedException()
+                delay(250); waited += 250
+            }
+        }
 
         val fullPrompt = req.prompt
         val promptTokensEst = TokenEstimator.estimate(fullPrompt)
@@ -213,7 +230,8 @@ class LlmEngine(
 
         val callback = object : LlmCallback {
             override fun onResult(result: String) {
-                if (stopRequested.get()) return
+                // A stop requested before the native loop started (e.g. preemption) is re-sent on the first token.
+                if (stopRequested.get()) { runCatching { m.stop() }; return }
                 firstTokenAt.compareAndSet(-1, SystemClock.elapsedRealtime())
                 val n = tokens.incrementAndGet()
                 val piece = SpecialTokens.clean(result)
@@ -249,6 +267,15 @@ class LlmEngine(
             }
         }
 
+        // 3a: a more urgent request stops this generation; the caller gets PreemptedException and requeues.
+        holder.onPreempt = {
+            if (stopRequested.compareAndSet(false, true)) {
+                stopReason.set(StopReason.PREEMPTED)
+                runCatching { m.stop() }
+            }
+        }
+        if (holder.preempted) holder.onPreempt?.invoke()
+
         val done = CompletableDeferred<Unit>()
         executor.execute {
             try {
@@ -272,9 +299,14 @@ class LlmEngine(
             throw ce
         }
 
+        holder.onPreempt = null
         val wall = SystemClock.elapsedRealtime() - start
         val first = firstTokenAt.get()
         _state.value = EngineState.Ready(sel.name, lastLoadMs)
+        if (stopReason.get() == StopReason.PREEMPTED) {
+            preemptions.incrementAndGet()
+            throw PreemptedException()
+        }
         val reason = if (nativeError != null && tokens.get() == 0) StopReason.ERROR else stopReason.get()
         GenResult(
             text = synchronized(out) { out.toString() }.trim(),
@@ -298,7 +330,7 @@ class LlmEngine(
     }
 
     /** Stops any generation, waits for it, then frees native memory. */
-    suspend fun unload() = mutex.withLock {
+    suspend fun unload() = gate.withPermit(Priority.P0) {
         withContext(NonCancellable + dispatcher) {
             module?.let { m ->
                 runCatching { m.stop() }
