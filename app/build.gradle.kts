@@ -78,6 +78,7 @@ dependencies {
     ksp(libs.room.compiler)
 
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.exp4j) // Phase 2b: evaluates the model's answer expression (pure Java, no permissions)
     implementation(libs.executorch.android)
 
     testImplementation(libs.junit)

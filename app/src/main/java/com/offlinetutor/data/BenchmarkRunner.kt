@@ -51,6 +51,7 @@ class BenchmarkRunner(
     private val ai: TutorAi,
     private val mcq: McqGenerator,
     private val diag: DiagnosticGenerator,
+    private val templates: TemplateGenerator,
     private val flags: FeatureFlags,
     private val metrics: MetricsRepository,
 ) {
@@ -108,6 +109,19 @@ class BenchmarkRunner(
                 question?.let { stems.add(0, it); history.add(QuestionDeduper.normalize(it)) }
                 tick()
             }
+        }
+        summarize(run)
+    }
+
+    /**
+     * 2a template eval: every template type x level once. Each row = one LLM wording attempt; "valid" means the
+     * text kept every given number and added none (otherwise the app falls back to its own wording).
+     */
+    fun templateEval() = launch("Template eval", com.offlinetutor.domain.TemplateType.entries.size * 3) { run ->
+        for (type in com.offlinetutor.domain.TemplateType.entries) for (level in 1..3) {
+            label("Template · ${type.name.lowercase()} · L$level")
+            templates.build(8, type, level, type.name.lowercase(), emptySet(), LogMeta(run, type.name, 8), onPartial = { p -> partial(p) })
+            tick()
         }
         summarize(run)
     }

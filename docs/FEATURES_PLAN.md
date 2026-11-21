@@ -33,6 +33,8 @@ stored in `FeatureFlags` (SharedPreferences, excluded from backup). Pure logic l
 
 | Feature | Files / classes | New data | Risks |
 |---|---|---|---|
-| 2a templates | `domain/ProblemTemplates.kt` (8 types; Kotlin picks numbers, computes the answer, builds tagged distractors), `data/TemplateGenerator` (LLM writes text only) | `quiz_questions.source = "template"` | the LLM may alter numbers → exact-number check, fall back to Kotlin's own text |
-| 2b verifier | `domain/ExpressionVerifier.kt` (exp4j), `"expression"` field in both MCQ prompts | `quiz_questions.verdict`, `generation_logs.verdict` | checks the arithmetic only, not pedagogy; options that are not numeric → `UNVERIFIABLE` |
-| library | `net.objecthunter:exp4j` | — | re-check the merged manifest for INTERNET |
+| 2a templates | `domain/ProblemTemplates.kt` (8 types; Kotlin picks numbers, computes the answer, builds tagged distractors), `data/TemplateGenerator` (LLM writes text only) | `quiz_questions.source = "template"` | the LLM may alter numbers → exact-number check, fall back to Kotlin's own text. **Measured:** 16/24 texts accepted; a one-line preamble naming the grade is now stripped (Ohm's law 0/3 → 3/3) |
+| 2b verifier | `domain/Verifier.kt` (`ExpressionVerifier`, exp4j), `"expression"` field in both MCQ prompts | `quiz_questions.verdict`, `generation_logs.verdict` | checks the arithmetic only, not pedagogy; options that are not numeric → `UNVERIFIABLE`. **Measured:** the 1B model gives a usable expression rarely (3/19), so most free-form MCQs stay UNVERIFIABLE |
+| library | `net.objecthunter:exp4j` 0.4.8 | — | merged manifest re-checked: no INTERNET / network permissions |
+
+Measured numbers for both phases: `docs/eval/RESULTS.md` → "Feature phases".

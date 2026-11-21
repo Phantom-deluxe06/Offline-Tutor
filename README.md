@@ -18,6 +18,9 @@ with **ExecuTorch 1.5.1** (XNNPACK). Kotlin, Jetpack Compose, Room, coroutines. 
 | Progress graphs | `ui/screens/ProgressScreen.kt` | daily accuracy, difficulty trail, per-level / per-subject bars, weak spots |
 | Benchmark + eval set | `ui/screens/BenchmarkScreen.kt`, `data/BenchmarkRunner.kt` | peak RAM (VmHWM), TTFT, tok/s, valid-JSON & duplicate rate, CSV export |
 | Import model | `ui/screens/ModelsScreen.kt` | system file picker → copy into `filesDir/models`; adb push for dev |
+| Adaptive brain (phase 1) | `data/AdaptiveBrain.kt`, `domain/Mastery.kt`, `domain/DiagnosticMcq.kt` | misconception-tagged options, Sure / Not sure, Elo per concept, self-healing fix steps, prerequisite backtracking, skill tree |
+| Symbolic verifier (phase 2) | `domain/ProblemTemplates.kt`, `domain/Verifier.kt` | 8 Kotlin-owned problem types (app computes the answer, LLM writes the story); exp4j re-checks every numeric MCQ key |
+| Feature toggles | `data/FeatureFlags.kt`, Settings → Smart features | each phase-1/2 feature can be switched off for on/off demos and benchmarks; plan in `docs/FEATURES_PLAN.md` |
 
 ## LLM engine (`llm/LlmEngine.kt`)
 
@@ -72,7 +75,9 @@ Install on the phone: **AI model → Import .pte / Import tokenizer**, or for de
 ## Measured on-device
 
 See `docs/eval/RESULTS.md` (motorola edge 40): SpinQuant INT4 peaks at ~1.46 GB RAM, ~16–19 tok/s, 93 % valid MCQs and
-100 % parsed roadmaps on the 5 × 3 eval set.
+100 % parsed roadmaps on the 5 × 3 eval set. Feature phases (same file): diagnostic tagging completes on 15/15 parsed
+MCQs, template word problems keep the app-computed answer on 24/24, and the verifier can check only the few MCQs where
+the model writes a usable expression.
 
 ## Report metrics
 

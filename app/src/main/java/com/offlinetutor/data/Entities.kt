@@ -102,6 +102,9 @@ data class QuizQuestion(
     val misconception: String? = null,
     /** QUIZ (null), PROBE or FIX:<stepId>. */
     val purpose: String? = null,
+    // ---- v3 (symbolic verifier) ----
+    /** VERIFIED / FIXED / UNVERIFIABLE (model questions) or TEMPLATE (Kotlin-computed); null on older rows. */
+    val verdict: String? = null,
 ) {
     val optionList: List<String> get() = options.split(OPTION_SEP)
 
@@ -207,4 +210,6 @@ data class GenerationLog(
     val error: String? = null,
     val output: String = "",
     val rawStats: String? = null,
+    /** v3: verifier verdict for MCQ runs (VERIFIED / FIXED / DISCARD / UNVERIFIABLE) or TEMPLATE. */
+    val verdict: String? = null,
 )

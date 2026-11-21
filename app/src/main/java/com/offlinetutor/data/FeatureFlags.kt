@@ -18,7 +18,7 @@ enum class Feature(val phase: Int) {
 
     companion object {
         /** Toggles for later phases stay hidden until that phase is built. */
-        const val IMPLEMENTED_PHASE = 1
+        const val IMPLEMENTED_PHASE = 2
     }
 }
 

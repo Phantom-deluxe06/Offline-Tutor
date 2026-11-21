@@ -56,3 +56,25 @@ for run, rs in runs.items():
     print("--- valid samples")
     for r in [r for r in rs if r["validJson"]][:3]:
         print(f"  [{r['evalSubject']} g{r['evalGrade']} L{r['difficulty']}] {r['output'][:300]!r}")
+    # Phase 2b: verifier verdicts (DB schema v3+). TEMPLATE rows are LLM wording for Kotlin-built problems.
+    if "verdict" in rs[0].keys():
+        verdicts = collections.Counter(r["verdict"] for r in rs if r["verdict"])
+        if verdicts:
+            print("verdicts        :", dict(verdicts))
+
+# Per-item view of diagnostic runs: each base MCQ row, then the :tags rows logged after it (id order).
+for run in [k for k in runs if k.startswith("mcq-diag-eval-") and ":" not in k]:
+    items = []
+    for r in db.execute("select * from generation_logs where evalRun in (?, ?) order by id", (run, run + ":tags")):
+        if r["evalRun"] == run:
+            items.append({"base": r, "tags": []})
+        elif items:
+            items[-1]["tags"].append(r)
+    has_verdict = bool(items) and "verdict" in items[0]["base"].keys()
+    parsed = [i for i in items if i["base"]["validJson"] or (has_verdict and i["base"]["verdict"] == "DISCARD")]
+    reached = [i for i in items if i["tags"]]
+    complete = [i for i in reached if any(t["validJson"] for t in i["tags"])]
+    calls = collections.Counter(len(i["tags"]) for i in reached)
+    print(f"\n=== {run} per item")
+    print(f"items           : {len(items)}; parsed before verifier {len(parsed)}; final valid {sum(1 for i in items if i['base']['validJson'])}")
+    print(f"tags complete   : {len(complete)}/{len(reached)} items that reached tagging; tag calls per item {dict(sorted(calls.items()))}")

@@ -59,6 +59,48 @@ each get 10. Roadmap: 1 per subject × grade.
 Run history (same device, SpinQuant): MCQ 70 % (array format) → 47 % (letter keys, hard level added, before follow-up)
 → 93 % (with follow-up); roadmap 13 % (nested JSON) → 0 % (JSON, comma subtopics) → 100 % (line format).
 
+## Feature phases — 21 Nov 2026 (same phone, SpinQuant)
+
+Raw data: `eval_2026-11-21_phase2_edge40.csv` and `analysis_2026-11-21_phase2_edge40.txt` (all runs, including the
+Phase 1 diagnostic runs). Thermal status 0 and peak RSS ≤ 1,449 MB in every run below.
+
+### 1b — diagnostic MCQ (plain MCQ, then a tagging call)
+
+| Run | Base MCQ parsed | Wrong options fully tagged | Tag calls per tagged item |
+|---|---|---|---|
+| Phase 1, "B) CODE - reason" lines (15 items) | 8/15 | 0/8 | 1 |
+| Phase 1, block format (15 items) | 12/15 | 6/12 | 1 |
+| **Phase 2 build, block format + continuation call (30 items)** | **19/30** | **15/15** | 1 call: 6 · 2 calls: 9 |
+
+Continuing from the first tagged block fixed the "stops after B" failure. Cost: median 9.2 s per tag call (vs 6.7 s per
+MCQ), so a fully diagnostic question takes roughly 16–25 s. 2 of the 17 accepted questions were duplicates. Base MCQ
+validity by level: easy 7/10, medium 7/10, hard 3/10.
+
+### 2b — answer verifier (exp4j on the model's `"expression"`)
+
+Of the 19 parsed MCQs: **1 FIXED, 2 DISCARD, 0 VERIFIED, 16 UNVERIFIABLE**.
+
+* FIXED was right: "2x + 5 = 11" keyed 9; expression `(11 - 5) / 2` → the key moved to 3.
+* DISCARD #1 was right: a "mode" question over a list with no repeated value.
+* DISCARD #2 was a false reject: the key (10, for 15 − 5) was correct but the model wrote `10/2`.
+* UNVERIFIABLE: the expression was empty, an equation with letters (`2x + 5 - 5/2 = 11 - 5`), a chemical equation, or the
+  options were words.
+
+**Takeaway:** the 1B model rarely writes a usable expression, so the verifier catches few keys on free-form questions.
+Numeric reliability comes mainly from 2a templates; the verifier is a safety net.
+
+### 2a — Kotlin-owned templates (8 types × 3 levels, LLM writes the story only)
+
+| Run | LLM text accepted | Median wall per text | Notes |
+|---|---|---|---|
+| before preamble fix | 15/24 (62 %) | 3.1 s | Ohm's law 0/3: "Here is a word problem for a Grade 8 student…" — the 8 counts as an extra number |
+| **after preamble fix** | **16/24 (67 %)** | 3.0 s | Ohm's law 3/3; average 0/3 |
+
+Rejected texts fall back to the app's own wording, so **24/24 questions keep the Kotlin-computed answer** either way.
+Rejections were real problem changes (e.g. "120 packets at Rs 80 … buys 25 packets", "90-minute ride … 1.5 hours …
+60 km/h"). Limitation: the check is on numbers only — an accepted text can still change the meaning ("40% of the total
+sales is Rs 240").
+
 ## Not measured yet
 
 * Answer-key correctness / difficulty match / roadmap rubric — needs the team review in the CSV. A spot check found

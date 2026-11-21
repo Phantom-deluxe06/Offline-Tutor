@@ -47,5 +47,13 @@ object Migrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_1_2)
+    /** Phase 2 (symbolic verifier): verdict columns on questions and generation logs. */
+    val MIGRATION_2_3 = object : Migration(2, 3) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `quiz_questions` ADD COLUMN `verdict` TEXT")
+            db.execSQL("ALTER TABLE `generation_logs` ADD COLUMN `verdict` TEXT")
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_1_2, MIGRATION_2_3)
 }

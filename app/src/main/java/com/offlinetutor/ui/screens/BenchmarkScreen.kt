@@ -130,6 +130,7 @@ fun BenchmarkScreen(onBack: () -> Unit, openModels: () -> Unit) {
                     Button(onClick = { c.bench.quickBench() }, enabled = !runner.running) { Text(stringResource(R.string.quick_bench)) }
                     Button(onClick = { c.bench.mcqEval(perCombo) }, enabled = !runner.running) { Text(stringResource(R.string.mcq_eval)) }
                     Button(onClick = { c.bench.roadmapEval() }, enabled = !runner.running) { Text(stringResource(R.string.roadmap_eval)) }
+                    Button(onClick = { c.bench.templateEval() }, enabled = !runner.running) { Text(stringResource(R.string.template_eval)) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.per_combo), Modifier.padding(top = 8.dp))

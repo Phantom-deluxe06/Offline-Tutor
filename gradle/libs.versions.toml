@@ -34,6 +34,7 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 executorch-android = { module = "org.pytorch:executorch-android", version.ref = "executorch" }
 junit = { module = "junit:junit", version.ref = "junit" }
 json = { module = "org.json:json", version = "20240303" }
+exp4j = { module = "net.objecthunter:exp4j", version = "0.4.8" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

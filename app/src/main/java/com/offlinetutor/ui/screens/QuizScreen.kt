@@ -72,6 +72,10 @@ import com.offlinetutor.domain.AttemptClass
 import com.offlinetutor.domain.Misconception
 import com.offlinetutor.domain.OptionMeta
 import com.offlinetutor.domain.OptionTag
+import com.offlinetutor.domain.Verdict
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Calculate
+import androidx.compose.material.icons.filled.Verified
 import com.offlinetutor.domain.AdaptiveDifficulty
 import com.offlinetutor.domain.ExplainLanguage
 import com.offlinetutor.llm.ModelMissingException
@@ -368,12 +372,19 @@ private fun QuestionBlock(
                 Text(q.subtopic, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.weight(1f), maxLines = 1)
                 Pill(
-                    stringResource(if (q.source == "seed") R.string.source_seed else R.string.source_ai),
+                    stringResource(when (q.source) { "seed" -> R.string.source_seed; "template" -> R.string.source_template; else -> R.string.source_ai }),
                     MaterialTheme.colorScheme.onSurfaceVariant,
-                    icon = if (q.source == "seed") Icons.Filled.Inventory2 else Icons.Filled.AutoAwesome,
+                    icon = when (q.source) { "seed" -> Icons.Filled.Inventory2; "template" -> Icons.Filled.Calculate; else -> Icons.Filled.AutoAwesome },
                 )
             }
             Text(q.stem, style = MaterialTheme.typography.headlineSmall)
+            // 2b: how the answer key was checked.
+            when (q.verdict) {
+                Verdict.VERIFIED.name -> Pill(stringResource(R.string.verdict_checked), Palette.correct, icon = Icons.Filled.Verified)
+                Verdict.FIXED.name -> Pill(stringResource(R.string.verdict_fixed), Palette.marigold, icon = Icons.Filled.Build)
+                Verdict.TEMPLATE.name -> Pill(stringResource(R.string.verdict_template), Palette.correct, icon = Icons.Filled.Verified)
+                else -> Unit
+            }
         }
 
         q.optionList.forEachIndexed { i, opt ->

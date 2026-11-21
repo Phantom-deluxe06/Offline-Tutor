@@ -40,8 +40,10 @@ object McqParser {
         val explanation = firstString(o, "explanation", "reason", "rationale").trim()
         val answer = readAnswer(o, options)
 
-        return validate(Mcq(question, options, answer, explanation))
+        return validate(Mcq(question, options, answer, explanation, expressionOf(o)))
     }
+
+    private fun expressionOf(o: JSONObject): String? = o.optString("expression").trim().ifBlank { null }
 
     /**
      * Question + 4 unique options but no usable answer/explanation (the 1B model often closes the
@@ -50,7 +52,7 @@ object McqParser {
     fun parseStem(raw: String): Mcq? {
         val json = JsonRepair.extractObject(raw) ?: return null
         val o = try { JSONObject(json) } catch (_: Exception) { return null }
-        val m = Mcq(firstString(o, "question", "q", "stem").trim(), readOptions(o), -1, "")
+        val m = Mcq(firstString(o, "question", "q", "stem").trim(), readOptions(o), -1, "", expressionOf(o))
         if (m.question.length < 8 || m.options.size != 4 || m.options.any { it.isBlank() }) return null
         if (m.options.map { QuestionDeduper.normalize(it) }.toSet().size != 4) return null
         return m

@@ -295,19 +295,29 @@ class RoadmapPrereqTest {
 }
 
 class MigrationTest {
-    /** Records every SQL statement the 1→2 migration executes, and checks it against Room's exported schemas. */
-    @Test fun migration1to2MatchesExportedSchema() {
+    @Test fun migration1to2MatchesExportedSchema() = checkMigration(Migrations.MIGRATION_1_2)
+
+    @Test fun migration2to3MatchesExportedSchema() = checkMigration(Migrations.MIGRATION_2_3)
+
+    @Test fun migrationsCoverEveryVersion() {
+        val versions = Migrations.ALL.map { it.startVersion to it.endVersion }
+        val latest = File("schemas/com.offlinetutor.data.AppDatabase").listFiles()!!.mapNotNull { it.nameWithoutExtension.toIntOrNull() }.max()
+        assertEquals((1 until latest).map { it to it + 1 }, versions)
+    }
+
+    /** Records every SQL statement a migration executes and checks it against Room's exported schemas. */
+    private fun checkMigration(migration: androidx.room.migration.Migration) {
         val sql = ArrayList<String>()
         val db = Proxy.newProxyInstance(SupportSQLiteDatabase::class.java.classLoader, arrayOf(SupportSQLiteDatabase::class.java)) { _, m, args ->
             if (m.name == "execSQL") sql.add(args[0] as String)
             null
         } as SupportSQLiteDatabase
-        Migrations.MIGRATION_1_2.migrate(db)
+        migration.migrate(db)
 
         val dir = File("schemas/com.offlinetutor.data.AppDatabase")
         fun entities(v: Int) = JSONObject(File(dir, "$v.json").readText()).getJSONObject("database").getJSONArray("entities")
-        val v1 = entities(1)
-        val v2 = entities(2)
+        val v1 = entities(migration.startVersion)
+        val v2 = entities(migration.endVersion)
         val v1Tables = (0 until v1.length()).associate { i -> v1.getJSONObject(i).let { it.getString("tableName") to it } }
         for (i in 0 until v2.length()) {
             val e = v2.getJSONObject(i)

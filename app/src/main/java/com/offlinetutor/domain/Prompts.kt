@@ -99,8 +99,9 @@ object Prompts {
                 Difficulty: ${difficultyText(level)}$weak$avoid
                 Rules: options A, B, C and D are all different and only one is correct. Never ask the same question twice.
                 "answer" is the letter of the correct option.
+                If the answer is a number, "expression" is the arithmetic that gives it, for example 120/1.5; otherwise leave it empty.
                 Return ONLY JSON in exactly this shape:
-                {"question":"...","A":"...","B":"...","C":"...","D":"...","answer":"B","explanation":"one or two sentences"}
+                {"question":"...","A":"...","B":"...","C":"...","D":"...","answer":"B","explanation":"one or two sentences","expression":""}
             """.trimIndent()
             return Llama3Prompt.single(JSON_SYSTEM, user, MCQ_PREFIX)
         }
@@ -138,7 +139,13 @@ object Prompts {
      */
     fun tagPrefix(firstWrong: String) = "B) $firstWrong\nMistake type: "
 
-    fun diagnosticTagLines(question: String, correct: String, wrong: List<String>): String {
+    /** Continuation prefix: the blocks already tagged, then the next block header up to "Mistake type: ". */
+    fun tagContinuationPrefix(wrong: List<String>, done: List<OptionTag>, next: Int): String = buildString {
+        done.forEachIndexed { i, t -> append("${'B' + i}) ${wrong[i]}\nMistake type: ${t.code.name}\nReason: ${t.why}\n\n") }
+        append("${'B' + next}) ${wrong[next]}\nMistake type: ")
+    }
+
+    fun diagnosticTagLines(question: String, correct: String, wrong: List<String>, prefix: String = tagPrefix(wrong.firstOrNull().orEmpty())): String {
         val user = buildString {
             append("Question: $question\nCorrect answer: $correct\nWrong answers:\n")
             wrong.forEachIndexed { i, w -> append("${'B' + i}) $w\n") }
@@ -154,7 +161,7 @@ object Prompts {
             append("For each wrong answer, say which mistake type makes a student choose it. Answer with one block per wrong answer:\n")
             append("B) <wrong answer>\nMistake type: <one type from the list>\nReason: <short reason>")
         }
-        return Llama3Prompt.single(TAG_SYSTEM, user, tagPrefix(wrong.firstOrNull().orEmpty()))
+        return Llama3Prompt.single(TAG_SYSTEM, user, prefix)
     }
 
     /** Stop once the D tag is complete (its line has ended), in either the block or the one-line shape. */
@@ -189,6 +196,37 @@ object Prompts {
             append("{\"answer\":\"B\",\"explanation\":\"one or two sentences\"}")
         }
         return Llama3Prompt.single(JSON_SYSTEM, user, ANSWER_PREFIX)
+    }
+
+    // ---------- 2a: template word problems ----------
+    private const val TEMPLATE_SYSTEM = "You write short, clear school word problems set in everyday Indian life."
+
+    fun templateText(grade: Int, p: TemplateProblem): String {
+        val user = """
+            Write a short word problem (one or two sentences) for a Grade $grade student in India, about ${p.setting}.
+            Use exactly these quantities: ${p.givens.joinToString(", ")}.
+            The question must ask for ${p.ask}.
+            Do not solve it, do not give the answer, and do not use any other numbers.
+        """.trimIndent()
+        return Llama3Prompt.single(TEMPLATE_SYSTEM, user)
+    }
+
+    /**
+     * Keeps only the problem text: drops labels ("Word problem:"), quotes, anything after "Answer"/"Solution",
+     * and makes sure it ends as a question. Null if nothing usable is left.
+     */
+    fun cleanTemplateText(raw: String, ask: String): String? {
+        // Measured on-device: the model often opens with "Here is a word problem for a Grade 8 student in India:"
+        // on its own line; the grade number then counts as an extra number, so drop such a preamble line.
+        var t = raw.trim()
+            .let { s -> if ('\n' in s && s.substringBefore('\n').trimEnd().endsWith(':')) s.substringAfter('\n').trim() else s }
+            .replace(Regex("^(here is|here's )?(a |the )?(short )?(word )?problem\\s*:?\\s*", RegexOption.IGNORE_CASE), "")
+            .substringBefore("\nAnswer").substringBefore("Answer:").substringBefore("Solution")
+            .replace("\n", " ").replace(Regex("\\s+"), " ")
+            .trim().trim('"', '“', '”', '*').trim()
+        if (t.length < 15) return null
+        if (!t.contains('?')) t = "$t What is ${ask}?"
+        return t.substring(0, t.lastIndexOf('?') + 1)
     }
 
     // ---------- Explanations ----------

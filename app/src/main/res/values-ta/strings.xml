@@ -282,4 +282,10 @@
     <string name="ff_templates_body">செயலியே விடையைக் கணக்கிடும் கணித, அறிவியல் கணக்குகள்.</string>
     <string name="ff_verifier">விடை சரிபார்ப்பி</string>
     <string name="ff_verifier_body">எண் விடைகளை மீண்டும் கணக்கிட்டு, தவறான விடைக் குறிப்பைத் திருத்தும் அல்லது கேள்வியை நிராகரிக்கும்.</string>
+
+    <string name="source_template">செயலி கணக்கிட்டது</string>
+    <string name="verdict_checked">விடை சரிபார்க்கப்பட்டது</string>
+    <string name="verdict_fixed">விடைக் குறிப்பு திருத்தப்பட்டது</string>
+    <string name="verdict_template">விடையைச் செயலியே கணக்கிட்டது</string>
+    <string name="template_eval">வார்ப்புரு மதிப்பீட்டுத் தொகுப்பு</string>
 </resources>

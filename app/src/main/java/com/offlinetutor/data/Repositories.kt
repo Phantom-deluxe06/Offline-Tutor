@@ -4,6 +4,8 @@ import android.content.Context
 import com.offlinetutor.domain.AdaptiveDifficulty
 import com.offlinetutor.domain.Concepts
 import com.offlinetutor.domain.ExplainLanguage
+import com.offlinetutor.domain.ProblemTemplates
+import com.offlinetutor.domain.Verdict
 import com.offlinetutor.domain.PinHasher
 import com.offlinetutor.domain.Prompts
 import com.offlinetutor.domain.QuestionDeduper
@@ -137,6 +139,7 @@ class QuizRepository(
     private val roadmaps: RoadmapDao,
     private val generator: McqGenerator,
     private val diag: DiagnosticGenerator,
+    private val templates: TemplateGenerator,
     private val seeds: SeedBank,
     private val brain: AdaptiveBrain,
     private val probes: ProbeDao,
@@ -192,14 +195,26 @@ class QuizRepository(
 
         fun store(
             stem: String, options: List<String>, answer: Int, explanation: String, source: String, meta: String?,
-            subtopic: String = t.subtopic, difficulty: Int = level, concept: String = t.concept,
+            subtopic: String = t.subtopic, difficulty: Int = level, concept: String = t.concept, verdict: String? = null,
         ) = QuizQuestion(
             profileId = profile.id, course = course, subtopic = subtopic, difficulty = difficulty,
             stem = stem, normalizedStem = QuestionDeduper.normalize(stem),
             options = options.joinToString(QuizQuestion.OPTION_SEP.toString()),
             answerIndex = answer, explanation = explanation, source = source,
-            concept = concept, optionMeta = meta, purpose = t.purpose,
+            concept = concept, optionMeta = meta, purpose = t.purpose, verdict = verdict,
         )
+
+        // 2a: a Kotlin-owned template when the topic has one (answer computed by the app, distractors tagged).
+        if (flags.isOn(Feature.TEMPLATES)) {
+            ProblemTemplates.forTopic("${t.subtopic} ${t.conceptTitle}", course)?.let { type ->
+                templates.build(profile.grade, type, level, t.concept, history, LogMeta(), onPartial)?.let { r ->
+                    val s = r.mcq.shuffled()
+                    val q = store(s.question, s.options.map { it.text }, s.answer, s.explanation, "template", s.metaJson(),
+                        verdict = Verdict.TEMPLATE.name)
+                    return Next(q.copy(id = dao.insert(q)), 1, null)
+                }
+            }
+        }
 
         var lastReason: String? = null
         for (attempt in 1..2) {
@@ -207,7 +222,7 @@ class QuizRepository(
                 val o = diag.attempt(profile.grade, course, t.conceptTitle, t.concept, t.subtopic, level, recent, weak, history, LogMeta(), focus, onPartial)
                 o.mcq?.let { d ->
                     val s = d.shuffled()
-                    val q = store(s.question, s.options.map { it.text }, s.answer, s.explanation, "llm", s.metaJson())
+                    val q = store(s.question, s.options.map { it.text }, s.answer, s.explanation, "llm", s.metaJson(), verdict = o.verdict?.name)
                     return Next(q.copy(id = dao.insert(q)), attempt, null)
                 }
                 lastReason = o.reason
@@ -215,7 +230,7 @@ class QuizRepository(
                 val o = generator.attempt(profile.grade, course, t.subtopic, level, recent, weak, history, LogMeta(), onPartial, focus)
                 o.mcq?.let { mcq ->
                     val s = mcq.shuffled()
-                    val q = store(s.question, s.options, s.answer, s.explanation, "llm", null)
+                    val q = store(s.question, s.options, s.answer, s.explanation, "llm", null, verdict = o.verdict?.name)
                     return Next(q.copy(id = dao.insert(q)), attempt, null)
                 }
                 lastReason = o.reason
@@ -334,7 +349,7 @@ class MetricsRepository(private val dao: LogDao) {
             "id", "time", "task", "model", "eval_run", "eval_subject", "eval_grade", "difficulty",
             "prompt_chars", "prompt_tokens_est", "prompt_tokens", "generated_tokens", "max_new_tokens", "temperature",
             "ttft_ms", "wall_ms", "decode_tok_s", "prefill_tok_s", "peak_rss_mb", "rss_mb", "device_avail_mb",
-            "thermal_status", "thermal_policy", "stop_reason", "guard_reason", "valid_json", "duplicate", "error",
+            "thermal_status", "thermal_policy", "stop_reason", "guard_reason", "valid_json", "duplicate", "error", "verdict",
             "output", "raw_stats", "review_answer_correct", "review_difficulty_match", "review_roadmap_score_1to5",
         )
         out.bufferedWriter().use { w ->
@@ -346,7 +361,7 @@ class MetricsRepository(private val dao: LogDao) {
                     l.ttftMs, l.wallMs, l.decodeTokPerSec?.let { "%.2f".format(Locale.US, it) },
                     l.prefillTokPerSec?.let { "%.2f".format(Locale.US, it) },
                     mb(l.peakRssKb), mb(l.rssKb), mb(l.deviceAvailKb), l.thermalStatus, l.thermalPolicy, l.stopReason,
-                    l.guardReason, l.validJson, l.duplicate, l.error, l.output, l.rawStats, "", "", "",
+                    l.guardReason, l.validJson, l.duplicate, l.error, l.verdict, l.output, l.rawStats, "", "", "",
                 )
                 w.write(cells.joinToString(",") { csv(it) }); w.write("\n")
             }

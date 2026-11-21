@@ -36,8 +36,9 @@ class AppContainer(app: Application) {
     val engine = LlmEngine(app, modelStore, thermal)
     val ai = TutorAi(engine, db.logs())
     val seeds = SeedBank(app)
-    val mcqGenerator = McqGenerator(ai)
     val flags = com.offlinetutor.data.FeatureFlags(app)
+    val mcqGenerator = McqGenerator(ai, flags)
+    val templateGenerator = com.offlinetutor.data.TemplateGenerator(ai)
     val taxonomy = com.offlinetutor.domain.MisconceptionTaxonomy.parse(
         app.assets.open("misconceptions.json").bufferedReader().use { it.readText() },
     )
@@ -46,12 +47,12 @@ class AppContainer(app: Application) {
 
     val profiles = ProfileRepository(db.profiles(), session)
     val roadmaps = RoadmapRepository(db.roadmaps(), ai)
-    val quiz = QuizRepository(db.quiz(), db.roadmaps(), mcqGenerator, diagGenerator, seeds, brain, db.probes(), flags)
+    val quiz = QuizRepository(db.quiz(), db.roadmaps(), mcqGenerator, diagGenerator, templateGenerator, seeds, brain, db.probes(), flags)
     val fixes = com.offlinetutor.data.FixService(db.roadmaps(), quiz, ai, taxonomy)
     val demo = com.offlinetutor.data.DemoSeeder(profiles, db.roadmaps(), db.quiz(), brain)
     val chat = ChatRepository(db.chat(), ai)
     val metrics = MetricsRepository(db.logs())
-    val bench = BenchmarkRunner(app, appScope, engine, ai, mcqGenerator, diagGenerator, flags, metrics)
+    val bench = BenchmarkRunner(app, appScope, engine, ai, mcqGenerator, diagGenerator, templateGenerator, flags, metrics)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val activeProfile: StateFlow<Profile?> = session.activeProfileId
