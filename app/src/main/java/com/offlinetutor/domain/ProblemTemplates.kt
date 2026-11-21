@@ -127,6 +127,30 @@ object ProblemTemplates {
         return t
     }
 
+    private val unitWords = mapOf("rs" to setOf("rs", "rupee", "rupees", "₹"), "%" to setOf("percent", "%"))
+
+    /**
+     * After filling, a unit must not appear twice around a placeholder ("{A} rupees" with {A} = "Rs 400" →
+     * "Rs 400 rupees"; "for {C} years" with {C} = "2 years"). Returns the problem or null.
+     */
+    fun unitClash(story: String, slots: List<Slot>): String? {
+        slots.forEachIndexed { i, slot ->
+            val ph = Regex.escape(placeholder(i))
+            // Unit words of the value: "Rs 400" → {rs}; "2 years" → {years}; "5% per year" → {%, year}.
+            val units = slot.value.lowercase().split(Regex("\\s+"))
+                .flatMap { w -> if (w.any { it.isDigit() }) listOfNotNull(if (w.endsWith("%")) "%" else null) else listOf(w.trimEnd('.', ',')) }
+                .filter { it.isNotBlank() && it != "per" }.toSet()
+            val after = Regex("$ph\\s+([\\p{L}%₹]+)").find(story)?.groupValues?.get(1)?.lowercase()
+            val before = Regex("([\\p{L}%₹]+)\\s+$ph").find(story)?.groupValues?.get(1)?.lowercase()
+            fun clashes(a: String?): Boolean = a != null && units.any { u ->
+                a.removeSuffix("s") == u.removeSuffix("s") || a in (unitWords[u] ?: emptySet())
+            }
+            if (clashes(after)) return "unit repeated after ${placeholder(i)}"
+            if (clashes(before)) return "unit repeated before ${placeholder(i)}"
+        }
+        return null
+    }
+
     /** Accepted story (with placeholders) or null. */
     fun acceptStory(raw: String, slotCount: Int): String? {
         val s = cleanStory(raw)

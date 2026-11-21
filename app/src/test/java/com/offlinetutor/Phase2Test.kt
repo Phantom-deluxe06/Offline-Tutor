@@ -176,6 +176,24 @@ class TemplatesTest {
         assertEquals("contains the number word \"half\"", ProblemTemplates.storyProblem("He walks {A} in half the time.", 1))
     }
 
+    @Test fun unitMustNotBeRepeatedAroundAPlaceholder() {
+        val rs = listOf(com.offlinetutor.domain.Slot("Rs 400", "the price"))
+        // Accepted on-device before this check: "costs {A} rupees" → "costs Rs 400 rupees".
+        assertNotNull(ProblemTemplates.unitClash("The cricket bat costs {A} rupees to buy.", rs))
+        assertNotNull(ProblemTemplates.unitClash("The bat costs Rs {A} at the shop.", rs))
+        assertNull(ProblemTemplates.unitClash("The cricket bat costs {A} at the sports shop.", rs))
+        val si = listOf(com.offlinetutor.domain.Slot("Rs 1000", "money"), com.offlinetutor.domain.Slot("5% per year", "rate"),
+            com.offlinetutor.domain.Slot("2 years", "time"))
+        assertNotNull(ProblemTemplates.unitClash("A farmer saves {A} at {B} over {C} years.", si))
+        assertNull(ProblemTemplates.unitClash("A farmer saves {A} at {B} for {C}.", si))
+        val pct = listOf(com.offlinetutor.domain.Slot("Rs 300", "old price"), com.offlinetutor.domain.Slot("10%", "increase"))
+        assertNotNull(ProblemTemplates.unitClash("A price of {A} rises by {B} percent.", pct))
+        for (type in TemplateType.entries) for (level in 1..3) {
+            val p = ProblemTemplates.generate(type, level, Random(level + 10))
+            assertNull("$type L$level default story", ProblemTemplates.unitClash(p.defaultStory, p.slots))
+        }
+    }
+
     @Test fun kotlinOwnsNumbersAndQuestion() {
         for (type in TemplateType.entries) for (level in 1..3) {
             val p = ProblemTemplates.generate(type, level, Random(level))

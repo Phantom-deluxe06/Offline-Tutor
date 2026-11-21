@@ -247,11 +247,15 @@ object Prompts {
      */
     fun templateStory(grade: Int, p: TemplateProblem): String {
         val band = if (grade <= 8) "middle-school" else "high-school"
+        // Measured (2-fix-1 run, 48 stories): most rejections were long descriptive sentences that left out a
+        // placeholder, and some accepted ones repeated a unit next to it ("{A} rupees" with {A} = "Rs 400"). So: one
+        // short sentence, every placeholder required, and the units are said to be inside the placeholders.
+        val names = p.placeholders.joinToString(" and ")
         val user = buildList {
-            add("Write one or two sentences about ${p.setting} for a $band student.")
-            add("Use each of these placeholders exactly once, written exactly like this, instead of the quantities:")
-            p.slots.forEachIndexed { i, s -> add("${ProblemTemplates.placeholder(i)} = ${s.meaning}") }
-            add("Do not write any numbers or number words (like five, twice or half). Do not ask a question and do not solve anything.")
+            add("Write ONE short sentence about ${p.setting} for a $band student.")
+            add("The sentence must contain $names, each exactly once, written exactly like that with the curly brackets:")
+            p.slots.forEachIndexed { i, s -> add("${ProblemTemplates.placeholder(i)} = ${s.meaning} (it already includes its unit)") }
+            add("Do not write any numbers, number words (like five, twice or half) or units. Do not ask a question.")
             add("Example for a different problem: ${storyExamples[(p.slots.size - 1).coerceIn(0, storyExamples.lastIndex)]}")
         }.joinToString("\n")
         return Llama3Prompt.single(TEMPLATE_SYSTEM, user)

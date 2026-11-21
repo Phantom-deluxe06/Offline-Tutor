@@ -35,7 +35,7 @@ enum class TaskType(val temperature: Float, val maxNewTokens: Int, val isJson: B
     MCQ_TAGS(0.3f, 220, false),  // 1b: tag each wrong option with a misconception (one block per option); 2-fix-4 fallback
     MCQ_TAGS_PIPE(0.3f, 110, false), // 2-fix-4: all three wrong options in one call, "B|CODE|why" lines
     MICRO_FIX(0.6f, 320, false), // 1e: short lesson fixing one misconception
-    TEMPLATE_TEXT(0.7f, 110, false), // 2a: word-problem text around Kotlin-chosen numbers
+    TEMPLATE_TEXT(0.5f, 80, false), // 2-fix-1: one story sentence with {A}, {B} placeholders (0.7 / 110 rambled)
     CHAT(0.7f, 350, false),
     EXPLAIN(0.6f, 320, false),
     BENCH(0.5f, 128, false),

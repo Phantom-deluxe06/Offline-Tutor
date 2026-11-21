@@ -191,6 +191,7 @@ class TemplateGenerator(private val ai: TutorAi) {
                 // then Kotlin fills the numbers and appends its own question.
                 val cleaned = ProblemTemplates.cleanStory(r.text)
                 val problem = ProblemTemplates.storyProblem(cleaned, p.slots.size)
+                    ?: cleaned?.let { ProblemTemplates.unitClash(it, p.slots) }
                 val story = cleaned.takeIf { problem == null }
                 ai.log(r, TaskType.TEMPLATE_TEXT, meta.copy(difficulty = level), story != null, null, Verdict.TEMPLATE.name,
                     problem?.let { "rule: $it" })
