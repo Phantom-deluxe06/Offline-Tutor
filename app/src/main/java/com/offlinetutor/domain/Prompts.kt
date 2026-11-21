@@ -173,6 +173,29 @@ object Prompts {
         return Llama3Prompt.single(TAG_SYSTEM, user, prefix)
     }
 
+    /** 2-fix-4: prefill for the one-call pipe format, so the model continues the first line. */
+    const val PIPE_TAG_PREFIX = "B|"
+
+    /**
+     * 2-fix-4: all three wrong options in one call, one compact line each: `B|CODE|why (12 words max)`.
+     * The option letters are listed and the assistant turn starts with "B|".
+     */
+    fun tagPipe(question: String, correct: String, wrong: List<String>): String {
+        val user = buildString {
+            append("Question: $question\nCorrect answer: $correct\nWrong answers:\n")
+            wrong.forEachIndexed { i, w -> append("${'B' + i}) $w\n") }
+            append("Mistake types: ")
+            append(Misconception.entries.joinToString(", ") { it.name })
+            append("\nFor each wrong answer B, C and D, write one line: letter|MISTAKE_TYPE|why a student picks it (12 words max).\n")
+            append("Example line: B|FORMULA_SWAP|used the area formula instead of the perimeter formula\n")
+            append("Write exactly three lines, for B, C and D, and nothing else.")
+        }
+        return Llama3Prompt.single(TAG_SYSTEM, user, PIPE_TAG_PREFIX)
+    }
+
+    /** Stop once the D line has ended. */
+    fun pipeTagsDone(text: String): Boolean = text.endsWith("\n") && DiagnosticParser.parsePipeTags(text)[2] != null
+
     /** Stop once the D tag is complete (its line has ended), in either the block or the one-line shape. */
     fun tagLinesDone(text: String): Boolean = text.endsWith("\n") && DiagnosticParser.parseTagLines(text).getOrNull(2) != null
 

@@ -74,6 +74,32 @@ class FailReasonsTest {
     }
 }
 
+class PipeTagsTest {
+    @Test fun parsesCompactLines() {
+        val raw = "B|FORMULA_SWAP|used the area formula instead of perimeter\nC| operation swap |added the two sides\n" +
+            "D|PARTIAL_STEP|stopped before dividing by two, one two three four five six seven eight\n"
+        val tags = com.offlinetutor.domain.DiagnosticParser.parsePipeTags(raw)
+        assertEquals(com.offlinetutor.domain.Misconception.FORMULA_SWAP, tags[0]!!.code)
+        assertEquals(com.offlinetutor.domain.Misconception.OPERATION_SWAP, tags[1]!!.code)
+        assertEquals(12, tags[2]!!.why.split(" ").size) // cut to 12 words
+        assertTrue(Prompts.pipeTagsDone(raw))
+    }
+
+    @Test fun missingOrUnknownLinesAreNull() {
+        val tags = com.offlinetutor.domain.DiagnosticParser.parsePipeTags("B|FORMULA_SWAP|wrong formula\nC|GUESSING|no idea\n")
+        assertNotNull(tags[0]); assertNull(tags[1]); assertNull(tags[2])
+        assertFalse(Prompts.pipeTagsDone("B|FORMULA_SWAP|wrong formula\n"))
+        // A line that just echoes a code as the reason is not a reason.
+        assertNull(com.offlinetutor.domain.DiagnosticParser.parsePipeTags("B|SIGN_ERROR|SIGN_ERROR\n")[0])
+    }
+
+    @Test fun promptListsLettersAndPrefills() {
+        val p = Prompts.tagPipe("Q?", "right", listOf("w1", "w2", "w3"))
+        assertTrue(p.contains("B) w1") && p.contains("C) w2") && p.contains("D) w3"))
+        assertTrue(p.endsWith(Prompts.PIPE_TAG_PREFIX))
+    }
+}
+
 class McqPromptSwitchTest {
     @Test fun expressionFieldOnlyForTheAbEval() {
         val plain = Prompts.mcq(8, "Science", "Photosynthesis", 2, emptyList(), emptyList())

@@ -88,3 +88,16 @@ for run in [k for k in runs if k.startswith("mcq-diag-eval-") and ":" not in k]:
     print(f"\n=== {run} per item")
     print(f"items           : {len(items)}; parsed before verifier {len(parsed)}; final valid {sum(1 for i in items if i['base']['validJson'])}")
     print(f"tags complete   : {len(complete)}/{len(reached)} items that reached tagging; tag calls per item {dict(sorted(calls.items()))}")
+    # 2-fix-4: time per fully tagged question = the MCQ call (+ answer follow-up) + every tag call for it.
+    answers = {r["id"]: r for r in db.execute("select * from generation_logs where evalRun=?", (run + ":answer",))}
+    def total_ms(i):
+        base = i["base"]
+        prev = answers.get(base["id"] - 1)  # the follow-up is logged just before its main row
+        return base["wallMs"] + (prev["wallMs"] if prev else 0) + sum(t["wallMs"] for t in i["tags"])
+    if complete:
+        print(f"tag time / fully tagged q : median {statistics.median(sum(t['wallMs'] for t in i['tags']) for i in complete) / 1000:.1f} s"
+              f"; total incl. MCQ median {statistics.median(total_ms(i) for i in complete) / 1000:.1f} s"
+              f" (min {min(total_ms(i) for i in complete) / 1000:.1f}, max {max(total_ms(i) for i in complete) / 1000:.1f})")
+        tasks = collections.Counter(t["task"] for i in reached for t in i["tags"])
+        print(f"tag calls by task: {dict(tasks)}; pipe-only complete: "
+              f"{sum(1 for i in reached if i['tags'][0]['task'] == 'MCQ_TAGS_PIPE' and i['tags'][0]['validJson'])}/{len(reached)}")

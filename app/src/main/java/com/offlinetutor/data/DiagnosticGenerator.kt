@@ -12,8 +12,9 @@ import com.offlinetutor.llm.TaskType
  * 1b: one diagnostic MCQ attempt, in two steps (measured: the 1B model could not write the nested
  * diagnostic JSON in one shot):
  *  1. the plain MCQ through [McqGenerator] (validate → answer follow-up → dedupe), logged as MCQ;
- *  2. a short line-format call that tags each wrong option with a misconception code + why,
- *     logged as MCQ_TAGS under "<run>:tags".
+ *  2. 2-fix-4: one compact call tagging all three wrong options ("B|CODE|why" lines, MCQ_TAGS_PIPE), then at most
+ *     two block-format fallback calls (MCQ_TAGS) for missing lines; all logged under "<run>:tags".
+ * Template questions are tagged by Kotlin and never reach this class.
  * Valid only when every wrong option gets a known code and a reason.
  */
 class DiagnosticGenerator(private val ai: TutorAi, private val mcq: McqGenerator) {
@@ -47,10 +48,23 @@ class DiagnosticGenerator(private val ai: TutorAi, private val mcq: McqGenerator
         val correct = m.options[m.answer]
         val tagMeta = meta.copy(difficulty = level, evalRun = meta.evalRun?.let { "$it:tags" })
         val tags = MutableList<com.offlinetutor.domain.OptionTag?>(3) { null }
-        var prefix = Prompts.tagPrefix(wrong.first())
-        // Measured on-device: the model often stops after the first block. Continue with the tagged blocks
-        // plus the next header as the prefix (at most 2 extra calls). A row is "valid" when tagging completed.
-        for (call in 0 until 3) {
+
+        // 2-fix-4: one call for all three wrong options in the compact "B|CODE|why" line format.
+        val pipe = ai.engine.generate(
+            GenRequest(TaskType.MCQ_TAGS_PIPE, Prompts.tagPipe(m.question, correct, wrong),
+                assistantPrefix = Prompts.PIPE_TAG_PREFIX, stopWhen = Prompts::pipeTagsDone),
+        )
+        DiagnosticParser.parsePipeTags(pipe.text).forEachIndexed { i, tag -> tags[i] = tag }
+        val pipeMissing = tags.indices.filter { tags[it] == null }.map { 'B' + it }
+        ai.log(pipe, TaskType.MCQ_TAGS_PIPE, tagMeta, pipeMissing.isEmpty(), null,
+            failReason = if (pipeMissing.isEmpty()) null else "rule: no valid line for option ${pipeMissing.joinToString(", ")}")
+
+        // Fallback for missing lines: the earlier block-format call, resuming at the first untagged option and
+        // replaying the tagged ones before it (measured: the model often stopped after the first block).
+        var prefix = tags.indexOfFirst { it == null }.let { next ->
+            if (next <= 0) Prompts.tagPrefix(wrong.first()) else Prompts.tagContinuationPrefix(wrong, tags.take(next).filterNotNull(), next)
+        }
+        for (call in 0 until if (pipeMissing.isEmpty()) 0 else 2) {
             val t = ai.engine.generate(
                 GenRequest(TaskType.MCQ_TAGS, Prompts.diagnosticTagLines(m.question, correct, wrong, prefix),
                     assistantPrefix = prefix, stopWhen = Prompts::tagLinesDone),

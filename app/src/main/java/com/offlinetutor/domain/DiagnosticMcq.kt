@@ -130,6 +130,25 @@ object DiagnosticParser {
      * mistake type: CODE / The reason: …") and one-line "B) CODE - reason". A block naming 3+ different codes is
      * an echo of the instructions and is ignored.
      */
+    private val pipeLine = Regex("^\\s*\\**\\s*([BCDbcd])\\s*[|)]\\s*([A-Za-z_ ]+?)\\s*\\|\\s*(.+?)\\s*$")
+
+    /**
+     * 2-fix-4: compact one-call format, one line per wrong option: `B|CODE|why (12 words max)`. Returns the tags
+     * for B, C, D (null where a line is missing or its code is unknown). The reason is cut to 12 words.
+     */
+    fun parsePipeTags(raw: String): List<OptionTag?> {
+        val found = HashMap<Char, OptionTag>()
+        for (line in raw.lines()) {
+            val m = pipeLine.find(line) ?: continue
+            val letter = m.groupValues[1].uppercase()[0]
+            if (letter in found) continue
+            val code = Misconception.of(m.groupValues[2].trim().replace(' ', '_')) ?: continue
+            val why = m.groupValues[3].trim().trim('"', '.', ' ').split(Regex("\\s+")).take(12).joinToString(" ")
+            if (why.length >= 3 && Misconception.of(why) == null) found[letter] = OptionTag(code, why)
+        }
+        return listOf('B', 'C', 'D').map { found[it] }
+    }
+
     fun parseTagLines(raw: String): List<OptionTag?> {
         val blocks = LinkedHashMap<Char, StringBuilder>()
         var current: Char? = null
