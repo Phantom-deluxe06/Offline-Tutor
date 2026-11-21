@@ -302,4 +302,17 @@
     <string name="verdict_template">Answer computed by the app</string>
     <string name="template_eval">Template eval set</string>
     <string name="mcq_ab_eval">MCQ A/B (expression field)</string>
+    <string name="ff_pool">Ready questions (no waiting)</string>
+    <string name="ff_pool_body">Prepares the next questions in the background, so most questions appear instantly.</string>
+    <string name="ff_shadow">Look-ahead questions</string>
+    <string name="ff_shadow_body">While the phone is cool, also prepares one easier and one harder question.</string>
+    <string name="zero_wait">Zero-wait questions</string>
+    <string name="pool_ready">Ready in pool</string>
+    <string name="pool_hit_rate">Pool hit rate (last %1 questions)</string>
+    <string name="wait_pool">Wait, from pool (median)</string>
+    <string name="wait_instant">Wait, instant template (median)</string>
+    <string name="wait_live">Wait, live generation (median)</string>
+    <string name="tagged_gen_time">Time per fully tagged question (median)</string>
+    <string name="bg_queue">Background queue</string>
+    <string name="zero_wait_note">Measured on this phone from %1 served questions (tap to question shown).</string>
 </resources>

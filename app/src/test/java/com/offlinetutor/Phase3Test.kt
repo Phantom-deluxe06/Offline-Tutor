@@ -78,3 +78,29 @@ class PriorityGateTest {
         assertEquals(0, gate.waiting)
     }
 }
+
+class PoolPolicyTest {
+    @Test fun neighboursStayInRange() {
+        assertEquals(listOf(2), com.offlinetutor.domain.PoolPolicy.neighbours(1))
+        assertEquals(listOf(1, 3), com.offlinetutor.domain.PoolPolicy.neighbours(2))
+        assertEquals(listOf(2), com.offlinetutor.domain.PoolPolicy.neighbours(3))
+    }
+
+    @Test fun serveStatsFromServedRows() {
+        val R = com.offlinetutor.domain.ServeStats.Companion
+        val rows = listOf(
+            com.offlinetutor.domain.ServeStats.Row("pool", 120, 21_000, "llm", true),
+            com.offlinetutor.domain.ServeStats.Row("pool", 80, 19_000, "llm", true),
+            com.offlinetutor.domain.ServeStats.Row("live", 22_000, 22_000, "llm", true),
+            com.offlinetutor.domain.ServeStats.Row("instant-template", 15, 0, "template", true),
+            com.offlinetutor.domain.ServeStats.Row(null, null, null, "llm", false), // old row, not served via pool code
+        )
+        val s = R.from(rows, window = 4)
+        assertEquals(4, s.served)
+        assertEquals(0.5, s.hitRateLast!!, 1e-9)
+        assertEquals(120L, s.medianWaitPoolMs)
+        assertEquals(22_000L, s.medianWaitLiveMs)
+        assertEquals(21_000L, s.medianTaggedGenMs)
+        assertNull(com.offlinetutor.domain.PoolPolicy.hitRate(emptyList()))
+    }
+}

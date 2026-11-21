@@ -40,6 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -161,6 +162,12 @@ class RoadmapVm(private val c: AppContainer) : ViewModel() {
         }
     }
 
+    /** 3b warm-up: the roadmap is shown, so start filling the ready pool for its current step (background P1). */
+    fun warmUp(course: String) {
+        val p = profile.value ?: return
+        c.appScope.launch { runCatching { c.quiz.warmUp(p, course) } }
+    }
+
     fun stop() { job?.cancel() }
 
     fun toggle(step: RoadmapStep) {
@@ -187,6 +194,7 @@ fun RoadmapScreen(openQuiz: (String, String) -> Unit, openChat: (String) -> Unit
     val look = subjectLook(course)
     val courseSteps = steps.filter { it.course == course }
     val currentIndex = courseSteps.indexOfFirst { !it.done }
+    LaunchedEffect(p.id, course) { vm.warmUp(course) }
     val g = gen
 
     LazyColumn(

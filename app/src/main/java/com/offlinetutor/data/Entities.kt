@@ -105,6 +105,13 @@ data class QuizQuestion(
     // ---- v3 (symbolic verifier) ----
     /** VERIFIED / FIXED / UNVERIFIABLE (model questions) or TEMPLATE (Kotlin-computed); null on older rows. */
     val verdict: String? = null,
+    // ---- v5 (3b ready pool) ----
+    /** Perceived wait: from the tap that asked for this question to it being ready. */
+    val waitMs: Long? = null,
+    /** "pool", "live", "instant-template", "instant-seed" or "seed" (fallback after failed generation). */
+    val servedFrom: String? = null,
+    /** Wall time spent generating this question (MCQ + tags, or template story); 0 for instant/seed items. */
+    val genMs: Long? = null,
 ) {
     val optionList: List<String> get() = options.split(OPTION_SEP)
 
@@ -214,4 +221,35 @@ data class GenerationLog(
     val verdict: String? = null,
     /** v4 (2-fix-3): why the output was rejected ("parse: …", "truncated: …", "rule: …", "duplicate", …). */
     val failReason: String? = null,
+)
+
+/**
+ * 3b: a ready question (validated, tagged, deduped when made) waiting to be served, per profile × concept × level.
+ * Served items are moved to quiz_questions; the pool never holds attempts.
+ */
+@Entity(
+    tableName = "question_pool",
+    foreignKeys = [ForeignKey(Profile::class, ["id"], ["profileId"], onDelete = ForeignKey.CASCADE)],
+    indices = [Index(value = ["profileId", "concept", "level"])],
+)
+data class PoolItem(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val profileId: Long,
+    val course: String,
+    val concept: String,
+    val subtopic: String,
+    val level: Int,
+    val stem: String,
+    val normalizedStem: String,
+    /** Four options joined with [QuizQuestion.OPTION_SEP]. */
+    val options: String,
+    val answerIndex: Int,
+    val explanation: String,
+    val optionMeta: String?,
+    /** "llm", "template" or "peer" (5b). */
+    val source: String,
+    val verdict: String?,
+    /** Wall time spent generating this item (MCQ + tags, or template story). */
+    val genMs: Long,
+    val createdAt: Long = System.currentTimeMillis(),
 )

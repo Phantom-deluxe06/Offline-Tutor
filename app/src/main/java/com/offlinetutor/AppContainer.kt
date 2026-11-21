@@ -24,6 +24,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.launch
 import com.offlinetutor.data.Profile
 
 /** Manual dependency container (no DI framework needed for a single-module app). */
@@ -47,7 +50,10 @@ class AppContainer(app: Application) {
 
     val profiles = ProfileRepository(db.profiles(), session)
     val roadmaps = RoadmapRepository(db.roadmaps(), ai)
-    val quiz = QuizRepository(db.quiz(), db.roadmaps(), mcqGenerator, diagGenerator, templateGenerator, seeds, brain, db.probes(), flags)
+    // 3a: background (P1/P2) generation queue in front of the single LLM worker.
+    val scheduler = com.offlinetutor.data.GenerationScheduler(appScope)
+    val quiz = QuizRepository(db.quiz(), db.roadmaps(), mcqGenerator, diagGenerator, templateGenerator, seeds, brain, db.probes(), flags,
+        db.pool(), scheduler, thermal)
     val fixes = com.offlinetutor.data.FixService(db.roadmaps(), quiz, ai, taxonomy)
     val demo = com.offlinetutor.data.DemoSeeder(profiles, db.roadmaps(), db.quiz(), brain)
     val chat = ChatRepository(db.chat(), ai)
@@ -58,4 +64,13 @@ class AppContainer(app: Application) {
     val activeProfile: StateFlow<Profile?> = session.activeProfileId
         .flatMapLatest { id -> if (id == null) flowOf(null) else profiles.observe(id) }
         .stateIn(appScope, SharingStarted.Eagerly, null)
+
+    init {
+        // 3b warm-up on app open: when a profile becomes active, start filling the ready pool for its courses.
+        appScope.launch {
+            activeProfile.filterNotNull().distinctUntilChangedBy { it.id }.collect { p ->
+                p.courseList.take(2).forEach { course -> runCatching { quiz.warmUp(p, course) } }
+            }
+        }
+    }
 }

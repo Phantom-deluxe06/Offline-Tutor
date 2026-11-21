@@ -287,4 +287,17 @@
     <string name="verdict_template">விடையைச் செயலியே கணக்கிட்டது</string>
     <string name="template_eval">வார்ப்புரு மதிப்பீட்டுத் தொகுப்பு</string>
     <string name="mcq_ab_eval">MCQ A/B (expression புலம்)</string>
+    <string name="ff_pool">தயார் கேள்விகள் (காத்திருப்பு இல்லை)</string>
+    <string name="ff_pool_body">அடுத்த கேள்விகளைப் பின்னணியில் தயார் செய்கிறது, அதனால் பெரும்பாலான கேள்விகள் உடனே தோன்றும்.</string>
+    <string name="ff_shadow">முன்னோக்குக் கேள்விகள்</string>
+    <string name="ff_shadow_body">போன் சூடாக இல்லாதபோது, ஒரு எளிய மற்றும் ஒரு கடினமான கேள்வியையும் தயார் செய்கிறது.</string>
+    <string name="zero_wait">காத்திருப்பு இல்லாத கேள்விகள்</string>
+    <string name="pool_ready">தயாராக உள்ளவை</string>
+    <string name="pool_hit_rate">தயார் கேள்வி விகிதம் (கடைசி %1 கேள்விகள்)</string>
+    <string name="wait_pool">காத்திருப்பு, தயார் கேள்வி (இடைநிலை)</string>
+    <string name="wait_instant">காத்திருப்பு, உடனடி வார்ப்புரு (இடைநிலை)</string>
+    <string name="wait_live">காத்திருப்பு, நேரடி உருவாக்கம் (இடைநிலை)</string>
+    <string name="tagged_gen_time">முழுமையாகக் குறியிட்ட கேள்விக்கு நேரம் (இடைநிலை)</string>
+    <string name="bg_queue">பின்னணி வரிசை</string>
+    <string name="zero_wait_note">இந்த போனில் %1 கேள்விகளில் அளந்தது (தட்டியது முதல் கேள்வி தோன்றும் வரை).</string>
 </resources>

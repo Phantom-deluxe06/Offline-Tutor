@@ -287,4 +287,17 @@
     <string name="verdict_template">উত্তর অ্যাপ নিজেই হিসাব করেছে</string>
     <string name="template_eval">টেমপ্লেট মূল্যায়ন সেট</string>
     <string name="mcq_ab_eval">MCQ A/B (expression ক্ষেত্র)</string>
+    <string name="ff_pool">তৈরি প্রশ্ন (অপেক্ষা নেই)</string>
+    <string name="ff_pool_body">পরের প্রশ্নগুলো পেছনে তৈরি রাখে, তাই বেশিরভাগ প্রশ্ন সঙ্গে সঙ্গে আসে।</string>
+    <string name="ff_shadow">আগাম প্রশ্ন</string>
+    <string name="ff_shadow_body">ফোন ঠান্ডা থাকলে একটি সহজ ও একটি কঠিন প্রশ্নও তৈরি রাখে।</string>
+    <string name="zero_wait">অপেক্ষাহীন প্রশ্ন</string>
+    <string name="pool_ready">তৈরি আছে</string>
+    <string name="pool_hit_rate">তৈরি প্রশ্নের হার (শেষ %1টি প্রশ্ন)</string>
+    <string name="wait_pool">অপেক্ষা, তৈরি প্রশ্ন (মধ্যমা)</string>
+    <string name="wait_instant">অপেক্ষা, তাৎক্ষণিক টেমপ্লেট (মধ্যমা)</string>
+    <string name="wait_live">অপেক্ষা, সরাসরি তৈরি (মধ্যমা)</string>
+    <string name="tagged_gen_time">পুরো ট্যাগ করা প্রশ্নে সময় (মধ্যমা)</string>
+    <string name="bg_queue">পেছনের সারি</string>
+    <string name="zero_wait_note">এই ফোনে %1টি প্রশ্নে মাপা (ট্যাপ থেকে প্রশ্ন দেখা পর্যন্ত)।</string>
 </resources>

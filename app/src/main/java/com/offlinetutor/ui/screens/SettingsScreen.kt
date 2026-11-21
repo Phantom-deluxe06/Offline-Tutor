@@ -195,6 +195,8 @@ private fun featureTitle(f: Feature): String = stringResource(
         Feature.BACKTRACKING -> R.string.ff_backtracking
         Feature.SKILL_TREE -> R.string.ff_tree
         Feature.TEMPLATES -> R.string.ff_templates
+        Feature.READY_POOL -> R.string.ff_pool
+        Feature.SHADOW_PREGEN -> R.string.ff_shadow
     },
 )
 
@@ -208,5 +210,7 @@ private fun featureBody(f: Feature): String = stringResource(
         Feature.BACKTRACKING -> R.string.ff_backtracking_body
         Feature.SKILL_TREE -> R.string.ff_tree_body
         Feature.TEMPLATES -> R.string.ff_templates_body
+        Feature.READY_POOL -> R.string.ff_pool_body
+        Feature.SHADOW_PREGEN -> R.string.ff_shadow_body
     },
 )

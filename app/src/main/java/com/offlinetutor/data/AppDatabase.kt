@@ -8,9 +8,9 @@ import androidx.room.RoomDatabase
 @Database(
     entities = [
         Profile::class, RoadmapStep::class, QuizQuestion::class, ChatMessage::class, GenerationLog::class,
-        ConceptMastery::class, MisconceptionHit::class, PendingProbe::class,
+        ConceptMastery::class, MisconceptionHit::class, PendingProbe::class, PoolItem::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -22,6 +22,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun mastery(): MasteryDao
     abstract fun misconceptions(): MisconceptionDao
     abstract fun probes(): ProbeDao
+    abstract fun pool(): PoolDao
 
     companion object {
         // Migrations only, never a destructive fallback: a student's history must survive app updates.

@@ -7,6 +7,7 @@ import com.offlinetutor.domain.ExplainLanguage
 import com.offlinetutor.domain.ProblemTemplates
 import com.offlinetutor.domain.Verdict
 import com.offlinetutor.domain.PinHasher
+import com.offlinetutor.domain.PoolPolicy
 import com.offlinetutor.domain.Prompts
 import com.offlinetutor.domain.QuestionDeduper
 import com.offlinetutor.domain.RoadmapParser
@@ -144,6 +145,9 @@ class QuizRepository(
     private val brain: AdaptiveBrain,
     private val probes: ProbeDao,
     private val flags: FeatureFlags,
+    private val pool: PoolDao,
+    private val scheduler: GenerationScheduler,
+    private val thermal: com.offlinetutor.llm.ThermalMonitor,
 ) {
     fun observeAnswered(profileId: Long) = dao.observeAnswered(profileId)
 
@@ -167,10 +171,20 @@ class QuizRepository(
     /** What the next question is about. [purpose]: null = normal quiz, PROBE, or FIX:<stepId>. */
     data class Target(val subtopic: String, val concept: String, val conceptTitle: String, val purpose: String?)
 
+    /** A validated (and, for diagnostic/template items, tagged) question before it is stored or pooled. */
+    data class Made(
+        val stem: String, val options: List<String>, val answer: Int, val explanation: String, val meta: String?,
+        val source: String, val verdict: String?, val genMs: Long, val attempts: Int,
+    )
+
     /**
      * Adaptive next question. Target: a pending probe first, then a forced subtopic/concept, then the current
      * roadmap step (NORMAL or REVIEW). Level: per-concept Elo rules (toggle) or the 2-up/1-down staircase.
-     * Generation: diagnostic MCQ (toggle) or plain MCQ, validate → dedupe, retry once, then the seed bank.
+     *
+     * 3b serving order (ready-pool toggle on): a ready pool item for (concept, level), deduped against history at
+     * serve time (3f) → if the pool is empty, an instant Kotlin template (no LLM call) while the pool refills →
+     * live generation (template / diagnostic / plain MCQ, validate → dedupe, retry once) → the seed bank.
+     * Every served question records its perceived wait and where it came from.
      */
     suspend fun next(
         profile: Profile,
@@ -181,57 +195,95 @@ class QuizRepository(
         purpose: String? = null,
         focus: String? = null,
     ): Next {
+        val t0 = android.os.SystemClock.elapsedRealtime()
         dao.dropUnanswered(profile.id)
         val answered = dao.answeredForCourse(profile.id, course)
         val weak = WeakSpots.weak(answered.map { it.subtopic to (it.correct == true) })
         val t = pickTarget(profile.id, course, forcedSubtopic, forcedConcept, answered, weak, purpose)
-        val level = if (flags.isOn(Feature.ELO_DIFFICULTY)) {
-            brain.masteryState(profile.id, t.concept)?.level ?: AdaptiveDifficulty.EASY
-        } else {
-            state(profile.id, course).level
-        }
+        val level = levelFor(profile.id, course, t.concept)
         val history = dao.allNormalizedStems(profile.id).toMutableSet()
-        val recent = dao.recentStems(profile.id, course, 10).toMutableList()
+        val usePool = flags.isOn(Feature.READY_POOL) && focus == null
 
-        fun store(
-            stem: String, options: List<String>, answer: Int, explanation: String, source: String, meta: String?,
-            subtopic: String = t.subtopic, difficulty: Int = level, concept: String = t.concept, verdict: String? = null,
-        ) = QuizQuestion(
-            profileId = profile.id, course = course, subtopic = subtopic, difficulty = difficulty,
-            stem = stem, normalizedStem = QuestionDeduper.normalize(stem),
-            options = options.joinToString(QuizQuestion.OPTION_SEP.toString()),
-            answerIndex = answer, explanation = explanation, source = source,
-            concept = concept, optionMeta = meta, purpose = t.purpose, verdict = verdict,
-        )
+        suspend fun serve(
+            m: Made, from: String, subtopic: String = t.subtopic, difficulty: Int = level, concept: String = t.concept,
+            note: String? = null,
+        ): Next {
+            val q = QuizQuestion(
+                profileId = profile.id, course = course, subtopic = subtopic, difficulty = difficulty,
+                stem = m.stem, normalizedStem = QuestionDeduper.normalize(m.stem),
+                options = m.options.joinToString(QuizQuestion.OPTION_SEP.toString()),
+                answerIndex = m.answer, explanation = m.explanation, source = m.source,
+                concept = concept, optionMeta = m.meta, purpose = t.purpose, verdict = m.verdict,
+                waitMs = android.os.SystemClock.elapsedRealtime() - t0, servedFrom = from, genMs = m.genMs,
+            )
+            val stored = q.copy(id = dao.insert(q))
+            if (usePool) shadow(profile, course, t.concept, level)
+            return Next(stored, m.attempts, note)
+        }
 
-        // 2a: a Kotlin-owned template when the topic has one (answer computed by the app, distractors tagged).
+        if (usePool) {
+            takeFromPool(profile.id, t.concept, level, history)?.let { item ->
+                return serve(Made(item.stem, item.options.split(QuizQuestion.OPTION_SEP), item.answerIndex, item.explanation,
+                    item.optionMeta, item.source, item.verdict, item.genMs, 1), "pool", subtopic = item.subtopic)
+            }
+            // Pool empty: an instant Kotlin template (Kotlin's own wording, no LLM call) while the pool refills.
+            instantTemplate(course, t, level, history)?.let { m -> return serve(m, "instant-template") }
+        }
+
+        val (made, lastReason) = make(profile, course, t, level, history, weak, focus, onPartial)
+        if (made != null) return serve(made, "live")
+
+        val seed = seeds.pick(course, level, history)
+            ?: throw IllegalStateException("Could not create a question ($lastReason) and the seed bank is used up.")
+        // A bank question is credited to its own topic, not to the step that was targeted.
+        val seedConcept = Concepts.slug(seed.topic)
+        val d = seed.toDiag(seedConcept).shuffled()
+        return serve(Made(d.question, d.options.map { it.text }, d.answer, d.explanation,
+            d.metaJson().takeIf { d.options.any { it.code != null } }, "seed", null, 0, 2), "seed",
+            subtopic = seed.topic, difficulty = seed.difficulty, concept = seedConcept, note = lastReason)
+    }
+
+    private suspend fun levelFor(profileId: Long, course: String, concept: String): Int =
+        if (flags.isOn(Feature.ELO_DIFFICULTY)) brain.masteryState(profileId, concept)?.level ?: AdaptiveDifficulty.EASY
+        else state(profileId, course).level
+
+    /**
+     * One validated question for [t] at [level]: a Kotlin template when the topic is numeric (2-fix-2), else a
+     * diagnostic (tagged) or plain LLM MCQ, retried once. Shared by live serving (P0) and pool refill (P1, via the
+     * caller's GenPriority context). Returns the question or the last failure reason.
+     */
+    private suspend fun make(
+        profile: Profile, course: String, t: Target, level: Int, history: Set<String>, weak: List<String>,
+        focus: String?, onPartial: (String) -> Unit,
+    ): Pair<Made?, String?> {
+        val start = android.os.SystemClock.elapsedRealtime()
+        fun ms() = android.os.SystemClock.elapsedRealtime() - start
         if (flags.isOn(Feature.TEMPLATES)) {
             ProblemTemplates.forTopic("${t.subtopic} ${t.conceptTitle}", course)?.let { type ->
                 templates.build(profile.grade, type, level, t.concept, history, LogMeta(), onPartial)?.let { r ->
                     val s = r.mcq.shuffled()
-                    val q = store(s.question, s.options.map { it.text }, s.answer, s.explanation, "template", s.metaJson(),
-                        verdict = Verdict.TEMPLATE.name)
-                    return Next(q.copy(id = dao.insert(q)), 1, null)
+                    return Made(s.question, s.options.map { it.text }, s.answer, s.explanation, s.metaJson(), "template",
+                        Verdict.TEMPLATE.name, ms(), 1) to null
                 }
             }
         }
-
+        val recent = dao.recentStems(profile.id, course, 10).toMutableList()
         var lastReason: String? = null
         for (attempt in 1..2) {
             if (flags.isOn(Feature.DIAGNOSTIC_MCQ)) {
-                val o = diag.attempt(profile.grade, course, t.conceptTitle, t.concept, t.subtopic, level, recent, weak, history, LogMeta(), focus, onPartial)
+                val o = diag.attempt(profile.grade, course, t.conceptTitle, t.concept, t.subtopic, level, recent, weak, history,
+                    LogMeta(), focus, onPartial)
                 o.mcq?.let { d ->
                     val s = d.shuffled()
-                    val q = store(s.question, s.options.map { it.text }, s.answer, s.explanation, "llm", s.metaJson(), verdict = o.verdict?.name)
-                    return Next(q.copy(id = dao.insert(q)), attempt, null)
+                    return Made(s.question, s.options.map { it.text }, s.answer, s.explanation, s.metaJson(), "llm",
+                        o.verdict?.name, ms(), attempt) to null
                 }
                 lastReason = o.reason
             } else {
                 val o = generator.attempt(profile.grade, course, t.subtopic, level, recent, weak, history, LogMeta(), onPartial, focus)
                 o.mcq?.let { mcq ->
                     val s = mcq.shuffled()
-                    val q = store(s.question, s.options, s.answer, s.explanation, "llm", null, verdict = o.verdict?.name)
-                    return Next(q.copy(id = dao.insert(q)), attempt, null)
+                    return Made(s.question, s.options, s.answer, s.explanation, null, "llm", o.verdict?.name, ms(), attempt) to null
                 }
                 lastReason = o.reason
                 o.result.text.let { txt -> com.offlinetutor.domain.McqParser.parse(txt) }
@@ -239,16 +291,84 @@ class QuizRepository(
                     ?.let { recent.add(0, it) }
             }
         }
-
-        val seed = seeds.pick(course, level, history)
-            ?: throw IllegalStateException("Could not create a question ($lastReason) and the seed bank is used up.")
-        // A bank question is credited to its own topic, not to the step that was targeted.
-        val seedConcept = Concepts.slug(seed.topic)
-        val d = seed.toDiag(seedConcept).shuffled()
-        val q = store(d.question, d.options.map { it.text }, d.answer, d.explanation, "seed",
-            d.metaJson().takeIf { d.options.any { it.code != null } }, subtopic = seed.topic, difficulty = seed.difficulty, concept = seedConcept)
-        return Next(q.copy(id = dao.insert(q)), 2, lastReason)
+        return null to lastReason
     }
+
+    /** Kotlin template with Kotlin's own wording: no LLM call, so it is served instantly (3b). */
+    private fun instantTemplate(course: String, t: Target, level: Int, history: Set<String>): Made? {
+        if (!flags.isOn(Feature.TEMPLATES)) return null
+        val type = ProblemTemplates.forTopic("${t.subtopic} ${t.conceptTitle}", course) ?: return null
+        repeat(3) {
+            val s = ProblemTemplates.generate(type, level).toDiag(t.concept).shuffled()
+            if (!QuestionDeduper.isDuplicate(s.question, history)) {
+                return Made(s.question, s.options.map { it.text }, s.answer, s.explanation, s.metaJson(), "template",
+                    Verdict.TEMPLATE.name, 0, 1)
+            }
+        }
+        return null
+    }
+
+    /** Oldest ready item for (concept, level); items that became duplicates since they were made are dropped (3f). */
+    private suspend fun takeFromPool(profileId: Long, concept: String, level: Int, history: Set<String>): PoolItem? {
+        while (true) {
+            val item = pool.oldest(profileId, concept, level) ?: return null
+            pool.delete(item.id)
+            if (!QuestionDeduper.isDuplicate(item.stem, history)) return item
+        }
+    }
+
+    /**
+     * 3b shadow pre-generation, called when a question is served (it is on screen while this runs): refill one item
+     * at the predicted next level (the current one); only when the device is cool and that level is already full,
+     * one candidate a level up and one down.
+     */
+    private suspend fun shadow(profile: Profile, course: String, concept: String, level: Int) {
+        refill(profile, course, concept, level, items = 1)
+        if (flags.isOn(Feature.SHADOW_PREGEN) && pool.count(profile.id, concept, level) >= PoolPolicy.PER_LEVEL && cool()) {
+            PoolPolicy.neighbours(level).forEach { refill(profile, course, concept, it, items = 1) }
+        }
+    }
+
+    /**
+     * Queues a background refill of (concept, level) up to [PoolPolicy.PER_LEVEL] ready items, generating at most
+     * [items]. Respects the per-profile pool cap. P1 by default; the night shift uses P2.
+     */
+    fun refill(
+        profile: Profile, course: String, concept: String, level: Int, items: Int = PoolPolicy.PER_LEVEL,
+        priority: com.offlinetutor.llm.Priority = com.offlinetutor.llm.Priority.P1,
+    ): Boolean {
+        if (!flags.isOn(Feature.READY_POOL)) return false
+        return scheduler.submit(GenerationScheduler.Job(priority, "pool:${profile.id}:$course:$concept:$level") {
+            repeat(items) {
+                if (pool.count(profile.id, concept, level) >= PoolPolicy.PER_LEVEL) return@Job
+                if (pool.countForProfile(profile.id) >= PoolPolicy.PROFILE_CAP) return@Job
+                val answered = dao.answeredForCourse(profile.id, course)
+                val weak = WeakSpots.weak(answered.map { it.subtopic to (it.correct == true) })
+                val t = pickTarget(profile.id, course, null, concept, answered, weak, null)
+                val history = (dao.allNormalizedStems(profile.id) + pool.stems(profile.id)).toSet()
+                val m = make(profile, course, t, level, history, weak, null) {}.first ?: return@repeat
+                pool.insert(PoolItem(
+                    profileId = profile.id, course = course, concept = concept, subtopic = t.subtopic, level = level,
+                    stem = m.stem, normalizedStem = QuestionDeduper.normalize(m.stem),
+                    options = m.options.joinToString(QuizQuestion.OPTION_SEP.toString()), answerIndex = m.answer,
+                    explanation = m.explanation, optionMeta = m.meta, source = m.source, verdict = m.verdict, genMs = m.genMs,
+                ))
+            }
+        })
+    }
+
+    /** 3b warm-up (app open, roadmap shown): start refilling the pool for the current step at the student's level. */
+    suspend fun warmUp(profile: Profile, course: String) {
+        if (!flags.isOn(Feature.READY_POOL)) return
+        val answered = dao.answeredForCourse(profile.id, course)
+        val t = pickTarget(profile.id, course, null, null, answered, emptyList(), null)
+        refill(profile, course, t.concept, levelFor(profile.id, course, t.concept))
+    }
+
+    private fun cool(): Boolean = thermal.currentStatus() == 0
+
+    /** For the benchmark screen: the last [n] served questions (wait + where they came from). */
+    suspend fun recentServed(n: Int) = dao.recentServed(n)
 
     private suspend fun pickTarget(
         profileId: Long,

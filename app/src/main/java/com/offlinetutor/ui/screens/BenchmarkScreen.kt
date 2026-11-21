@@ -108,6 +108,7 @@ fun BenchmarkScreen(onBack: () -> Unit, openModels: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             ModelStatusCard(engine, openModels)
+            ZeroWaitCard()
             SectionCard(stringResource(R.string.device)) {
                 KV(stringResource(R.string.device_model), "${Build.MANUFACTURER} ${Build.MODEL}" +
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) " · ${Build.SOC_MODEL}" else "")
@@ -196,7 +197,7 @@ fun BenchmarkScreen(onBack: () -> Unit, openModels: () -> Unit) {
 }
 
 @Composable
-private fun KV(k: String, v: String) {
+internal fun KV(k: String, v: String) {
     Row(Modifier.fillMaxWidth()) {
         Text(k, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(v, Modifier.weight(1.3f), style = MaterialTheme.typography.bodyMedium)

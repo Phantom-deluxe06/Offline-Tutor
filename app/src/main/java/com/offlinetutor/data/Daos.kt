@@ -163,6 +163,10 @@ interface QuizDao {
 
     @Query("SELECT * FROM quiz_questions WHERE profileId = :profileId AND correct IS NOT NULL ORDER BY answeredAt")
     suspend fun answered(profileId: Long): List<QuizQuestion>
+
+    /** 3b metrics: the most recently served questions with their perceived wait. */
+    @Query("SELECT * FROM quiz_questions WHERE servedFrom IS NOT NULL ORDER BY askedAt DESC LIMIT :n")
+    suspend fun recentServed(n: Int): List<QuizQuestion>
 }
 
 @Dao
@@ -196,4 +200,35 @@ interface LogDao {
 
     @Query("DELETE FROM generation_logs")
     suspend fun clear()
+}
+
+/** 3b: ready-question pool. */
+@Dao
+interface PoolDao {
+    @Insert
+    suspend fun insert(item: PoolItem): Long
+
+    @Query("SELECT COUNT(*) FROM question_pool WHERE profileId = :profileId AND concept = :concept AND level = :level")
+    suspend fun count(profileId: Long, concept: String, level: Int): Int
+
+    @Query("SELECT COUNT(*) FROM question_pool WHERE profileId = :profileId")
+    suspend fun countForProfile(profileId: Long): Int
+
+    @Query("SELECT COUNT(*) FROM question_pool")
+    fun observeTotal(): Flow<Int>
+
+    @Query("SELECT * FROM question_pool WHERE profileId = :profileId AND concept = :concept AND level = :level ORDER BY createdAt LIMIT 1")
+    suspend fun oldest(profileId: Long, concept: String, level: Int): PoolItem?
+
+    @Query("SELECT normalizedStem FROM question_pool WHERE profileId = :profileId")
+    suspend fun stems(profileId: Long): List<String>
+
+    @Query("DELETE FROM question_pool WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("DELETE FROM question_pool WHERE profileId = :profileId")
+    suspend fun clearProfile(profileId: Long)
+
+    @Query("SELECT * FROM question_pool ORDER BY createdAt DESC LIMIT :limit")
+    suspend fun recent(limit: Int): List<PoolItem>
 }

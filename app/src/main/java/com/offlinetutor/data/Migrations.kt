@@ -62,5 +62,23 @@ object Migrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+    // 3b: ready-question pool + perceived-wait columns. SQL copied from the exported schema 5.json.
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `quiz_questions` ADD COLUMN `waitMs` INTEGER")
+            db.execSQL("ALTER TABLE `quiz_questions` ADD COLUMN `servedFrom` TEXT")
+            db.execSQL("ALTER TABLE `quiz_questions` ADD COLUMN `genMs` INTEGER")
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `question_pool` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                    "`profileId` INTEGER NOT NULL, `course` TEXT NOT NULL, `concept` TEXT NOT NULL, `subtopic` TEXT NOT NULL, " +
+                    "`level` INTEGER NOT NULL, `stem` TEXT NOT NULL, `normalizedStem` TEXT NOT NULL, `options` TEXT NOT NULL, " +
+                    "`answerIndex` INTEGER NOT NULL, `explanation` TEXT NOT NULL, `optionMeta` TEXT, `source` TEXT NOT NULL, " +
+                    "`verdict` TEXT, `genMs` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, " +
+                    "FOREIGN KEY(`profileId`) REFERENCES `profiles`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_question_pool_profileId_concept_level` ON `question_pool` (`profileId`, `concept`, `level`)")
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
 }
