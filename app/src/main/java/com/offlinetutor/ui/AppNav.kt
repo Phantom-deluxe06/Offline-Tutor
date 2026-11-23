@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Memory
@@ -85,6 +86,8 @@ object Routes {
     const val BENCHMARK = "benchmark"
     const val MODELS = "models"
     const val SETTINGS = "settings"
+    const val CLASSROOM = "classroom?standalone={standalone}"
+    fun classroom(standalone: Boolean) = "classroom?standalone=$standalone"
 
     const val HOME = "home"
     const val ROADMAP = "roadmap"
@@ -122,6 +125,7 @@ fun AppNav() {
             ProfilesScreen(
                 autoEnter = e.arguments?.getBoolean("auto") ?: true,
                 onCreate = { nav.navigate(Routes.INTAKE) },
+                onJoinBattle = { nav.navigate(Routes.classroom(true)) },
                 onEnter = { nav.navigate(Routes.MAIN) { popUpTo(0) { inclusive = true } } },
             )
         }
@@ -137,7 +141,11 @@ fun AppNav() {
                 openModels = { nav.navigate(Routes.MODELS) },
                 openSettings = { nav.navigate(Routes.SETTINGS) },
                 switchProfile = { nav.navigate(Routes.profiles(false)) { popUpTo(0) { inclusive = true } } },
+                openClassroom = { nav.navigate(Routes.classroom(false)) },
             )
+        }
+        composable(Routes.CLASSROOM, arguments = listOf(navArgument("standalone") { type = NavType.BoolType; defaultValue = false })) { e ->
+            com.offlinetutor.ui.screens.ClassroomScreen(onBack = { nav.popBackStack() }, standalone = e.arguments?.getBoolean("standalone") ?: false)
         }
         composable(Routes.BENCHMARK) { BenchmarkScreen(onBack = { nav.popBackStack() }, openModels = { nav.navigate(Routes.MODELS) }) }
         composable(Routes.MODELS) { ModelsScreen(onBack = { nav.popBackStack() }) }
@@ -178,6 +186,7 @@ private fun MainScaffold(
     openModels: () -> Unit,
     openSettings: () -> Unit,
     switchProfile: () -> Unit,
+    openClassroom: () -> Unit = {},
 ) {
     val inner = rememberNavController()
     val entry by inner.currentBackStackEntryAsState()
@@ -200,6 +209,10 @@ private fun MainScaffold(
                             leadingIcon = { Icon(Icons.Filled.Memory, null) }, onClick = { menu = false; openModels() })
                         DropdownMenuItem(text = { Text(stringResource(R.string.settings_title)) },
                             leadingIcon = { Icon(Icons.Filled.Settings, null) }, onClick = { menu = false; openSettings() })
+                        if (container().flags.isOn(com.offlinetutor.data.Feature.CLASSROOM_MESH)) {
+                            DropdownMenuItem(text = { Text(stringResource(R.string.classroom)) },
+                                leadingIcon = { Icon(Icons.Filled.Groups, null) }, onClick = { menu = false; openClassroom() })
+                        }
                         DropdownMenuItem(text = { Text(stringResource(R.string.switch_profile)) },
                             leadingIcon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null) }, onClick = { menu = false; switchProfile() })
                     }

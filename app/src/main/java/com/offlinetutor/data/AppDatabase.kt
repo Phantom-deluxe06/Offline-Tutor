@@ -10,7 +10,7 @@ import androidx.room.RoomDatabase
         Profile::class, RoadmapStep::class, QuizQuestion::class, ChatMessage::class, GenerationLog::class,
         ConceptMastery::class, MisconceptionHit::class, PendingProbe::class, PoolItem::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

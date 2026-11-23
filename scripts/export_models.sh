@@ -99,4 +99,4 @@ done
 
 echo "== Done"
 ls -lh "$OUT"
-echo "Copy to Windows with:  cp $OUT/* /mnt/d/Projects/OfflineTutor/model-export/out/"
+echo "Copy to Windows with:  cp $OUT/* <repo>/model-export/out/"

@@ -80,6 +80,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.exp4j) // Phase 2b: evaluates the model's answer expression (pure Java, no permissions)
     implementation(libs.androidx.work.runtime.ktx) // 3c Night Shift: runs only while charging + idle
+    implementation(libs.play.services.nearby) // Phase 5 classroom mesh (Bluetooth / Wi-Fi, no internet)
+    implementation(libs.zxing.core)           // 5c "Share my progress" QR code
+    implementation(libs.zxing.embedded)       // 5c teacher scan mode
     implementation(libs.executorch.android)
 
     testImplementation(libs.junit)

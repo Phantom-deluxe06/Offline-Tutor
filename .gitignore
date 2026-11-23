@@ -10,3 +10,18 @@ captures/
 tokenizer.model
 model-export/out/
 model-export/devdb/
+.kotlin/
+# signing keys
+*.keystore
+*.jks
+keystore.properties
+# model files (download links are in the README; never commit them)
+*.bin
+*.safetensors
+*.gguf
+*.pth
+*.pt
+tokenizer.json
+tokenizer_config.json
+model-export/hf/
+model-export/venv/

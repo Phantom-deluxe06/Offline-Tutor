@@ -176,6 +176,8 @@ class QuizRepository(
     data class Made(
         val stem: String, val options: List<String>, val answer: Int, val explanation: String, val meta: String?,
         val source: String, val verdict: String?, val genMs: Long, val attempts: Int,
+        /** Template items: shareable parameters (5b). */
+        val spec: String? = null,
     )
 
     /**
@@ -264,7 +266,7 @@ class QuizRepository(
                 templates.build(profile.grade, type, level, t.concept, history, LogMeta(), onPartial)?.let { r ->
                     val s = r.mcq.shuffled()
                     return Made(s.question, s.options.map { it.text }, s.answer, s.explanation, s.metaJson(), "template",
-                        Verdict.TEMPLATE.name, ms(), 1) to null
+                        Verdict.TEMPLATE.name, ms(), 1, spec = r.spec) to null
                 }
             }
         }
@@ -363,10 +365,38 @@ class QuizRepository(
                 stem = m.stem, normalizedStem = QuestionDeduper.normalize(m.stem),
                 options = m.options.joinToString(QuizQuestion.OPTION_SEP.toString()), answerIndex = m.answer,
                 explanation = m.explanation, optionMeta = m.meta, source = m.source, verdict = m.verdict, genMs = m.genMs,
+                spec = m.spec,
             ))
             added++
         }
         return added
+    }
+
+    /** 5a: a battle question with its key and the misconception behind each option (null for the key). */
+    data class BattleItem(val stem: String, val options: List<String>, val answer: Int, val codes: List<String?>)
+
+    /**
+     * 5a: [n] questions for a class battle on [concept] (or the current step): ready pool items first, and only
+     * what is missing is generated live. Pool items used here are removed from the pool.
+     */
+    suspend fun battleQuestions(profile: Profile, course: String, concept: String?, n: Int = 5, onPartial: (String) -> Unit = {}): List<BattleItem> {
+        val answered = dao.answeredForCourse(profile.id, course)
+        val t = pickTarget(profile.id, course, null, concept, answered, emptyList(), null)
+        fun codes(meta: String?, size: Int) = com.offlinetutor.domain.OptionMeta.parse(meta).let { tags -> (0 until size).map { tags.getOrNull(it)?.code?.name } }
+        val out = ArrayList<BattleItem>()
+        for (item in pool.forConcept(profile.id, t.concept, n)) {
+            pool.delete(item.id)
+            val opts = item.options.split(QuizQuestion.OPTION_SEP)
+            out.add(BattleItem(item.stem, opts, item.answerIndex, codes(item.optionMeta, opts.size)))
+        }
+        val history = (dao.allNormalizedStems(profile.id) + out.map { QuestionDeduper.normalize(it.stem) }).toMutableSet()
+        var tries = 0
+        while (out.size < n && tries++ < n * 2) {
+            val m = make(profile, course, t, levelFor(profile.id, course, t.concept), history, emptyList(), null, onPartial).first ?: continue
+            history.add(QuestionDeduper.normalize(m.stem))
+            out.add(BattleItem(m.stem, m.options, m.answer, codes(m.meta, m.options.size)))
+        }
+        return out
     }
 
     /** Current level for a concept (Elo rules or staircase), for background planners. */

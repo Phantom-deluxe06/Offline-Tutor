@@ -63,6 +63,17 @@ class AppContainer(app: Application) {
     // 3c: Night Shift (WorkManager while charging + idle, or Settings → Simulate night).
     val night = com.offlinetutor.data.NightShift(app, db.profiles(), db.mastery(), db.roadmaps(), quiz, fixes, diagGenerator,
         templateGenerator, ai) { p -> backgroundPaused(p) }
+    // Phase 5: classroom mesh (Nearby Connections) and the QR fallback.
+    val nearby = com.offlinetutor.data.NearbyTransport(app)
+    val battleHost = com.offlinetutor.data.BattleHost(nearby, appScope, ai)
+    val battleClient = com.offlinetutor.data.BattleClient(nearby)
+    val questionCache = com.offlinetutor.data.QuestionCache(db.pool(), db.quiz())
+    val share = com.offlinetutor.data.QuestionShareSession(nearby, appScope, questionCache, ai) {
+        // measured median time per fully tagged question on this phone (seconds)
+        com.offlinetutor.domain.ServeStats.from(quiz.recentServed(200).map {
+            com.offlinetutor.domain.ServeStats.Row(it.servedFrom, it.waitMs, it.genMs, it.source, !it.optionMeta.isNullOrBlank())
+        }).medianTaggedGenMs?.let { it / 1000.0 }
+    }
     val bench = BenchmarkRunner(app, appScope, engine, ai, mcqGenerator, diagGenerator, templateGenerator, flags, metrics)
 
     /** 3e: thermal governor (toggle) — hot phones pause background priorities; live requests are never paused. */

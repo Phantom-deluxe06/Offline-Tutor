@@ -234,4 +234,10 @@ interface PoolDao {
 
     @Query("SELECT * FROM question_pool ORDER BY createdAt DESC LIMIT :limit")
     suspend fun recent(limit: Int): List<PoolItem>
+
+    @Query("SELECT * FROM question_pool WHERE profileId = :profileId ORDER BY createdAt")
+    suspend fun all(profileId: Long): List<PoolItem>
+
+    @Query("SELECT * FROM question_pool WHERE profileId = :profileId AND concept = :concept ORDER BY createdAt LIMIT :limit")
+    suspend fun forConcept(profileId: Long, concept: String, limit: Int): List<PoolItem>
 }

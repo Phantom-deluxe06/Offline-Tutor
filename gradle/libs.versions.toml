@@ -36,6 +36,9 @@ junit = { module = "junit:junit", version.ref = "junit" }
 json = { module = "org.json:json", version = "20240303" }
 exp4j = { module = "net.objecthunter:exp4j", version = "0.4.8" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version = "2.10.1" }
+play-services-nearby = { module = "com.google.android.gms:play-services-nearby", version = "19.3.0" }
+zxing-core = { module = "com.google.zxing:core", version = "3.5.3" }
+zxing-embedded = { module = "com.journeyapps:zxing-android-embedded", version = "4.3.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -173,7 +173,8 @@ class McqGenerator(private val ai: TutorAi, private val flags: FeatureFlags) {
  * Works without a model too (Kotlin text).
  */
 class TemplateGenerator(private val ai: TutorAi) {
-    data class Result(val mcq: DiagMcq, val llmText: Boolean)
+    /** [spec] = "TYPE|level|seed|story" (5b: peers rebuild the numbers and answer from it). */
+    data class Result(val mcq: DiagMcq, val llmText: Boolean, val spec: String)
 
     suspend fun build(
         grade: Int,
@@ -186,7 +187,9 @@ class TemplateGenerator(private val ai: TutorAi) {
         random: kotlin.random.Random = kotlin.random.Random.Default,
     ): Result? {
         repeat(3) {
-            val p = ProblemTemplates.generate(type, level, random)
+            val seed = random.nextLong()
+            val p = ProblemTemplates.generate(type, level, kotlin.random.Random(seed))
+            var acceptedStory: String? = null
             val text = try {
                 val r = ai.engine.generate(
                     GenRequest(TaskType.TEMPLATE_TEXT, Prompts.templateStory(grade, p), stopWhen = Prompts.storyDone(p)),
@@ -200,12 +203,14 @@ class TemplateGenerator(private val ai: TutorAi) {
                 val story = cleaned.takeIf { problem == null }
                 ai.log(r, TaskType.TEMPLATE_TEXT, meta.copy(difficulty = level), story != null, null, Verdict.TEMPLATE.name,
                     problem?.let { "rule: $it" })
+                acceptedStory = story
                 story?.let { p.textFor(it) }
             } catch (_: ModelMissingException) {
                 null // no model installed: Kotlin's own wording still gives a correct question
             }
             val question = text ?: p.defaultText
-            if (!QuestionDeduper.isDuplicate(question, historyNormalized)) return Result(p.toDiag(concept, question), text != null)
+            if (!QuestionDeduper.isDuplicate(question, historyNormalized)) return Result(p.toDiag(concept, question), text != null,
+                listOf(type.name, level, seed, acceptedStory.orEmpty().replace("|", "/")).joinToString("|"))
         }
         return null
     }

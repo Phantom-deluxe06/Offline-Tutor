@@ -50,10 +50,31 @@ Requirements: JDK 17+ (Android Studio's JBR works), Android SDK with platform 36
 
 APK: `app/build/outputs/apk/debug/app-debug.apk` (arm64-v8a only).
 
+## Get the model (not in this repo)
+
+The model files are too large for git (and `*.pte` / `tokenizer.model` are git-ignored). Download them:
+
+| File | Size | Link |
+|---|---|---|
+| `tutor_1b_spinquant.pte` (default, Llama 3.2 1B Instruct SpinQuant INT4) | 1,025 MB | `<GOOGLE_DRIVE_LINK_SPINQUANT>` |
+| `tokenizer.model` | ~2 MB | `<GOOGLE_DRIVE_LINK_TOKENIZER>` |
+| `tutor_1b_8da4w.pte` (optional, for the RAM comparison) | 765 MB | `<GOOGLE_DRIVE_LINK_8DA4W>` |
+
+Llama 3.2 is under the Llama 3.2 Community License; accept it on Hugging Face before using the weights.
+
+Setup:
+
+1. Build and install the APK (`.\gradlew.bat installDebug`, or copy `app-debug.apk` to the phone).
+2. Copy the downloaded files to the phone, then in the app: **⋮ → AI model → Import .pte** and **Import tokenizer**
+   (or `.\scripts\push_model.ps1 -Dir <folder with the files>` over adb).
+3. Create a profile, or **Settings → Debug → Seed demo student** for the demo data.
+
+Or export the files yourself:
+
 ## Model export (WSL2 Ubuntu)
 
 ```bash
-bash /mnt/d/Projects/OfflineTutor/scripts/export_models.sh
+bash scripts/export_models.sh   # run from the repo root inside WSL
 ```
 
 Produces `tutor_1b_spinquant.pte`, `tutor_1b_8da4w.pte` and `tokenizer.model` (pip `executorch==1.5.1`, same as the AAR).
@@ -67,8 +88,11 @@ Install on the phone: **AI model → Import .pte / Import tokenizer**, or for de
 
 ## Offline compliance
 
-* `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE` removed with `tools:node="remove"` (check
+* `INTERNET` and `ACCESS_NETWORK_STATE` removed with `tools:node="remove"`, so no library can merge them back (check
   `app/build/intermediates/merged_manifests/debug/.../AndroidManifest.xml`).
+* The classroom mesh (Phase 5) declares the Nearby Connections permissions (Bluetooth, Wi-Fi state, nearby Wi-Fi
+  devices, location up to Android 12) for phone-to-phone links only; CAMERA is for the teacher's QR scan.
+  WorkManager (Night Shift) adds WAKE_LOCK, RECEIVE_BOOT_COMPLETED and FOREGROUND_SERVICE.
 * `allowBackup="false"` + `data_extraction_rules.xml` / `backup_rules.xml` exclude every domain.
 * Local profiles only; no accounts anywhere.
 

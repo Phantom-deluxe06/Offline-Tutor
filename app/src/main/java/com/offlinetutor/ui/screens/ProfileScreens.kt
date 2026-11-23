@@ -84,7 +84,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun ProfilesScreen(autoEnter: Boolean, onCreate: () -> Unit, onEnter: () -> Unit) {
+fun ProfilesScreen(autoEnter: Boolean, onCreate: () -> Unit, onEnter: () -> Unit, onJoinBattle: () -> Unit = {}) {
     val c = container()
     val profilesFlow = remember { c.profiles.observeAll() }
     val profiles by profilesFlow.collectAsStateWithLifecycle(initialValue = null)
@@ -121,6 +121,8 @@ fun ProfilesScreen(autoEnter: Boolean, onCreate: () -> Unit, onEnter: () -> Unit
             Text(stringResource(R.string.profiles_title), style = MaterialTheme.typography.displaySmall, modifier = Modifier.enterAnimation(1))
             Text(stringResource(R.string.profiles_subtitle), style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.enterAnimation(2))
+            // 5a model-less mode: classmates can join a battle without a profile or the AI model.
+            androidx.compose.material3.TextButton(onClick = onJoinBattle) { Text(stringResource(R.string.join_battle_nomodel)) }
             Spacer(Modifier.height(20.dp))
             val list = profiles.orEmpty()
             if (profiles != null && list.isEmpty()) {

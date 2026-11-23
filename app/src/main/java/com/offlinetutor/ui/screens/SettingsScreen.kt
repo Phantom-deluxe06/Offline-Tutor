@@ -229,6 +229,7 @@ private fun featureTitle(f: Feature): String = stringResource(
         Feature.PROMPT_PREFILL -> R.string.ff_prefill
         Feature.THERMAL_GOVERNOR -> R.string.ff_thermal
         Feature.ANALOGY_WORLDS -> R.string.ff_analogy
+        Feature.CLASSROOM_MESH -> R.string.ff_mesh
     },
 )
 
@@ -248,5 +249,6 @@ private fun featureBody(f: Feature): String = stringResource(
         Feature.PROMPT_PREFILL -> R.string.ff_prefill_body
         Feature.THERMAL_GOVERNOR -> R.string.ff_thermal_body
         Feature.ANALOGY_WORLDS -> R.string.ff_analogy_body
+        Feature.CLASSROOM_MESH -> R.string.ff_mesh_body
     },
 )

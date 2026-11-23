@@ -19,11 +19,12 @@ enum class Feature(val phase: Int, /** Spec: default ON; 3d prefill stays off un
     NIGHT_SHIFT(3),
     PROMPT_PREFILL(3, defaultOn = false),
     THERMAL_GOVERNOR(3),
-    ANALOGY_WORLDS(4);
+    ANALOGY_WORLDS(4),
+    CLASSROOM_MESH(5);
 
     companion object {
         /** Toggles for later phases stay hidden until that phase is built. */
-        const val IMPLEMENTED_PHASE = 4
+        const val IMPLEMENTED_PHASE = 5
     }
 }
 

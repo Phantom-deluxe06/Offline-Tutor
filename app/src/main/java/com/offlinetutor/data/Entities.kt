@@ -254,4 +254,6 @@ data class PoolItem(
     /** Wall time spent generating this item (MCQ + tags, or template story). */
     val genMs: Long,
     val createdAt: Long = System.currentTimeMillis(),
+    /** v7 (5b): template items only, "TYPE|level|seed|story-with-placeholders" so peers can rebuild and re-check them. */
+    val spec: String? = null,
 )

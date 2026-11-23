@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Waits until Meta approves access to both gated Llama repos, then runs export_models.sh.
-# Usage (WSL): bash /mnt/d/Projects/OfflineTutor/scripts/wait_and_export.sh
+# Usage (WSL, from the repo root): bash scripts/wait_and_export.sh
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WORK="${WORK:-$HOME/tutor-export}"
