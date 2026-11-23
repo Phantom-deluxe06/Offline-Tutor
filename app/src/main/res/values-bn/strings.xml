@@ -387,4 +387,34 @@
     <string name="bg_doodles">আঁকিবুকি</string>
     <string name="bg_paper">দাগ কাটা কাগজ</string>
     <string name="bg_plain">সাদামাটা</string>
+    <!-- Phase 6 -->
+    <string name="teach_kutty">কুট্টিকে শেখাও</string>
+    <string name="kutty_pick">শেখানোর জন্য একটি বিষয় বেছে নাও</string>
+    <string name="kutty_intro">কুট্টি একটি কৌতূহলী ছোট বাচ্চা। নিজের ভাষায় কুট্টিকে একটি বিষয় বুঝিয়ে দাও; শেখানোই শেখার সেরা উপায়!</string>
+    <string name="kutty_ready">কুট্টিকে তৈরি করো</string>
+    <string name="kutty_preparing">কুট্টি তৈরি হচ্ছে…</string>
+    <string name="kutty_explain">কুট্টিকে \"%1$s\" বুঝিয়ে দাও</string>
+    <string name="kutty_hint">কুট্টি কিছুই জানে না ধরে নিয়ে তোমার ব্যাখ্যা লেখো…</string>
+    <string name="kutty_send">কুট্টিকে বোঝাও</string>
+    <string name="kutty_score">%2$dটি মূল কথার মধ্যে %1$dটি বলেছ</string>
+    <string name="kutty_missing">বাদ পড়া শব্দ: %1$s</string>
+    <string name="kutty_asks">কুট্টি জিজ্ঞেস করছে:</string>
+    <string name="kutty_no_question">কুট্টি ভাবছে (AI মডেল লাগবে)।</string>
+    <string name="textbook">পাঠ্যবই মোড</string>
+    <string name="textbook_add">পাঠ্যবইয়ের পাতা যোগ করো</string>
+    <string name="textbook_body">তোমার পাঠ্যবইয়ের একটি পাতার ছবি তোলো। এটি এই ফোনেই পড়া হয় (ইন্টারনেট নেই), আর সেই বিষয়ের প্রশ্ন এটি ব্যবহার করবে।</string>
+    <string name="script_latin">ইংরেজি (ল্যাটিন)</string>
+    <string name="script_devanagari">হিন্দি (দেবনাগরী)</string>
+    <string name="textbook_scripts_note">তামিল ও বাংলা পাতা এখনও সমর্থিত নয়।</string>
+    <string name="take_photo">ছবি তোলো</string>
+    <string name="pick_image">ছবি বেছে নাও</string>
+    <string name="textbook_reading">পাতা পড়া হচ্ছে…</string>
+    <string name="textbook_saved">%1$dটি অংশ সংরক্ষিত হয়েছে।</string>
+    <string name="textbook_failed">পাতা পড়া গেল না: %1$s</string>
+    <string name="textbook_pages">সংরক্ষিত পাতা (%1$d)</string>
+    <string name="passages">অংশ</string>
+    <string name="ff_kutty">কুট্টিকে শেখাও</string>
+    <string name="ff_kutty_body">কৌতূহলী ছোট বাচ্চাকে একটি বিষয় বোঝাও; কোন মূল কথা বাদ গেল দেখো।</string>
+    <string name="ff_textbook">পাঠ্যবই মোড</string>
+    <string name="ff_textbook_body">তোমার তোলা পাঠ্যবইয়ের পাতা থেকে প্রশ্ন তৈরি হবে।</string>
 </resources>

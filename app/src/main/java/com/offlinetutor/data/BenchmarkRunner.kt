@@ -101,7 +101,7 @@ class BenchmarkRunner(
                 // Diagnostic toggle on → eval the diagnostic schema (tagged wrong options), else the plain MCQ.
                 val question = if (diagnostic) {
                     diag.attempt(grade, subject, subject, com.offlinetutor.domain.Concepts.slug(subject), subject, level, stems,
-                        emptyList(), history, LogMeta(run, subject, grade, level)) { p -> partial(p) }.mcq?.question
+                        emptyList(), history, LogMeta(run, subject, grade, level), onPartial = { p -> partial(p) }).mcq?.question
                 } else {
                     mcq.attempt(grade, subject, subject, level, stems, emptyList(), history,
                         LogMeta(run, subject, grade, level), onPartial = { p -> partial(p) }).mcq?.question

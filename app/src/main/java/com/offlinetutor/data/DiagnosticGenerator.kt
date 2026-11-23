@@ -40,8 +40,9 @@ class DiagnosticGenerator(private val ai: TutorAi, private val mcq: McqGenerator
         meta: LogMeta,
         focus: String? = null,
         onPartial: (String) -> Unit = {},
+        grounding: String? = null,
     ): Outcome {
-        val base = mcq.attempt(grade, course, subtopic, level, recentStems, weak, historyNormalized, meta, onPartial, focus)
+        val base = mcq.attempt(grade, course, subtopic, level, recentStems, weak, historyNormalized, meta, onPartial, focus, grounding = grounding)
         val m = base.mcq ?: return Outcome(null, base.valid, base.duplicate, base.reason, base.result, base.verdict)
 
         val wrong = m.options.indices.filter { it != m.answer }.map { m.options[it] }

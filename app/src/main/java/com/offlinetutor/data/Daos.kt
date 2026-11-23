@@ -241,3 +241,19 @@ interface PoolDao {
     @Query("SELECT * FROM question_pool WHERE profileId = :profileId AND concept = :concept ORDER BY createdAt LIMIT :limit")
     suspend fun forConcept(profileId: Long, concept: String, limit: Int): List<PoolItem>
 }
+
+/** 6b: textbook passages (FTS4). */
+@Dao
+interface TextbookDao {
+    @Insert
+    suspend fun insert(p: TextbookPassage)
+
+    @Query("SELECT rowid, * FROM textbook_fts WHERE textbook_fts MATCH :query AND profileId = :profileId LIMIT :limit")
+    suspend fun search(profileId: String, query: String, limit: Int): List<TextbookPassage>
+
+    @Query("SELECT rowid, * FROM textbook_fts WHERE profileId = :profileId")
+    fun observe(profileId: String): Flow<List<TextbookPassage>>
+
+    @Query("DELETE FROM textbook_fts WHERE profileId = :profileId AND page = :page")
+    suspend fun deletePage(profileId: String, page: String)
+}

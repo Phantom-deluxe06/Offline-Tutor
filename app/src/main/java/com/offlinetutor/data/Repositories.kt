@@ -149,6 +149,7 @@ class QuizRepository(
     private val pool: PoolDao,
     private val scheduler: GenerationScheduler,
     private val thermal: com.offlinetutor.llm.ThermalMonitor,
+    private val textbook: TextbookService? = null,
 ) {
     fun observeAnswered(profileId: Long) = dao.observeAnswered(profileId)
 
@@ -271,11 +272,13 @@ class QuizRepository(
             }
         }
         val recent = dao.recentStems(profile.id, course, 10).toMutableList()
+        // 6b: the student's own textbook passages for this topic, when textbook mode has pages that match.
+        val grounding = textbook?.grounding(profile.id, "${t.subtopic} ${t.conceptTitle}")
         var lastReason: String? = null
         for (attempt in 1..2) {
             if (flags.isOn(Feature.DIAGNOSTIC_MCQ)) {
                 val o = diag.attempt(profile.grade, course, t.conceptTitle, t.concept, t.subtopic, level, recent, weak, history,
-                    LogMeta(), focus, onPartial)
+                    LogMeta(), focus, onPartial, grounding)
                 o.mcq?.let { d ->
                     val s = d.shuffled()
                     return Made(s.question, s.options.map { it.text }, s.answer, s.explanation, s.metaJson(), "llm",
@@ -283,7 +286,7 @@ class QuizRepository(
                 }
                 lastReason = o.reason
             } else {
-                val o = generator.attempt(profile.grade, course, t.subtopic, level, recent, weak, history, LogMeta(), onPartial, focus)
+                val o = generator.attempt(profile.grade, course, t.subtopic, level, recent, weak, history, LogMeta(), onPartial, focus, grounding = grounding)
                 o.mcq?.let { mcq ->
                     val s = mcq.shuffled()
                     return Made(s.question, s.options, s.answer, s.explanation, null, "llm", o.verdict?.name, ms(), attempt) to null

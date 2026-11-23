@@ -387,4 +387,34 @@
     <string name="bg_doodles">சித்திரங்கள்</string>
     <string name="bg_paper">கோடிட்ட தாள்</string>
     <string name="bg_plain">வெற்று</string>
+    <!-- Phase 6 -->
+    <string name="teach_kutty">குட்டிக்குக் கற்றுக்கொடு</string>
+    <string name="kutty_pick">கற்றுக்கொடுக்க ஒரு தலைப்பைத் தேர்ந்தெடுங்கள்</string>
+    <string name="kutty_intro">குட்டி ஆர்வமுள்ள ஒரு சிறு குழந்தை. ஒரு தலைப்பை உங்கள் சொந்த வார்த்தைகளில் குட்டிக்கு விளக்குங்கள்; கற்றுக்கொடுப்பதே சிறந்த கற்றல்!</string>
+    <string name="kutty_ready">குட்டியைத் தயார் செய்</string>
+    <string name="kutty_preparing">குட்டி தயாராகிறது…</string>
+    <string name="kutty_explain">\"%1$s\" ஐக் குட்டிக்கு விளக்குங்கள்</string>
+    <string name="kutty_hint">குட்டிக்கு எதுவும் தெரியாது என நினைத்து உங்கள் விளக்கத்தை எழுதுங்கள்…</string>
+    <string name="kutty_send">குட்டிக்கு விளக்கு</string>
+    <string name="kutty_score">%2$d முக்கியக் கருத்துகளில் %1$d ஐ விளக்கினீர்கள்</string>
+    <string name="kutty_missing">விடுபட்ட சொற்கள்: %1$s</string>
+    <string name="kutty_asks">குட்டி கேட்கிறது:</string>
+    <string name="kutty_no_question">குட்டி யோசிக்கிறது (AI மாடல் தேவை).</string>
+    <string name="textbook">பாடநூல் முறை</string>
+    <string name="textbook_add">பாடநூல் பக்கத்தைச் சேர்</string>
+    <string name="textbook_body">உங்கள் பாடநூலிலிருந்து ஒரு பக்கத்தைப் படம் எடுங்கள். அது இந்த போனிலேயே படிக்கப்படும் (இணையம் இல்லை); அந்தத் தலைப்பின் வினாக்கள் அதைப் பயன்படுத்தும்.</string>
+    <string name="script_latin">ஆங்கிலம் (லத்தீன்)</string>
+    <string name="script_devanagari">இந்தி (தேவநாகரி)</string>
+    <string name="textbook_scripts_note">தமிழ், வங்காளப் பக்கங்கள் இன்னும் ஆதரிக்கப்படவில்லை.</string>
+    <string name="take_photo">படம் எடு</string>
+    <string name="pick_image">படத்தைத் தேர்ந்தெடு</string>
+    <string name="textbook_reading">பக்கம் படிக்கப்படுகிறது…</string>
+    <string name="textbook_saved">%1$d பகுதிகள் சேமிக்கப்பட்டன.</string>
+    <string name="textbook_failed">பக்கத்தைப் படிக்க முடியவில்லை: %1$s</string>
+    <string name="textbook_pages">சேமித்த பக்கங்கள் (%1$d)</string>
+    <string name="passages">பகுதிகள்</string>
+    <string name="ff_kutty">குட்டிக்குக் கற்றுக்கொடு</string>
+    <string name="ff_kutty_body">ஆர்வமுள்ள சிறு குழந்தைக்கு ஒரு தலைப்பை விளக்குங்கள்; எந்த முக்கியக் கருத்துகளை விட்டீர்கள் எனப் பாருங்கள்.</string>
+    <string name="ff_textbook">பாடநூல் முறை</string>
+    <string name="ff_textbook_body">நீங்கள் படம் எடுத்த பாடநூல் பக்கங்களிலிருந்து வினாக்கள் உருவாகும்.</string>
 </resources>

@@ -98,10 +98,13 @@ object Prompts {
         withExpression: Boolean = false,
         // 2-fix-2: numeric questions come from Kotlin templates, so free-form LLM MCQs stay conceptual.
         conceptual: Boolean = false,
+        // 6b: 1–2 textbook passages the question must be based on (textbook mode).
+        grounding: String? = null,
     ): String {
         fun build(stems: List<String>): String {
             val exprRule = if (withExpression)
                 "\nIf the answer is a number, \"expression\" is the arithmetic that gives it, for example 120/1.5; otherwise leave it empty." else ""
+            val groundRule = grounding?.let { "\nBase the question on this passage from the student's textbook:\n\"$it\"" } ?: ""
             val conceptRule = if (conceptual)
                 "\nAsk about an idea, definition, reason or example. Do not ask a calculation question." else ""
             val shape = "{\"question\":\"...\",\"A\":\"...\",\"B\":\"...\",\"C\":\"...\",\"D\":\"...\",\"answer\":\"B\",\"explanation\":\"one or two sentences\"" +
@@ -119,7 +122,7 @@ object Prompts {
                 Write ONE new multiple-choice question for a Grade $grade student in India.
                 Subject: $course
                 Topic: $subtopic
-                Difficulty: ${difficultyText(level)}$weak$avoid$conceptRule
+                Difficulty: ${difficultyText(level)}$weak$avoid$conceptRule$groundRule
                 Rules: options A, B, C and D are all different and only one is correct. Never ask the same question twice.
                 "answer" is the letter of the correct option.$exprRule
                 Return ONLY JSON in exactly this shape:

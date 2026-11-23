@@ -39,6 +39,8 @@ enum class TaskType(val temperature: Float, val maxNewTokens: Int, val isJson: B
     CHAT(0.7f, 350, false),
     EXPLAIN(0.6f, 320, false),
     BENCH(0.5f, 128, false),
+    KUTTY_POINTS(0.4f, 160, false), // 6a: 3-5 key points of a concept (numbered lines)
+    KUTTY_ASK(0.8f, 80, false),     // 6a: Kutty's one naive follow-up question
 }
 
 data class GenRequest(

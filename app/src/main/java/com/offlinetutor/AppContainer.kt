@@ -51,10 +51,12 @@ class AppContainer(app: Application) {
 
     val profiles = ProfileRepository(db.profiles(), session)
     val roadmaps = RoadmapRepository(db.roadmaps(), ai)
+    // 6b: textbook pages (on-device OCR, FTS4).
+    val textbook = com.offlinetutor.data.TextbookService(app, db.textbook(), flags)
     // 3a: background (P1/P2) generation queue in front of the single LLM worker.
     val scheduler = com.offlinetutor.data.GenerationScheduler(appScope) { p -> backgroundPaused(p) }
     val quiz = QuizRepository(db.quiz(), db.roadmaps(), mcqGenerator, diagGenerator, templateGenerator, seeds, brain, db.probes(), flags,
-        db.pool(), scheduler, thermal)
+        db.pool(), scheduler, thermal, textbook)
     // 4b: hand-curated analogy bank (concept area x world).
     val analogies = com.offlinetutor.domain.AnalogyBank.parse(app.assets.open("analogies.json").bufferedReader().use { it.readText() })
     val fixes = com.offlinetutor.data.FixService(db.roadmaps(), quiz, ai, taxonomy, analogies, flags)

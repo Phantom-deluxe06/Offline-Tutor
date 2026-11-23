@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 6b: the camera writes the textbook photo here (app cache, never shared further). -->
+<paths>
+    <cache-path name="textbook" path="textbook/" />
+</paths>

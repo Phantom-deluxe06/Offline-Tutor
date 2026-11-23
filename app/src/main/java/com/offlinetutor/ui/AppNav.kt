@@ -88,6 +88,8 @@ object Routes {
     const val SETTINGS = "settings"
     const val CLASSROOM = "classroom?standalone={standalone}"
     fun classroom(standalone: Boolean) = "classroom?standalone=$standalone"
+    const val KUTTY = "kutty"
+    const val TEXTBOOK = "textbook"
 
     const val HOME = "home"
     const val ROADMAP = "roadmap"
@@ -142,8 +144,12 @@ fun AppNav() {
                 openSettings = { nav.navigate(Routes.SETTINGS) },
                 switchProfile = { nav.navigate(Routes.profiles(false)) { popUpTo(0) { inclusive = true } } },
                 openClassroom = { nav.navigate(Routes.classroom(false)) },
+                openKutty = { nav.navigate(Routes.KUTTY) },
+                openTextbook = { nav.navigate(Routes.TEXTBOOK) },
             )
         }
+        composable(Routes.KUTTY) { com.offlinetutor.ui.screens.TeachKuttyScreen(onBack = { nav.popBackStack() }) }
+        composable(Routes.TEXTBOOK) { com.offlinetutor.ui.screens.TextbookScreen(onBack = { nav.popBackStack() }) }
         composable(Routes.CLASSROOM, arguments = listOf(navArgument("standalone") { type = NavType.BoolType; defaultValue = false })) { e ->
             com.offlinetutor.ui.screens.ClassroomScreen(onBack = { nav.popBackStack() }, standalone = e.arguments?.getBoolean("standalone") ?: false)
         }
@@ -187,6 +193,8 @@ private fun MainScaffold(
     openSettings: () -> Unit,
     switchProfile: () -> Unit,
     openClassroom: () -> Unit = {},
+    openKutty: () -> Unit = {},
+    openTextbook: () -> Unit = {},
 ) {
     val inner = rememberNavController()
     val entry by inner.currentBackStackEntryAsState()
@@ -209,6 +217,14 @@ private fun MainScaffold(
                             leadingIcon = { Icon(Icons.Filled.Memory, null) }, onClick = { menu = false; openModels() })
                         DropdownMenuItem(text = { Text(stringResource(R.string.settings_title)) },
                             leadingIcon = { Icon(Icons.Filled.Settings, null) }, onClick = { menu = false; openSettings() })
+                        if (container().flags.isOn(com.offlinetutor.data.Feature.TEACH_KUTTY)) {
+                            DropdownMenuItem(text = { Text(stringResource(R.string.teach_kutty)) },
+                                leadingIcon = { Icon(Icons.Filled.Forum, null) }, onClick = { menu = false; openKutty() })
+                        }
+                        if (container().flags.isOn(com.offlinetutor.data.Feature.TEXTBOOK_MODE)) {
+                            DropdownMenuItem(text = { Text(stringResource(R.string.textbook)) },
+                                leadingIcon = { Icon(Icons.Filled.Quiz, null) }, onClick = { menu = false; openTextbook() })
+                        }
                         if (container().flags.isOn(com.offlinetutor.data.Feature.CLASSROOM_MESH)) {
                             DropdownMenuItem(text = { Text(stringResource(R.string.classroom)) },
                                 leadingIcon = { Icon(Icons.Filled.Groups, null) }, onClick = { menu = false; openClassroom() })

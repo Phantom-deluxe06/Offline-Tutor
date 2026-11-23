@@ -83,6 +83,8 @@ dependencies {
     implementation(libs.play.services.nearby) // Phase 5 classroom mesh (Bluetooth / Wi-Fi, no internet)
     implementation(libs.zxing.core)           // 5c "Share my progress" QR code
     implementation(libs.zxing.embedded)       // 5c teacher scan mode
+    implementation(libs.mlkit.text)           // 6b textbook OCR, bundled Latin model (on-device)
+    implementation(libs.mlkit.text.devanagari) // 6b textbook OCR, bundled Devanagari model
     implementation(libs.executorch.android)
 
     testImplementation(libs.junit)

@@ -402,4 +402,34 @@
     <string name="bg_doodles">Doodles</string>
     <string name="bg_paper">Ruled paper</string>
     <string name="bg_plain">Plain</string>
+    <!-- Phase 6 -->
+    <string name="teach_kutty">Teach Kutty</string>
+    <string name="kutty_pick">Pick a topic to teach</string>
+    <string name="kutty_intro">Kutty is a curious younger kid. Explain a topic to Kutty in your own words; the best way to learn is to teach!</string>
+    <string name="kutty_ready">Get Kutty ready</string>
+    <string name="kutty_preparing">Kutty is getting ready…</string>
+    <string name="kutty_explain">Explain \"%1$s\" to Kutty</string>
+    <string name="kutty_hint">Write your explanation as if Kutty knows nothing about it…</string>
+    <string name="kutty_send">Explain to Kutty</string>
+    <string name="kutty_score">You covered %1$d of %2$d key points</string>
+    <string name="kutty_missing">Missing words: %1$s</string>
+    <string name="kutty_asks">Kutty asks:</string>
+    <string name="kutty_no_question">Kutty is thinking (needs the AI model).</string>
+    <string name="textbook">Textbook mode</string>
+    <string name="textbook_add">Add a textbook page</string>
+    <string name="textbook_body">Photograph a page from your textbook. It is read on this phone (no internet) and quiz questions on that topic will use it.</string>
+    <string name="script_latin">English (Latin)</string>
+    <string name="script_devanagari">Hindi (Devanagari)</string>
+    <string name="textbook_scripts_note">Tamil and Bengali pages are not supported yet.</string>
+    <string name="take_photo">Take a photo</string>
+    <string name="pick_image">Pick an image</string>
+    <string name="textbook_reading">Reading the page…</string>
+    <string name="textbook_saved">Saved %1$d passages.</string>
+    <string name="textbook_failed">Could not read the page: %1$s</string>
+    <string name="textbook_pages">Saved pages (%1$d)</string>
+    <string name="passages">passages</string>
+    <string name="ff_kutty">Teach Kutty</string>
+    <string name="ff_kutty_body">Explain a topic to a curious younger kid; see which key points you missed.</string>
+    <string name="ff_textbook">Textbook mode</string>
+    <string name="ff_textbook_body">Quiz questions use passages from textbook pages you photographed.</string>
 </resources>

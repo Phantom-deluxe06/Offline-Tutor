@@ -251,6 +251,8 @@ private fun featureTitle(f: Feature): String = stringResource(
         Feature.THERMAL_GOVERNOR -> R.string.ff_thermal
         Feature.ANALOGY_WORLDS -> R.string.ff_analogy
         Feature.CLASSROOM_MESH -> R.string.ff_mesh
+        Feature.TEACH_KUTTY -> R.string.ff_kutty
+        Feature.TEXTBOOK_MODE -> R.string.ff_textbook
     },
 )
 
@@ -271,5 +273,7 @@ private fun featureBody(f: Feature): String = stringResource(
         Feature.THERMAL_GOVERNOR -> R.string.ff_thermal_body
         Feature.ANALOGY_WORLDS -> R.string.ff_analogy_body
         Feature.CLASSROOM_MESH -> R.string.ff_mesh_body
+        Feature.TEACH_KUTTY -> R.string.ff_kutty_body
+        Feature.TEXTBOOK_MODE -> R.string.ff_textbook_body
     },
 )

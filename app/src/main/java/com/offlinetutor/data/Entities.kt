@@ -257,3 +257,18 @@ data class PoolItem(
     /** v7 (5b): template items only, "TYPE|level|seed|story-with-placeholders" so peers can rebuild and re-check them. */
     val spec: String? = null,
 )
+
+/**
+ * v8 (6b): textbook passages read by on-device OCR, in a Room FTS4 table so a quiz topic can find the 1–2 best
+ * matching passages. All columns are text (FTS); [profileId] is stored as a string.
+ */
+@androidx.room.Fts4
+@Entity(tableName = "textbook_fts")
+data class TextbookPassage(
+    @PrimaryKey(autoGenerate = true) @androidx.room.ColumnInfo(name = "rowid") val rowid: Int = 0,
+    val profileId: String,
+    val course: String,
+    /** Page label shown in the list, e.g. "Page 3 · 21 Nov". */
+    val page: String,
+    val text: String,
+)

@@ -118,10 +118,12 @@ class McqGenerator(private val ai: TutorAi, private val flags: FeatureFlags) {
         withExpression: Boolean = false,
         /** Eval A/B only: force the conceptual rule on/off instead of following the templates toggle. */
         conceptualOverride: Boolean? = null,
+        /** 6b: textbook passages to base the question on. */
+        grounding: String? = null,
     ): Outcome {
         // 2-fix-2: with templates on, arithmetic belongs to Kotlin templates; LLM MCQs stay conceptual.
         val conceptual = conceptualOverride ?: flags.isOn(Feature.TEMPLATES)
-        val prompt = Prompts.mcq(grade, course, subtopic, level, recentStems, weak, focus, withExpression, conceptual)
+        val prompt = Prompts.mcq(grade, course, subtopic, level, recentStems, weak, focus, withExpression, conceptual, grounding)
         val m = meta.copy(difficulty = level)
         val r = ai.engine.generate(GenRequest(TaskType.MCQ, prompt, assistantPrefix = Prompts.MCQ_PREFIX), onPartial)
         var parsed: McqParse = McqParser.parse(r.text)
