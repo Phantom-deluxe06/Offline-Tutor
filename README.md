@@ -113,7 +113,7 @@ Llama 3.2 is under the Llama 3.2 Community License; accept it on Hugging Face be
 
 ## Setup
 
-1. **Install the APK**: download [`app-debug.apk`](https://gh.hhj520.top/Phantom-deluxe06/Offline-Tutor/releases/latest/download/app-debug.apk) from the GitHub release and open it on the phone (allow installing
+1. **Install the APK**: download [`app-debug.apk`](https://github.com/Phantom-deluxe06/Offline-Tutor/releases/tag/v1.0) from the GitHub release and open it on the phone (allow installing
    from this source), or build it yourself with `.\gradlew.bat installDebug`. Needs an arm64 phone with 4 GB+ RAM.
 2. **Import the model**: copy the two downloaded files to the phone, then in the app open **⋮ → AI model** and tap
    **Import .pte** and **Import tokenizer** (developers can use `.\scripts\push_model.ps1 -Dir <folder>` over adb).
