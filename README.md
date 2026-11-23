@@ -22,6 +22,30 @@ with **ExecuTorch 1.5.1** (XNNPACK). Kotlin, Jetpack Compose, Room, coroutines. 
 | Symbolic verifier (phase 2) | `domain/ProblemTemplates.kt`, `domain/Verifier.kt` | 8 Kotlin-owned problem types (app computes the answer, LLM writes the story); exp4j re-checks every numeric MCQ key |
 | Feature toggles | `data/FeatureFlags.kt`, Settings → Smart features | each phase-1/2 feature can be switched off for on/off demos and benchmarks; plan in `docs/FEATURES_PLAN.md` |
 
+## How to demo each feature
+
+Setup (once): import the model (see below), then **Settings → Debug → Seed demo student**. A few minutes before demoing,
+run **Settings → Night Shift → Simulate night** so the ready pool and fix lessons are prepared, and load the model from
+**Benchmark → Load model**. Every feature below can be switched off in **Settings → Smart features** for an on/off demo.
+
+| Feature | Where |
+|---|---|
+| Skill tree, fix steps, review ("Stuck on X because Y is shaky") | Roadmap tab |
+| "Why the app thinks you know this" | Roadmap → tap a node |
+| Misconception tags, Sure / Not sure, "Fix step added" | Quiz tab → answer a question |
+| App-computed number problems | Quiz on a numeric topic (percent, speed, area, …) → "Answer computed by the app" |
+| Zero-wait pool, wait times, background queue | Benchmark → "Zero-wait questions" card |
+| Night Shift | Settings → Night Shift → Simulate night |
+| Tanglish / Benglish, analogy worlds | Settings → Explanation language / Pick your example world → Quiz → Explain |
+| Light / dark theme, background art | Settings → Appearance |
+| Thermal chip | Home (shows when the phone is warm) |
+| Class battle (2+ phones) | ⋮ → Classroom → Battle; joiners: profile picker → "Join a class battle" (no model needed) |
+| Share questions, progress QR | ⋮ → Classroom |
+| Teach Kutty | ⋮ → Teach Kutty |
+| Textbook mode | ⋮ → Textbook mode → Take a photo |
+
+Measured results for the feature phases: `docs/REPORT_FEATURES.md`.
+
 ## LLM engine (`llm/LlmEngine.kt`)
 
 * One `LlmModule`, one **single-thread executor** (`llm-worker`), one `Mutex` → never two generations at once.

@@ -1,0 +1,509 @@
+﻿
+=== mcq-diag-eval-1795199957907:answer  model=tutor_1b_spinquant  n=6
+valid JSON      : 33% (2/6)
+duplicate       : -
+median TTFT ms  : 1832.0
+median decode/s : 15.4
+median wall ms  : 2565.5
+median gen tok  : 9.0
+peak RSS MB     : 1366.265625
+stop reasons    : {'JSON_COMPLETE': 6}
+max thermal     : 0
+valid by subject: {'Mathematics': '0% (0/2)', 'Social Science': '50% (1/2)', 'Computer Science': '50% (1/2)'}
+--- invalid samples
+  [Mathematics g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Mathematics g8 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Social Science g8 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Computer Science g8 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+--- valid samples
+  [Social Science g6 L2] '{"answer":"B","explanation":"it is to celebrate the harvest season"}'
+  [Computer Science g10 L1] '{"answer":"B","explanation":"The primary function of a keyboard in a computer is to input data, such as words, numbers, and symbols, into the computer. This is done by pressing keys on the keyboard, which send signals to the computer\'s processor, allowing it to process the input and perform calculat'
+fail categories : {'(none logged)': 4}
+fail reasons    : {'(none logged)': 4}
+hard fail cats  : {'(none logged)': 3} (hard usable 0/3)
+
+=== mcq-diag-eval-1795199957907  model=tutor_1b_spinquant  n=15
+valid JSON      : 53% (8/15)
+duplicate       : 0% (0/8)
+median TTFT ms  : 2065.0
+median decode/s : 19.0
+median wall ms  : 5730.0
+median gen tok  : 66.0
+peak RSS MB     : 1366.265625
+stop reasons    : {'JSON_COMPLETE': 11, 'END': 2, 'MAX_TOKENS': 1, 'REPETITION': 1}
+max thermal     : 0
+valid by subject: {'Mathematics': '33% (1/3)', 'Science': '100% (3/3)', 'English': '33% (1/3)', 'Social Science': '67% (2/3)', 'Computer Science': '33% (1/3)'}
+valid by level  : {1: '80% (4/5)', 2: '40% (2/5)', 3: '40% (2/5)'}
+--- invalid samples
+  [Mathematics g6 JSON_COMPLETE/None] '{"question":"In a triangle, if two sides are equal, what is the third side called?","A":"Perimeter","B":"Diagonal","C":"Inequality","D":"Side"}}'
+  [Mathematics g8 JSON_COMPLETE/None] '{"question":"A teacher is planning a school event and wants to give out 30 gold coins to the winners of a math competition. If she has 24 gold coins and 5 students are going to be awarded the prize, how many gold coins w'
+  [English g6 END/None] '{"question":"What is the correct spelling of the word \'accommodate\'?"{"A":"accomodate","B":"accomodate","C":"accomodate","D":"accomodate","answer":"B","explanation":"The correct spelling is \'accomodate\'."}'
+  [English g10 MAX_TOKENS/None] '{"question":"What is the name of the famous Indian author who wrote the novel \'Midnight\'s Children\'?"{"A":"Rahim Khan","B":"Rahim Khan","C":"Rahim Khan","D":"Rahim Khan"}{"question":"Which Indian river is the longest in '
+--- valid samples
+  [Mathematics g10 L1] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"3","B":"4","C":"5","D":"6","answer":"B","explanation":"To find the value of x, subtract 5 from both sides of the equation and then divide by 2."}'
+  [Science g6 L2] '{"question":"What is the process of plants making their own food from sunlight, water, and air in a process called photosynthesis?","A":"Respiration","B":"Photosynthesis","C":"Decomposition","D":" Fermentation","answer":"B","explanation":"Plants make their own food through photosynthesis, a process '
+  [Science g8 L3] '{"question":"What is the process by which plants convert sunlight, water, and carbon dioxide into glucose and oxygen, releasing oxygen into the atmosphere?","A":"Respiration","B":"Photosynthesis","C":"Transpiration","D":"Decomposition","answer":"B","explanation":"Photosynthesis is the process by whi'
+fail categories : {'(none logged)': 7}
+fail reasons    : {'(none logged)': 7}
+hard fail cats  : {'(none logged)': 3} (hard usable 2/5)
+
+=== mcq-diag-eval-1795199957907:tags  model=tutor_1b_spinquant  n=8
+valid JSON      : 0% (0/8)
+duplicate       : -
+median TTFT ms  : 2969.0
+median decode/s : 14.5
+median wall ms  : 9564.0
+median gen tok  : 95.5
+peak RSS MB     : 1366.265625
+stop reasons    : {'END': 2, 'CONDITION': 4, 'REPETITION': 1, 'MAX_TOKENS': 1}
+max thermal     : 0
+valid by subject: {'Mathematics': '0% (0/1)', 'Science': '0% (0/3)', 'English': '0% (0/1)', 'Social Science': '0% (0/2)', 'Computer Science': '0% (0/1)'}
+--- invalid samples
+  [Mathematics g10 END/None] 'B) 3\nThe letter is B\nThe mistake type is SIGN_ERROR\nThe reason is that 2x + 5 = 11, so 2x = 6, not 3.'
+  [Science g6 CONDITION/None] 'B)  RESPIRATION\nC) DECOMPOSITION\nD) FERMENTATION'
+  [Science g8 CONDITION/None] 'B)  RESPIRATION\nThe letter: B\nThe mistake type: SIGN_ERROR\nThe reason: Respiration is the process by which cells break down glucose to release energy, whereas photosynthesis is the process by which plants convert sunligh'
+  [Science g10 CONDITION/None] 'B)  RESPIRATION\nThe letter: B\nThe mistake type: SIGN_ERROR\nThe reason: Respiration is the process by which organisms release energy stored in glucose and release carbon dioxide and water as waste products.\n\nC) DECOMPOSIT'
+--- valid samples
+fail categories : {'(none logged)': 8}
+fail reasons    : {'(none logged)': 8}
+hard fail cats  : {'(none logged)': 2} (hard usable 0/2)
+
+=== mcq-diag-eval-1795200433800  model=tutor_1b_spinquant  n=15
+valid JSON      : 80% (12/15)
+duplicate       : 0% (0/12)
+median TTFT ms  : 2183.0
+median decode/s : 18.6
+median wall ms  : 5737.0
+median gen tok  : 66.0
+peak RSS MB     : 1375.89453125
+stop reasons    : {'JSON_COMPLETE': 10, 'END': 5}
+max thermal     : 0
+valid by subject: {'Mathematics': '100% (3/3)', 'Science': '100% (3/3)', 'English': '67% (2/3)', 'Social Science': '67% (2/3)', 'Computer Science': '67% (2/3)'}
+valid by level  : {1: '100% (5/5)', 2: '80% (4/5)', 3: '60% (3/5)'}
+--- invalid samples
+  [English g8 JSON_COMPLETE/None] '{"question":"In a story, a character says something that is not true, and another character says that the character is lying. Which of the following statements is true?","A":"The character is a liar.","B":"The character '
+  [Social Science g6 JSON_COMPLETE/None] '{"question":"What is the main reason why people in India often live in small villages or towns, rather than in cities like New York or London?","A":"The availability of fertile land","B":"The need for safety and security'
+  [Computer Science g8 JSON_COMPLETE/None] '{"question":"What is the primary function of a Virtual Private Network (VPN) in a computer network?","A":"to encrypt data","B":"to encrypt data and protect it from unauthorized access","C":"to provide a secure and privat'
+--- valid samples
+  [Mathematics g6 L2] '{"question":"In a triangle, if the length of one side is 5 cm and the other two sides are 6 cm and 8 cm, what is the length of the third side?","A":"6 cm","B":"8 cm","C":"12 cm","D":"10 cm","answer":"B","explanation":"Using the Pythagorean theorem, a^2 + b^2 = c^2, where a and b are the lengths of t'
+  [Mathematics g8 L3] '{"question":"A student\'s father is working in a factory that is 120 meters away from his house. If the student walks at a speed of 5 km/h, how many minutes will it take him to reach the factory?","A":"15","B":"60","C":"45","D":"30","answer":"B","explanation":"To find the time, we can use the formula'
+  [Mathematics g10 L1] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"5","B":"10","C":"2","D":"11","answer":"B","explanation":"To solve for x, subtract 5 from both sides of the equation and then divide by 2."}'
+fail categories : {'(none logged)': 3}
+fail reasons    : {'(none logged)': 3}
+hard fail cats  : {'(none logged)': 2} (hard usable 3/5)
+
+=== mcq-diag-eval-1795200433800:tags  model=tutor_1b_spinquant  n=12
+valid JSON      : 50% (6/12)
+duplicate       : -
+median TTFT ms  : 3336.5
+median decode/s : 14.9
+median wall ms  : 11368.0
+median gen tok  : 119.5
+peak RSS MB     : 1375.89453125
+stop reasons    : {'REPETITION': 3, 'MAX_TOKENS': 1, 'CONDITION': 3, 'END': 5}
+max thermal     : 0
+valid by subject: {'Mathematics': '67% (2/3)', 'Science': '67% (2/3)', 'English': '50% (1/2)', 'Social Science': '50% (1/2)', 'Computer Science': '0% (0/2)'}
+--- invalid samples
+  [Mathematics g8 MAX_TOKENS/None] 'B) 60\nMistake type: 1. SIGN_ERROR: The speed is given in km/h, but the distance is in meters. To convert km/h to m/s, we multiply by 1000/3600, which is 5/18. So, 5 km/h = 5 x 5/18 = 25/18 m/s. Speed = 25/18 m/s = 1.39 m'
+  [Science g6 END/None] 'B) Respiration\nMistake type: 1. SIGN_ERROR: a sign or direction was flipped (respiration is the process of breaking down food, not making food)\n2. 1. UNIT_CONVERSION: units not converted, or converted wrongly (respiratio'
+  [English g10 END/None] 'B) Rama\nMistake type:  FORMULA_SWAP\nReason: The question asks for the name of the famous Indian epic, but the options provided are all names of Hindu gods (Rama, Mahabharata, Ramayana).'
+  [Social Science g10 END/None] "B) Raja Ram Mohan Roy\nMistake type:  CONCEPT_CONFUSION\nReason: Raja Ram Mohan Roy was a key figure in the Indian independence movement, but his views on nationalism were not as clear-cut as Gandhi's. He was a liberal who"
+--- valid samples
+  [Mathematics g6 L2] 'B) 6 cm\nMistake type:  SIGN_ERROR\nReason: The question states that the length of one side is 5 cm, which is incorrect. The correct length of one side should be 6 cm.\n\nC) 12 cm\nMistake type:  FORMULA_SWAP\nReason: The question states that the length of one side is 5 cm, which is incorrect. The correct'
+  [Mathematics g10 L1] 'B) 5\nMistake type:  SIGN_ERROR\nReason: The student flipped the sign of the equation, changing 2x + 5 to 2x - 5, which is incorrect.\n\nC) 2\nMistake type:  FORMULA_SWAP\nReason: The student used the wrong formula, 2x + 5 = 11, instead of 2x - 5 = 11.\n\nD) 11\nMistake type:  CONCEPT_CONFUSION\nReason: The s'
+  [Science g8 L3] 'B) respiration\nMistake type: 1. SIGN_ERROR: a sign or direction was flipped\nReason: Plants do not respire; they produce glucose and oxygen through photosynthesis.\n\nC) transpiration\nMistake type: 1. UNIT_CONVERSION: units not converted, or converted wrongly\nReason: Transpiration is the process of wat'
+fail categories : {'(none logged)': 6}
+fail reasons    : {'(none logged)': 6}
+hard fail cats  : {'(none logged)': 1} (hard usable 2/3)
+
+=== mcq-diag-eval-1795200433800:answer  model=tutor_1b_spinquant  n=3
+valid JSON      : 33% (1/3)
+duplicate       : -
+median TTFT ms  : 2126.0
+median decode/s : 14.2
+median wall ms  : 2668.0
+median gen tok  : 9.0
+peak RSS MB     : 1375.89453125
+stop reasons    : {'JSON_COMPLETE': 3}
+max thermal     : 0
+valid by subject: {'Social Science': '50% (1/2)', 'Computer Science': '0% (0/1)'}
+--- invalid samples
+  [Social Science g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Computer Science g8 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+--- valid samples
+  [Social Science g8 L3] '{"answer":"B","explanation":"the Indian independence movement and the establishment of the Republic of India led to the erosion of the caste system."}'
+fail categories : {'(none logged)': 2}
+fail reasons    : {'(none logged)': 2}
+hard fail cats  : {'(none logged)': 1} (hard usable 1/2)
+
+=== template-eval-1795201726943  model=tutor_1b_spinquant  n=24
+valid JSON      : 62% (15/24)
+duplicate       : -
+median TTFT ms  : 1318.5
+median decode/s : 21.2
+median wall ms  : 3070.0
+median gen tok  : 36.5
+peak RSS MB     : 1448.90625
+stop reasons    : {'END': 9, 'CONDITION': 15}
+max thermal     : 0
+valid by subject: {'SPEED': '100% (3/3)', 'PERCENT': '100% (3/3)', 'SIMPLE_INTEREST': '100% (3/3)', 'AREA_PERIMETER': '67% (2/3)', 'OHMS_LAW': '0% (0/3)', 'DENSITY': '67% (2/3)', 'UNIT_CONVERSION': '33% (1/3)', 'AVERAGE': '33% (1/3)'}
+--- invalid samples
+  [AREA_PERIMETER g8 END/None] 'The teacher has 6 meters of carpet to cover the entire floor of the classroom.'
+  [OHMS_LAW g8 CONDITION/None] 'Here is a word problem for a Grade 8 student in India:\n\nA mobile charger circuit consists of a 12 V battery and a 4 ohm resistor. If the charger is connected to a household electrical system, what current will flow throu'
+  [OHMS_LAW g8 END/None] "Here is a word problem for a Grade 8 student in India:\n\nRohan's torch bulb is connected to a 5V power source. If he turns on the torch, it starts to glow."
+  [OHMS_LAW g8 CONDITION/None] 'Here is a short word problem for a Grade 8 student in India:\n\nA torch bulb in a village needs to be connected to a 12.5 V power source. If the resistance of the bulb is 5 ohms, how many amperes of current will it draw?'
+--- valid samples
+  [SPEED g8 L1] 'Rahul is cycling to school from his village to school, a distance of 120 km, and it takes him 3 hours to cover this distance.'
+  [SPEED g8 L2] 'The 15 km bus ride from the city to the village took 0.5 hours. If the bus travels at a constant speed, how many kilometers does it cover per hour?'
+  [SPEED g8 L3] 'Rahul cycled to school from his village, a distance of 30 km, taking 45 minutes to complete.'
+verdicts        : {'TEMPLATE': 24}
+fail categories : {'(none logged)': 9}
+fail reasons    : {'(none logged)': 9}
+hard fail cats  : {'(none logged)': 3} (hard usable 5/8)
+
+=== template-eval-1795228001182  model=tutor_1b_spinquant  n=24
+valid JSON      : 67% (16/24)
+duplicate       : -
+median TTFT ms  : 1193.5
+median decode/s : 20.7
+median wall ms  : 3008.0
+median gen tok  : 34.0
+peak RSS MB     : 1445.78515625
+stop reasons    : {'END': 12, 'CONDITION': 12}
+max thermal     : 0
+valid by subject: {'SPEED': '67% (2/3)', 'PERCENT': '67% (2/3)', 'SIMPLE_INTEREST': '100% (3/3)', 'AREA_PERIMETER': '67% (2/3)', 'OHMS_LAW': '100% (3/3)', 'DENSITY': '67% (2/3)', 'UNIT_CONVERSION': '67% (2/3)', 'AVERAGE': '0% (0/3)'}
+--- invalid samples
+  [SPEED g8 CONDITION/None] 'The 90-minute bus ride from the city to the village is expected to take the passengers 1.5 hours. If the bus travels at an average speed of 60 km/h, how many kilometers does it cover in 1.5 hours?'
+  [PERCENT g8 CONDITION/None] 'The vegetable market is selling 120 packets of carrots at Rs 80 each. If a customer buys 25 packets of carrots, how much will they pay?'
+  [AREA_PERIMETER g8 END/None] 'The teacher asked the students to measure the area of the classroom floor.'
+  [DENSITY g8 CONDITION/None] 'A 40 g stone is submerged in a river with a water density of 1.05 g/cm3. How many centimeters in length does the stone extend above the water surface?'
+--- valid samples
+  [SPEED g8 L1] 'A train travels from Mumbai to Delhi, covering a distance of 240 km in 3 hours.'
+  [SPEED g8 L2] 'A passenger train travels 10 km in 0.5 hours.'
+  [PERCENT g8 L2] 'The Diwali sale at the local market is on its third day, and 40% of the total sales is Rs 240.'
+verdicts        : {'TEMPLATE': 24}
+fail categories : {'(none logged)': 8}
+fail reasons    : {'(none logged)': 8}
+hard fail cats  : {'(none logged)': 3} (hard usable 5/8)
+
+=== mcq-diag-eval-1795230018255:answer  model=tutor_1b_spinquant  n=6
+valid JSON      : 33% (2/6)
+duplicate       : -
+median TTFT ms  : 1692.0
+median decode/s : 15.4
+median wall ms  : 2525.0
+median gen tok  : 9.0
+peak RSS MB     : 1388.609375
+stop reasons    : {'JSON_COMPLETE': 6}
+max thermal     : 0
+valid by subject: {'Mathematics': '0% (0/2)', 'English': '0% (0/1)', 'Social Science': '0% (0/1)', 'Computer Science': '100% (2/2)'}
+--- invalid samples
+  [Mathematics g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Mathematics g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [English g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Social Science g8 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+--- valid samples
+  [Computer Science g6 L2] '{"answer":"B","explanation":"To protect the computer from viruses and malware"}'
+  [Computer Science g10 L2] '{"answer":"B","explanation":"A firewall helps to block unauthorized access to computer networks, thereby reducing the risk of cyber attacks and data breaches."}'
+fail categories : {'(none logged)': 4}
+fail reasons    : {'(none logged)': 4}
+hard fail cats  : {'(none logged)': 2} (hard usable 0/2)
+
+=== mcq-diag-eval-1795230018255  model=tutor_1b_spinquant  n=30
+valid JSON      : 57% (17/30)
+duplicate       : 12% (2/17)
+median TTFT ms  : 2550.5
+median decode/s : 19.3
+median wall ms  : 6651.5
+median gen tok  : 83.0
+peak RSS MB     : 1388.609375
+stop reasons    : {'JSON_COMPLETE': 15, 'END': 11, 'REPETITION': 4}
+max thermal     : 0
+valid by subject: {'Mathematics': '50% (3/6)', 'Science': '67% (4/6)', 'English': '33% (2/6)', 'Social Science': '67% (4/6)', 'Computer Science': '67% (4/6)'}
+valid by level  : {1: '70% (7/10)', 2: '70% (7/10)', 3: '30% (3/10)'}
+--- invalid samples
+  [Mathematics g6 JSON_COMPLETE/None] '{"question":"In a triangle, if two sides are 6 cm and 8 cm, and the third side is 10 cm. What is the perimeter of the triangle?","A":"25","B":"98","C":"120","D":"130","answer":"B","explanation":"The perimeter is the sum '
+  [Mathematics g6 END/None] '{"question":"A 6 km distance is covered by a boy in 15 minutes. How many minutes does he take to cover 9 km at this speed?"","A":"45","B":"60","C":"30","D":"120","answer":"B","explanation":"The boy\'s speed can be calcula'
+  [Mathematics g8 END/None] '{"question":"A man is going home from work. He has 15 rupees in his wallet and spends 5 rupees on a cup of coffee. How much money does he have left after buying the coffee?","A":"25","B":"10","C":"30","D":"40","answer":"'
+  [Science g6 JSON_COMPLETE/None] '{"question":"What is the effect of high humidity on the growth of plants?","A":"Plants grow faster in humid environments.","B":"Plants grow slower in humid environments.","C":"Plants grow faster in humid environments.","'
+--- valid samples
+  [Mathematics g8 L1] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"7","B":"4","C":"9","D":"6","answer":"B","explanation":"To solve for x, subtract 5 from both sides and then divide by 2","expression":""}'
+  [Mathematics g10 L1] '{"question":"What is the value of x in the equation 2x + 5 = 11?"","A":"3","B":"4","C":"5","D":"6","answer":"B","explanation":"To solve for x, subtract 5 from both sides and then divide by 2.","expression":"2x + 5 - 5 / 2 = 11 - 5",""}'
+  [Mathematics g10 L2] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"6","B":"9","C":"4","D":"3","answer":"B","explanation":"To solve for x, subtract 5 from both sides of the equation and then divide by 2.","expression":"(11 - 5) / 2""}'
+verdicts        : {'DISCARD': 2, 'UNVERIFIABLE': 16, 'FIXED': 1}
+fail categories : {'(none logged)': 15}
+fail reasons    : {'(none logged)': 15}
+hard fail cats  : {'(none logged)': 7} (hard usable 3/10)
+
+=== mcq-diag-eval-1795230018255:tags  model=tutor_1b_spinquant  n=24
+valid JSON      : 62% (15/24)
+duplicate       : -
+median TTFT ms  : 3341.0
+median decode/s : 15.1
+median wall ms  : 9151.0
+median gen tok  : 81.5
+peak RSS MB     : 1388.609375
+stop reasons    : {'END': 9, 'CONDITION': 11, 'REPETITION': 4}
+max thermal     : 0
+valid by subject: {'Mathematics': '50% (2/4)', 'Science': '80% (4/5)', 'English': '67% (2/3)', 'Social Science': '50% (3/6)', 'Computer Science': '67% (4/6)'}
+--- invalid samples
+  [Mathematics g8 END/None] 'B) 7\nMistake type:  SIGN_ERROR\nReason: The student flipped the sign of the equation, changing 2x + 5 = 11 to 2x - 5 = 11.'
+  [Mathematics g10 END/None] 'B) 3\nMistake type:  SIGN_ERROR\nReason: The student flipped the sign of the equation, changing 2x + 5 = 11 to 2x - 5 = 11.'
+  [Science g6 REPETITION/repeated 6-gram] "B) respiration\nMistake type: 1. SIGN_ERROR\nReason: Students often choose respiration as the process of plants making their own food because they think it's the opposite of photosynthesis, which is the process of plants m"
+  [English g10 END/None] "B) A metaphor is a comparison between two unlike things without using 'like' or 'as', while a simile is a comparison between two unlike things using 'like' or 'as'.\nMistake type: 1. SIGN_ERROR: a sign or direction was fl"
+--- valid samples
+  [Mathematics g8 L1] 'B) 7\nMistake type: SIGN_ERROR\nReason: The student flipped the sign of the equation, changing 2x + 5 = 11 to 2x - 5 = 11\n\nC) 9\nMistake type:  FORMULA_SWAP\nReason: The student swapped the related but wrong formula 2x + 5 = 11 and 2x - 5 = 11\n\nD) 6\nMistake type:  OPERATION_SWAP\nReason: The student swap'
+  [Mathematics g10 L1] 'B) 3\nMistake type: SIGN_ERROR\nReason: The student flipped the sign of the equation, changing 2x + 5 = 11 to 2x - 5 = 11\n\nC) 5\nMistake type:  FORMULA_SWAP\nReason: The student used a related but wrong formula, 2x + 5 = 11, instead of the correct formula, 2x = 6\n\nD) 6\nMistake type:  FORMULA_SWAP\nReason'
+  [Science g6 L2] "B) respiration\nMistake type: SIGN_ERROR\nReason: Students often choose respiration as the process of plants making their own food because they think it's the opposite of photosynthesis, whi\n\nC) transpiration\nMistake type: UNIT_CONVERSION\nReason: Students often choose transpiration as the process of p"
+fail categories : {'(none logged)': 9}
+fail reasons    : {'(none logged)': 9}
+hard fail cats  : {'(none logged)': 2} (hard usable 3/5)
+
+=== template-eval-1795276410898  model=tutor_1b_spinquant  n=48
+valid JSON      : 40% (19/48)
+duplicate       : -
+median TTFT ms  : 2078.5
+median decode/s : 17.1
+median wall ms  : 4520.0
+median gen tok  : 43.0
+peak RSS MB     : 1441.09765625
+stop reasons    : {'END': 23, 'CONDITION': 25}
+max thermal     : 0
+valid by subject: {'SPEED': '0% (0/6)', 'PERCENT': '33% (2/6)', 'SIMPLE_INTEREST': '67% (4/6)', 'AREA_PERIMETER': '17% (1/6)', 'OHMS_LAW': '50% (3/6)', 'DENSITY': '33% (2/6)', 'UNIT_CONVERSION': '83% (5/6)', 'AVERAGE': '33% (2/6)'}
+--- invalid samples
+  [SPEED g8 END/None] 'As she pedaled her bicycle to school, Rohan, a bright student, rode alongside, enjoying the warm sun on her face and the wind in her hair. She was on her way to learn about the importance of community service at a local '
+  [SPEED g8 END/None] 'As I boarded the bus, the sound of the engine and the chatter of the other commuters filled the air. The bus, a crowded and noisy vehicle, hurtled down the highway, carrying its passengers to their destinations.'
+  [SPEED g8 END/None] 'As the sun rises over the bustling streets of the city, Rohan steps into his auto-rickshaw, a colorful and colorful contraption that whirs to life as he sets off towards the city center. With a gentle hum, he glides thro'
+  [SPEED g8 END/None] 'As I climbed into the rickshaw, the driver expertly navigated through the crowded streets of Mumbai, weaving past pedestrians and buses with ease. We picked up speed as we approached the famous Gateway of India, the soun'
+--- valid samples
+  [PERCENT g8 L1] "The cricket bat is a valuable possession that costs {A} rupees to buy, but it's a rare and expensive item."
+  [PERCENT g8 L2] 'The shopkeeper was selling colorful fabrics {A} at a special Diwali sale, and the smell of sweet treats wafted through the air.'
+  [SIMPLE_INTEREST g8 L1] 'The farmer deposited a large sum of {A} into the bank, earning {B} of interest over the course of {C} years.'
+verdicts        : {'TEMPLATE': 48}
+fail categories : {'rule': 29}
+fail reasons    : {'rule: placeholder {A} appears 0 times': 19, 'rule: placeholder {B} appears 0 times': 4, 'rule: placeholder {B} appears 2 times': 1, 'rule: contains the number word "one"': 2, 'rule: placeholder {A} appears 2 times': 1, 'rule: contains the number word "first"': 1, 'rule: contains the number word "three"': 1}
+hard fail cats  : {'rule': 14} (hard usable 2/16)
+
+=== mcq-ab-eval-1795277203194:expr:answer  model=tutor_1b_spinquant  n=2
+valid JSON      : 0% (0/2)
+duplicate       : -
+median TTFT ms  : 2285.0
+median decode/s : 16.7
+median wall ms  : 2856.0
+median gen tok  : 9.0
+peak RSS MB     : 1441.09765625
+stop reasons    : {'JSON_COMPLETE': 2}
+max thermal     : 0
+valid by subject: {'Mathematics': '0% (0/1)', 'Computer Science': '0% (0/1)'}
+--- invalid samples
+  [Mathematics g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Computer Science g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+--- valid samples
+fail categories : {'rule': 2}
+fail reasons    : {'rule: placeholder text copied from the prompt': 2}
+
+=== mcq-ab-eval-1795277203194:expr  model=tutor_1b_spinquant  n=15
+valid JSON      : 67% (10/15)
+duplicate       : 0% (0/10)
+median TTFT ms  : 3050.0
+median decode/s : 16.8
+median wall ms  : 8308.0
+median gen tok  : 87.0
+peak RSS MB     : 1441.09765625
+stop reasons    : {'REPETITION': 2, 'END': 6, 'JSON_COMPLETE': 7}
+max thermal     : 0
+valid by subject: {'Mathematics': '67% (2/3)', 'Science': '100% (3/3)', 'English': '67% (2/3)', 'Social Science': '33% (1/3)', 'Computer Science': '67% (2/3)'}
+valid by level  : {1: '80% (4/5)', 2: '20% (1/5)', 3: '100% (5/5)'}
+--- invalid samples
+  [Mathematics g6 REPETITION/tail loop] '{"question":"A book costs Rs 25 more than its selling price. If the book is selling at Rs 120, what is its selling price?"","A":"Rs 145","B":"Rs 100","C":"Rs 125","D":"Rs 90","answer":"B","explanation":"If the book is se'
+  [English g6 JSON_COMPLETE/None] '{"question":"What is the correct spelling of the word \\"simplifying\\"?","A":"Simplifying","B":"Simplifying","C":"Simplifying","D":"Simplifying","answer":"B","explanation":"The word \\"simplifying\\" is the past tense of \\"'
+  [Social Science g6 REPETITION/repeated 10-gram] '{"question":"What is the main reason why the Indian government provides free education to all citizens, including girls and women?","A":"The government provides free education to all citizens, including girls and women b'
+  [Social Science g10 END/None] '{"question":"Who is the author of the book \'The Jewel Box of India\'?"","A":"Raja Ravi Varma","B":"Raja Ravi Varma","C":"Raja Ravi Varma","D":"Raja Ravi Varma","answer":"B","explanation":"The book was written by Raja Ravi'
+--- valid samples
+  [Mathematics g8 L3] '{"question":"A 3-digit number is 2 times its digit sum. What is the digit sum of the number 456?"","A":"14","B":"24","C":"20","D":"30","answer":"B","explanation":"The sum of the digits 4, 5, and 6 is 15, and 2 times 15 is 30.","expression":"2*15=30"}}'
+  [Mathematics g10 L1] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"4","B":"6","C":"7","D":"8","answer":"B","explanation":"To solve for x, subtract 5 from both sides of the equation and then divide both sides by 2.","expression":"(11-5)/2"}}'
+  [Science g6 L2] '{"question":"What is the process of plants making their own food from sunlight, water, and air in a process called photosynthesis?","A":"Respiration","B":"Photosynthesis","C":"Decomposition","D":" Fermentation","answer":"B","explanation":"Plants use energy from sunlight to convert carbon dioxide and'
+verdicts        : {'UNVERIFIABLE': 8, 'DISCARD': 2}
+fail categories : {'repetition': 2, 'parse': 1, 'rule': 2}
+fail reasons    : {'repetition: tail loop': 1, 'parse: bad JSON: Unterminated object at character 233 of {"question":"What is the correct spelling of the word \\"simplifying\\"?","A":"Simplifying","B":"Simplifying","C":"Simplifying","D":"Simplifying","answer":"B","explanation":"The word \\"simplifying\\" is the past tense of \\"simplify\\","expression":"simplify"}}"}': 1, 'repetition: repeated 10-gram': 1, 'rule: duplicate options': 1, 'rule: placeholder text copied from the prompt': 1}
+
+=== mcq-ab-eval-1795277203194:noexpr:answer  model=tutor_1b_spinquant  n=4
+valid JSON      : 25% (1/4)
+duplicate       : -
+median TTFT ms  : 1839.0
+median decode/s : 14.6
+median wall ms  : 2611.0
+median gen tok  : 9.0
+peak RSS MB     : 1441.09765625
+stop reasons    : {'JSON_COMPLETE': 4}
+max thermal     : 0
+valid by subject: {'Mathematics': '0% (0/1)', 'Social Science': '0% (0/1)', 'Computer Science': '50% (1/2)'}
+--- invalid samples
+  [Mathematics g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Social Science g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Computer Science g10 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+--- valid samples
+  [Computer Science g8 L3] '{"answer":"C","explanation":"A VPN provides secure remote access to the internet by encrypting data and protecting it from unauthorized access. This is particularly useful for students who need to access the internet from home or a remote location."}'
+fail categories : {'rule': 3}
+fail reasons    : {'rule: placeholder text copied from the prompt': 3}
+
+=== mcq-ab-eval-1795277203194:noexpr  model=tutor_1b_spinquant  n=15
+valid JSON      : 67% (10/15)
+duplicate       : 0% (0/10)
+median TTFT ms  : 2402.0
+median decode/s : 16.7
+median wall ms  : 6597.0
+median gen tok  : 71.0
+peak RSS MB     : 1441.09765625
+stop reasons    : {'JSON_COMPLETE': 11, 'END': 4}
+max thermal     : 0
+valid by subject: {'Mathematics': '67% (2/3)', 'Science': '100% (3/3)', 'English': '33% (1/3)', 'Social Science': '67% (2/3)', 'Computer Science': '67% (2/3)'}
+valid by level  : {1: '80% (4/5)', 2: '40% (2/5)', 3: '80% (4/5)'}
+--- invalid samples
+  [Mathematics g6 JSON_COMPLETE/None] '{"question":"In a triangle, if two sides are equal, what is the third side called?","A":"Perpendicular","B":"Congruent","C":"Similar","D":"Right"}}'
+  [English g6 JSON_COMPLETE/None] '{"question":"What is the main feature of a metaphor in English literature?","A":"simile","B":"personification","C":"simile","D":"personification","answer":"C","explanation":"A metaphor is a comparison between two unlike '
+  [English g8 JSON_COMPLETE/None] '{"question":"In a story, what is the main difference between the following two characters?","A":"The wise old man and the young boy","B":"The brave warrior and the cunning thief","C":"The wise old man and the young girl"'
+  [Social Science g6 JSON_COMPLETE/None] '{"question":"What is the main reason why India is home to many different languages?","A":"The British colonial rule","B":"The presence of ancient languages like Sanskrit and Tamil","C":"The migration of people from other'
+--- valid samples
+  [Mathematics g8 L3] '{"question":"A group of friends want to share some sweets equally among themselves. If there are 24 sweets and 8 friends, how many sweets will each friend get if the sweets are divided in the ratio 3:4:5:2?","A":"2","B":"3","C":"4","D":"6","answer":"B","explanation":"To find the number of sweets eac'
+  [Mathematics g10 L1] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"4","B":"6","C":"9","D":"10","answer":"B","explanation":"To solve for x, subtract 5 from both sides of the equation and then divide by 2."}'
+  [Science g6 L2] '{"question":"What is the process by which plants make their own food from sunlight, water, and air?","A":"Respiration","B":"Photosynthesis","C":"Decomposition","D":"Transpiration","answer":"B","explanation":"Plants use sunlight, water, and air to produce glucose and oxygen."}'
+fail categories : {'rule': 5}
+fail reasons    : {'rule: placeholder text copied from the prompt': 3, 'rule: duplicate options': 2}
+hard fail cats  : {'rule': 1} (hard usable 4/5)
+
+=== mcq-ab-eval-1795277203194:prod  model=tutor_1b_spinquant  n=15
+valid JSON      : 73% (11/15)
+duplicate       : 0% (0/11)
+median TTFT ms  : 2784.0
+median decode/s : 16.7
+median wall ms  : 6690.0
+median gen tok  : 68.0
+peak RSS MB     : 1441.09765625
+stop reasons    : {'JSON_COMPLETE': 10, 'END': 5}
+max thermal     : 0
+valid by subject: {'Mathematics': '100% (3/3)', 'Science': '100% (3/3)', 'English': '67% (2/3)', 'Social Science': '0% (0/3)', 'Computer Science': '100% (3/3)'}
+valid by level  : {1: '60% (3/5)', 2: '80% (4/5)', 3: '80% (4/5)'}
+--- invalid samples
+  [English g10 END/None] '{"question":"What is the name of the famous Indian author who wrote the novel \'The God of Small Things\'?"{"A":"Rajmohan Rudramurthy","B":"Arundhati Devi","C":"Arundhati Devi","D":"Rajmohan Rudramurthy","answer":"B","expl'
+  [Social Science g6 JSON_COMPLETE/None] '{"question":"What is the term used to describe the process by which people of different cultures and backgrounds learn to appreciate and respect each other\'s differences?","A":"Socialization","B":"Cultural Exchange","C":'
+  [Social Science g8 END/None] '{"question":"What is the main difference between a caste system and a class system in India?","A":"Social hierarchy","B":"Economic system","C":"Societal structure","D":"Political system","answer":"C","explanation":"A cas'
+  [Social Science g10 JSON_COMPLETE/None] '{"question":"What is the term used to describe the process of social change that leads to the breakdown of traditional social structures and the emergence of new social classes?","A":"Socialism","B":"Communism","C":"Libe'
+--- valid samples
+  [Mathematics g6 L2] '{"question":"What is the term for the process of writing the same letter repeatedly to form a word or phrase?","A":"Alphabet","B":"Anagram","C":"Permutation","D":"Phonetic","answer":"B","explanation":"An anagram is a word or phrase formed by rearranging the letters of another word or phrase."}'
+  [Mathematics g8 L3] '{"question":"What is the definition of \'Zero in mathematics?\'","A":"Zero is a number that is equal to zero.","B":"Zero is a number that is equal to one.","C":"Zero is a number that is equal to any number.","D":"Zero is a number that is equal to one or two.","answer":"B","explanation":"Zero is a numb'
+  [Mathematics g10 L1] '{"question":"What is the name of the largest planet in our solar system?","A":"Mercury","B":"Jupiter","C":"Saturn","D":"Uranus","answer":"B","explanation":"Jupiter is the largest planet in our solar system."}'
+fail categories : {'rule': 3, 'parse': 1}
+fail reasons    : {'rule: duplicate options': 1, 'rule: placeholder text copied from the prompt': 2, 'parse: bad JSON: Unterminated object at character 300 of {"question":"What is the main difference between a caste system and a class system in India?","A":"Social hierarchy","B":"Economic system","C":"Societal structure","D":"Political system","answer":"C","explanation":"A caste system is based on birth, while a class system is based on economic status.")}': 1}
+hard fail cats  : {'parse': 1} (hard usable 4/5)
+
+=== mcq-ab-eval-1795277203194:prod:answer  model=tutor_1b_spinquant  n=3
+valid JSON      : 33% (1/3)
+duplicate       : -
+median TTFT ms  : 2092.0
+median decode/s : 14.2
+median wall ms  : 2715.0
+median gen tok  : 9.0
+peak RSS MB     : 1441.09765625
+stop reasons    : {'JSON_COMPLETE': 3}
+max thermal     : 0
+valid by subject: {'Social Science': '0% (0/2)', 'Computer Science': '100% (1/1)'}
+--- invalid samples
+  [Social Science g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Social Science g10 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+--- valid samples
+  [Computer Science g8 L3] '{"answer":"B","explanation":"a computer is a network of interconnected machines"}'
+fail categories : {'rule': 2}
+fail reasons    : {'rule: placeholder text copied from the prompt': 2}
+
+=== mcq-diag-eval-1795277617978  model=tutor_1b_spinquant  n=30
+valid JSON      : 63% (19/30)
+duplicate       : 11% (2/19)
+median TTFT ms  : 2976.5
+median decode/s : 18.0
+median wall ms  : 6587.5
+median gen tok  : 64.5
+peak RSS MB     : 1441.09765625
+stop reasons    : {'JSON_COMPLETE': 23, 'END': 7}
+max thermal     : 0
+valid by subject: {'Mathematics': '50% (3/6)', 'Science': '83% (5/6)', 'English': '67% (4/6)', 'Social Science': '50% (3/6)', 'Computer Science': '67% (4/6)'}
+valid by level  : {1: '50% (5/10)', 2: '80% (8/10)', 3: '60% (6/10)'}
+--- invalid samples
+  [Mathematics g8 JSON_COMPLETE/None] '{"question":"What is the term for the relationship between the number of hours a student spends in school and the number of hours they spend on homework?","A":"1:1","B":"2:1","C":"3:2","D":"4:3","answer":"B","explanation'
+  [Mathematics g8 JSON_COMPLETE/None] '{"question":"What is the value of x in the equation 2x + 5 = 11?","A":"3","B":"4","C":"6","D":"7","answer":"B","explanation":"To solve for x, subtract 5 from both sides of the equation and then divide by 2."}'
+  [Mathematics g10 END/None] '{"question":"What is the definition of a prime number?","A":"a positive integer greater than 1 that has exactly two distinct positive divisors: 1 and itself.","B":"a positive integer greater than 1 that is divisible only'
+  [Science g6 JSON_COMPLETE/None] '{"question":"What is the primary function of the human nose?","A":"to detect smells","B":"to detect sounds","C":"to detect smells and sounds","D":"to detect tastes"}'
+--- valid samples
+  [Mathematics g6 L2] '{"question":"What is the definition of a triangle if it has three sides and three angles?","A":"equilateral","B":"isosceles","C":"right-angled","D":"obtuse","answer":"B","explanation":"A triangle is a polygon with three sides and three angles."}'
+  [Mathematics g6 L3] '{"question":"What is the definition of a \'Ganit Koshthala\' in mathematics?","A":"A number that is equal to the sum of its digits.","B":"A shape with three sides of equal length.","C":"A mathematical concept that describes the relationship between the sum of the interior angles of a triangle.","D":"A'
+  [Mathematics g10 L2] '{"question":"What is the definition of \'Zero in mathematics?","A":"Zero is the additive identity.","B":"Zero is a number that is equal to zero.","C":"Zero is the number that has no size or magnitude.","D":"Zero is the number that is the result of adding zero to itself any number of times."","answer"'
+fail categories : {'rule': 11, 'duplicate': 2}
+fail reasons    : {'rule: arithmetic question (templates own numeric questions)': 2, 'rule: placeholder text copied from the prompt': 8, 'rule: duplicate options': 1, 'duplicate': 2}
+hard fail cats  : {'rule': 4, 'duplicate': 1} (hard usable 5/10)
+
+=== mcq-diag-eval-1795277617978:tags  model=tutor_1b_spinquant  n=34
+valid JSON      : 50% (17/34)
+duplicate       : -
+median TTFT ms  : 3690.5
+median decode/s : 17.4
+median wall ms  : 6460.5
+median gen tok  : 49.5
+peak RSS MB     : 1441.09765625
+stop reasons    : {'END': 20, 'CONDITION': 13, 'REPETITION': 1}
+max thermal     : 0
+valid by subject: {'Mathematics': '50% (3/6)', 'Science': '50% (5/10)', 'English': '50% (3/6)', 'Social Science': '50% (3/6)', 'Computer Science': '50% (3/6)'}
+--- invalid samples
+  [Mathematics g6 END/None] 'B|FORMULA_SWAP|used the area formula instead of the perimeter formula\nC|RIGHT-ANGLED|is a type of triangle, not a definition\nD|OBTUSE|is a type of angle, not a definition of a triangle'
+  [Mathematics g6 END/None] 'B|FORMULA_SWAP|used the area formula instead of the perimeter formula\nC|SHAPE_CONCEPT|students often confuse a triangle with a parallelogram\nD|MATH_CONCEPT|students mistakenly think a mathematical expression is a type of'
+  [Mathematics g10 END/None] 'B|FORMULA_SWAP|used the area formula instead of the perimeter formula\nC|NUMBER|is the number that has no size or magnitude\nD|RESULT|is the number that is the result of adding zero to itself any number of times'
+  [Science g6 END/None] 'B|FORMULA_SWAP|used the area formula instead of the perimeter formula\nC|DECOMPOSITION|plants break down organic matter into simpler substances\nD|TRANSPRATION|transpiration is the process of water loss through plants'
+--- valid samples
+  [Mathematics g6 L2] 'B) equilateral\nMistake type: FORMULA_SWAP\nReason: used the area formula instead of the perimeter formula\n\nC) right-angled\nMistake type:  OVERGENERALISATION\nReason: assumed all triangles are right-angled, but not all have three angles.\n\nD) obtuse\nMistake type: OVERGENERALISATION\nReason: assumed all t'
+  [Mathematics g6 L3] 'B) A number that is equal to the sum of its digits.\nMistake type: FORMULA_SWAP\nReason: used the area formula instead of the perimeter formula\n\nC) A shape with three sides of equal length.\nMistake type:  CONCEPT_CONFUSION\nReason: mixed up the definition of a triangle with a shape\n\nD) A type of mathem'
+  [Mathematics g10 L2] 'B) Zero is the additive identity.\nMistake type: FORMULA_SWAP\nReason: used the area formula instead of the perimeter formula\n\nC) Zero is the number that has no size or magnitude.\nMistake type:  CONCEPT_CONFUSION\nReason: confused the concept of zero with the concept of nothingness\n\nD) Zero is the numb'
+fail categories : {'rule': 17}
+fail reasons    : {'rule: no valid line for option C, D': 15, 'rule: no valid tag for option D': 1, 'rule: no valid line for option B, C, D': 1}
+hard fail cats  : {'rule': 5} (hard usable 5/10)
+
+=== mcq-diag-eval-1795277617978:answer  model=tutor_1b_spinquant  n=8
+valid JSON      : 0% (0/8)
+duplicate       : -
+median TTFT ms  : 2040.0
+median decode/s : 19.0
+median wall ms  : 2523.5
+median gen tok  : 9.0
+peak RSS MB     : 1441.09765625
+stop reasons    : {'JSON_COMPLETE': 8}
+max thermal     : 0
+valid by subject: {'Mathematics': '0% (0/1)', 'Science': '0% (0/1)', 'English': '0% (0/1)', 'Social Science': '0% (0/3)', 'Computer Science': '0% (0/2)'}
+--- invalid samples
+  [Mathematics g10 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Science g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [English g6 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+  [Social Science g8 JSON_COMPLETE/None] '{"answer":"B","explanation":"one or two sentences"}'
+--- valid samples
+fail categories : {'rule': 8}
+fail reasons    : {'rule: placeholder text copied from the prompt': 8}
+hard fail cats  : {'rule': 3} (hard usable 0/3)
+
+=== mcq-diag-eval-1795199957907 per item
+items           : 15; parsed before verifier 8; final valid 8
+tags complete   : 0/8 items that reached tagging; tag calls per item {1: 8}
+
+=== mcq-diag-eval-1795200433800 per item
+items           : 15; parsed before verifier 12; final valid 12
+tags complete   : 6/12 items that reached tagging; tag calls per item {1: 12}
+tag time / fully tagged q : median 12.0 s; total incl. MCQ median 17.4 s (min 16.5, max 32.5)
+tag calls by task: {'MCQ_TAGS': 12}; pipe-only complete: 0/12
+
+=== mcq-diag-eval-1795230018255 per item
+items           : 30; parsed before verifier 19; final valid 17
+tags complete   : 15/15 items that reached tagging; tag calls per item {1: 6, 2: 9}
+tag time / fully tagged q : median 14.1 s; total incl. MCQ median 20.9 s (min 18.0, max 644.1)
+tag calls by task: {'MCQ_TAGS': 24}; pipe-only complete: 0/15
+
+=== mcq-diag-eval-1795277617978 per item
+items           : 30; parsed before verifier 19; final valid 19
+tags complete   : 17/17 items that reached tagging; tag calls per item {1: 1, 2: 15, 3: 1}
+tag time / fully tagged q : median 14.3 s; total incl. MCQ median 20.8 s (min 11.0, max 27.9)
+tag calls by task: {'MCQ_TAGS_PIPE': 17, 'MCQ_TAGS': 17}; pipe-only complete: 1/17
