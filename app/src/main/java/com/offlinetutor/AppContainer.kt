@@ -40,6 +40,7 @@ class AppContainer(app: Application) {
     val ai = TutorAi(engine, db.logs())
     val seeds = SeedBank(app)
     val flags = com.offlinetutor.data.FeatureFlags(app)
+    val appearance = com.offlinetutor.data.AppearanceStore(app)
     val mcqGenerator = McqGenerator(ai, flags)
     val templateGenerator = com.offlinetutor.data.TemplateGenerator(ai)
     val taxonomy = com.offlinetutor.domain.MisconceptionTaxonomy.parse(

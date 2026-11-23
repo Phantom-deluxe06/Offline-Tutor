@@ -392,4 +392,14 @@
     <string name="join_battle_nomodel">Join a class battle (no AI model needed)</string>
     <string name="ff_mesh">Classroom mesh</string>
     <string name="ff_mesh_body">Quiz battles and question sharing with nearby phones, plus the progress QR code.</string>
+    <!-- Appearance -->
+    <string name="appearance">Appearance</string>
+    <string name="theme">Theme</string>
+    <string name="theme_system">Same as phone</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="background">Background</string>
+    <string name="bg_doodles">Doodles</string>
+    <string name="bg_paper">Ruled paper</string>
+    <string name="bg_plain">Plain</string>
 </resources>

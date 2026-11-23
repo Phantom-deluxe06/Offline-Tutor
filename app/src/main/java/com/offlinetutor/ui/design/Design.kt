@@ -81,6 +81,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -534,5 +536,115 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier, trailing: @Composa
     Row(modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(text, style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
         trailing()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Background art (Settings → Appearance): school doodles drawn in code over the paper, theme-aware, very low
+// contrast so text stays readable. No image files: they scale to any screen and recolour for dark mode.
+// ---------------------------------------------------------------------------
+
+private enum class DoodleKind { BOOK, PENCIL, ATOM, STAR, BULB, LEAF, RULER, GLYPH }
+
+private data class Doodle(val kind: DoodleKind, val x: Float, val y: Float, val size: Float, val angle: Float, val glyph: String, val tint: Int)
+
+private val glyphs = listOf("π", "√", "÷", "%", "+", "×", "=", "Δ", "அ", "অ", "∑", "∞")
+
+@Composable
+fun AppBackground(
+    style: com.offlinetutor.data.AppearanceStore.Background,
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    when (style) {
+        com.offlinetutor.data.AppearanceStore.Background.PAPER -> PaperBackground(modifier, ruled = true, content = content)
+        com.offlinetutor.data.AppearanceStore.Background.PLAIN -> {
+            val ex = LocalExtras.current
+            Box(modifier.fillMaxSize().drawBehind { drawRect(ex.paper) }, content = content)
+        }
+        com.offlinetutor.data.AppearanceStore.Background.DOODLES -> {
+            val scheme = androidx.compose.material3.MaterialTheme.colorScheme
+            val dark = scheme.background.luminance() < 0.4f
+            val alpha = if (dark) 0.10f else 0.075f
+            val tints = listOf(scheme.primary, scheme.tertiary, scheme.secondary).map { it.copy(alpha = alpha) }
+            val doodles = remember {
+                val rnd = Random(21)
+                // Jittered grid so the art covers the screen evenly without clumps.
+                buildList {
+                    for (row in 0 until 9) for (col in 0 until 4) {
+                        add(Doodle(DoodleKind.entries[rnd.nextInt(DoodleKind.entries.size)],
+                            (col + 0.2f + rnd.nextFloat() * 0.6f) / 4f, (row + 0.2f + rnd.nextFloat() * 0.6f) / 9f,
+                            26f + rnd.nextFloat() * 18f, rnd.nextFloat() * 50f - 25f, glyphs[rnd.nextInt(glyphs.size)], rnd.nextInt(3)))
+                    }
+                }
+            }
+            PaperBackground(modifier, ruled = false) {
+                Canvas(Modifier.fillMaxSize()) { doodles.forEach { drawDoodle(it, tints[it.tint]) } }
+                content()
+            }
+        }
+    }
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawDoodle(d: Doodle, color: Color) {
+    val s = d.size.dp.toPx()
+    val c = Offset(d.x * size.width, d.y * size.height)
+    val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.6.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round)
+    rotate(d.angle, c) {
+        when (d.kind) {
+            DoodleKind.BOOK -> {
+                drawRoundRect(color, Offset(c.x - s / 2, c.y - s / 3), androidx.compose.ui.geometry.Size(s, s * 0.66f),
+                    androidx.compose.ui.geometry.CornerRadius(4f), style = stroke)
+                drawLine(color, Offset(c.x, c.y - s / 3), Offset(c.x, c.y + s / 3), stroke.width)
+                for (i in 1..2) {
+                    drawLine(color, Offset(c.x - s * 0.4f, c.y - s / 3 + i * s * 0.2f), Offset(c.x - s * 0.1f, c.y - s / 3 + i * s * 0.2f), stroke.width)
+                    drawLine(color, Offset(c.x + s * 0.1f, c.y - s / 3 + i * s * 0.2f), Offset(c.x + s * 0.4f, c.y - s / 3 + i * s * 0.2f), stroke.width)
+                }
+            }
+            DoodleKind.PENCIL -> {
+                val p = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(c.x - s / 2, c.y - s * 0.09f); lineTo(c.x + s * 0.3f, c.y - s * 0.09f); lineTo(c.x + s / 2, c.y)
+                    lineTo(c.x + s * 0.3f, c.y + s * 0.09f); lineTo(c.x - s / 2, c.y + s * 0.09f); close()
+                }
+                drawPath(p, color, style = stroke)
+                drawLine(color, Offset(c.x + s * 0.3f, c.y - s * 0.09f), Offset(c.x + s * 0.3f, c.y + s * 0.09f), stroke.width)
+            }
+            DoodleKind.ATOM -> {
+                for (a in listOf(0f, 60f, 120f)) rotate(a, c) {
+                    drawOval(color, Offset(c.x - s / 2, c.y - s / 6), androidx.compose.ui.geometry.Size(s, s / 3), style = stroke)
+                }
+                drawCircle(color, s * 0.06f, c)
+            }
+            DoodleKind.STAR -> {
+                val p = androidx.compose.ui.graphics.Path()
+                for (i in 0 until 10) {
+                    val r = if (i % 2 == 0) s / 2 else s / 5
+                    val t = Math.toRadians((i * 36 - 90).toDouble())
+                    val pt = Offset(c.x + (r * kotlin.math.cos(t)).toFloat(), c.y + (r * kotlin.math.sin(t)).toFloat())
+                    if (i == 0) p.moveTo(pt.x, pt.y) else p.lineTo(pt.x, pt.y)
+                }
+                p.close(); drawPath(p, color, style = stroke)
+            }
+            DoodleKind.BULB -> {
+                drawCircle(color, s * 0.3f, Offset(c.x, c.y - s * 0.1f), style = stroke)
+                drawLine(color, Offset(c.x - s * 0.12f, c.y + s * 0.25f), Offset(c.x + s * 0.12f, c.y + s * 0.25f), stroke.width)
+                drawLine(color, Offset(c.x - s * 0.09f, c.y + s * 0.34f), Offset(c.x + s * 0.09f, c.y + s * 0.34f), stroke.width)
+            }
+            DoodleKind.LEAF -> {
+                val p = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(c.x - s / 2, c.y); quadraticTo(c.x, c.y - s / 2, c.x + s / 2, c.y); quadraticTo(c.x, c.y + s / 2, c.x - s / 2, c.y)
+                }
+                drawPath(p, color, style = stroke)
+                drawLine(color, Offset(c.x - s / 2, c.y), Offset(c.x + s * 0.35f, c.y), stroke.width)
+            }
+            DoodleKind.RULER -> {
+                drawRect(color, Offset(c.x - s / 2, c.y - s * 0.12f), androidx.compose.ui.geometry.Size(s, s * 0.24f), style = stroke)
+                for (i in 1..4) drawLine(color, Offset(c.x - s / 2 + i * s / 5, c.y - s * 0.12f), Offset(c.x - s / 2 + i * s / 5, c.y), stroke.width)
+            }
+            DoodleKind.GLYPH -> drawContext.canvas.nativeCanvas.drawText(d.glyph, c.x, c.y + s * 0.35f, android.graphics.Paint().apply {
+                isAntiAlias = true; textAlign = android.graphics.Paint.Align.CENTER; textSize = s * 1.1f
+                this.color = android.graphics.Color.argb((color.alpha * 255).toInt(), (color.red * 255).toInt(), (color.green * 255).toInt(), (color.blue * 255).toInt())
+            })
+        }
     }
 }

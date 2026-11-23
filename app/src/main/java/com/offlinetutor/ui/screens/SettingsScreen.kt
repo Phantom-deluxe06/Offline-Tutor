@@ -74,6 +74,27 @@ fun SettingsScreen(onBack: () -> Unit, switchProfile: () -> Unit) {
             Modifier.padding(pad).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            // Appearance: in-app light / dark theme and background art.
+            SectionCard(stringResource(R.string.appearance)) {
+                val look by c.appearance.state.collectAsStateWithLifecycle()
+                Text(stringResource(R.string.theme), style = MaterialTheme.typography.titleSmall)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(com.offlinetutor.data.AppearanceStore.ThemeMode.SYSTEM to R.string.theme_system,
+                        com.offlinetutor.data.AppearanceStore.ThemeMode.LIGHT to R.string.theme_light,
+                        com.offlinetutor.data.AppearanceStore.ThemeMode.DARK to R.string.theme_dark).forEach { (m, label) ->
+                        androidx.compose.material3.FilterChip(selected = look.theme == m, onClick = { c.appearance.setTheme(m) }, label = { Text(stringResource(label)) })
+                    }
+                }
+                Text(stringResource(R.string.background), style = MaterialTheme.typography.titleSmall)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(com.offlinetutor.data.AppearanceStore.Background.DOODLES to R.string.bg_doodles,
+                        com.offlinetutor.data.AppearanceStore.Background.PAPER to R.string.bg_paper,
+                        com.offlinetutor.data.AppearanceStore.Background.PLAIN to R.string.bg_plain).forEach { (b, label) ->
+                        androidx.compose.material3.FilterChip(selected = look.background == b, onClick = { c.appearance.setBackground(b) }, label = { Text(stringResource(label)) })
+                    }
+                }
+            }
+
             SectionCard(stringResource(R.string.app_language)) {
                 val current = AppCompatDelegate.getApplicationLocales().toLanguageTags()
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

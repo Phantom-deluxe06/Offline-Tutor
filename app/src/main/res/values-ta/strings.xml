@@ -377,4 +377,14 @@
     <string name="join_battle_nomodel">வகுப்புப் போட்டியில் சேர் (AI மாடல் தேவையில்லை)</string>
     <string name="ff_mesh">வகுப்பறை வலை</string>
     <string name="ff_mesh_body">அருகிலுள்ள போன்களுடன் வினாடி வினாப் போட்டிகள், கேள்விப் பகிர்வு, முன்னேற்ற QR குறியீடு.</string>
+    <!-- Appearance -->
+    <string name="appearance">தோற்றம்</string>
+    <string name="theme">தீம்</string>
+    <string name="theme_system">போனைப் போலவே</string>
+    <string name="theme_light">வெளிர்</string>
+    <string name="theme_dark">இருள்</string>
+    <string name="background">பின்னணி</string>
+    <string name="bg_doodles">சித்திரங்கள்</string>
+    <string name="bg_paper">கோடிட்ட தாள்</string>
+    <string name="bg_plain">வெற்று</string>
 </resources>

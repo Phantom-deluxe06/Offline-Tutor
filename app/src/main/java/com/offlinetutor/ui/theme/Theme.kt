@@ -164,8 +164,9 @@ object Palette {
 }
 
 @Composable
-fun OfflineTutorTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
+/** [darkOverride]: null = follow the phone, true / false = the in-app Dark / Light choice (Settings → Appearance). */
+fun OfflineTutorTheme(darkOverride: Boolean? = null, content: @Composable () -> Unit) {
+    val dark = darkOverride ?: isSystemInDarkTheme()
     val scheme = if (dark) Dark else Light
     CompositionLocalProvider(LocalExtras provides if (dark) DarkExtras else LightExtras) {
         MaterialTheme(colorScheme = scheme, typography = AppTypography, shapes = AppShapes) {
