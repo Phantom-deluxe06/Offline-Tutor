@@ -96,8 +96,8 @@ The model files are too large for git (`*.pte` and `tokenizer.model` are git-ign
 
 | File | Size | Link |
 |---|---|---|
-| `tutor_1b_spinquant.pte` (Llama 3.2 1B Instruct SpinQuant INT4, context 1024) | 1,025 MB | MODEL_PTE_DRIVE_LINK |
-| `tokenizer.model` | ~2 MB | TOKENIZER_DRIVE_LINK |
+| `tutor_1b_spinquant.pte` (Llama 3.2 1B Instruct SpinQuant INT4, context 1024) | 1,025 MB | https://drive.google.com/file/d/1SEV555uozxiG_jaBZRsgp1RFANz0e7HG/view?usp=sharing |
+| `tokenizer.model` | ~2 MB | https://drive.google.com/file/d/17gGmaWHtiBGOWHFkXQiu8onEce-lIhc7/view?usp=sharing |
 
 Llama 3.2 is under the Llama 3.2 Community License; accept it on Hugging Face before using the weights.
 
