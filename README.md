@@ -1,7 +1,18 @@
 # Guru · Offline AI Tutor (Android)
 
-A 100% offline tutor for Indian school students (Grades 6–12), running **Llama 3.2 1B Instruct (INT4)** on-device
-with **ExecuTorch 1.5.1** (XNNPACK). Kotlin, Jetpack Compose, Room, coroutines. No INTERNET permission.
+Guru is a 100% offline AI tutor for Indian school students (Grades 6–12). It runs **Llama 3.2 1B Instruct
+SpinQuant INT4** entirely on the phone with **ExecuTorch 1.5.1** (XNNPACK on Arm64 CPUs), so it works with no
+internet: the app has no INTERNET permission. It builds a step-by-step roadmap, runs an adaptive quiz that finds the
+misconception behind each wrong answer, lets the app compute the answer for number problems, prepares questions in
+the background so there is no wait, explains in English, Tanglish or Benglish, and links phones in a classroom over
+Nearby Connections. Built with Kotlin, Jetpack Compose, Room and coroutines.
+
+## Status
+
+* **Classroom battle and question sharing** are built and unit-tested but **not yet tested on two phones**.
+* **Textbook mode** reads **English and Hindi** pages only (ML Kit Latin + Devanagari); Tamil and Bengali OCR is not included.
+* Teach Kutty, Night Shift's full batch and the language-mode timings have not been measured on the phone yet; see
+  [docs/REPORT_FEATURES.md](docs/REPORT_FEATURES.md) for what was and was not measured.
 
 ## Features
 
@@ -20,7 +31,12 @@ with **ExecuTorch 1.5.1** (XNNPACK). Kotlin, Jetpack Compose, Room, coroutines. 
 | Import model | `ui/screens/ModelsScreen.kt` | system file picker → copy into `filesDir/models`; adb push for dev |
 | Adaptive brain (phase 1) | `data/AdaptiveBrain.kt`, `domain/Mastery.kt`, `domain/DiagnosticMcq.kt` | misconception-tagged options, Sure / Not sure, Elo per concept, self-healing fix steps, prerequisite backtracking, skill tree |
 | Symbolic verifier (phase 2) | `domain/ProblemTemplates.kt`, `domain/Verifier.kt` | 8 Kotlin-owned problem types (app computes the answer, LLM writes the story); exp4j re-checks every numeric MCQ key |
-| Feature toggles | `data/FeatureFlags.kt`, Settings → Smart features | each phase-1/2 feature can be switched off for on/off demos and benchmarks; plan in `docs/FEATURES_PLAN.md` |
+| Zero-wait scheduler (phase 3) | `llm/PriorityGate.kt`, `data/GenerationScheduler.kt`, `data/NightShift.kt` | priority gate with preemption (live > pool refill > night), ready question pool, Night Shift on charge + idle, thermal governor |
+| Language bridge (phase 4) | `domain/Prompts.kt`, `domain/Analogies.kt` | Tanglish / Benglish explanations, analogy worlds (cricket, kitchen, market, …) |
+| Classroom mesh (phase 5) | `data/Mesh.kt`, `ui/screens/ClassroomScreen.kt` | Nearby Connections quiz battle, class heatmap, question sharing, progress QR |
+| Teach Kutty, textbook mode (phase 6) | `ui/screens/TeachKuttyScreen.kt`, `data/TextbookService.kt` | explain a topic to "Kutty" and see missed key points; on-device OCR of textbook pages grounds quiz questions |
+| Light / dark theme, background art | `data/Appearance.kt`, `ui/design/Design.kt` | Settings → Appearance |
+| Feature toggles | `data/FeatureFlags.kt`, Settings → Smart features | every feature can be switched off for on/off demos and benchmarks; plan in `docs/FEATURES_PLAN.md` |
 
 ## How to demo each feature
 
@@ -44,7 +60,7 @@ run **Settings → Night Shift → Simulate night** so the ready pool and fix le
 | Teach Kutty | ⋮ → Teach Kutty |
 | Textbook mode | ⋮ → Textbook mode → Take a photo |
 
-Measured results for the feature phases: `docs/REPORT_FEATURES.md`.
+Measured results for the feature phases: [docs/REPORT_FEATURES.md](docs/REPORT_FEATURES.md).
 
 ## LLM engine (`llm/LlmEngine.kt`)
 
@@ -74,41 +90,50 @@ Requirements: JDK 17+ (Android Studio's JBR works), Android SDK with platform 36
 
 APK: `app/build/outputs/apk/debug/app-debug.apk` (arm64-v8a only).
 
-## Get the model (not in this repo)
+## Download model
 
-The model files are too large for git (and `*.pte` / `tokenizer.model` are git-ignored). Download them:
+The model files are too large for git (`*.pte` and `tokenizer.model` are git-ignored). Download them:
 
 | File | Size | Link |
 |---|---|---|
-| `tutor_1b_spinquant.pte` (default, Llama 3.2 1B Instruct SpinQuant INT4) | 1,025 MB | `<GOOGLE_DRIVE_LINK_SPINQUANT>` |
-| `tokenizer.model` | ~2 MB | `<GOOGLE_DRIVE_LINK_TOKENIZER>` |
-| `tutor_1b_8da4w.pte` (optional, for the RAM comparison) | 765 MB | `<GOOGLE_DRIVE_LINK_8DA4W>` |
+| `tutor_1b_spinquant.pte` (Llama 3.2 1B Instruct SpinQuant INT4, context 1024) | 1,025 MB | MODEL_PTE_DRIVE_LINK |
+| `tokenizer.model` | ~2 MB | TOKENIZER_DRIVE_LINK |
 
 Llama 3.2 is under the Llama 3.2 Community License; accept it on Hugging Face before using the weights.
 
-Setup:
+## Setup
 
-1. Build and install the APK (`.\gradlew.bat installDebug`, or copy `app-debug.apk` to the phone).
-2. Copy the downloaded files to the phone, then in the app: **⋮ → AI model → Import .pte** and **Import tokenizer**
-   (or `.\scripts\push_model.ps1 -Dir <folder with the files>` over adb).
+1. **Install the APK**: download `app-debug.apk` from the GitHub release and open it on the phone (allow installing
+   from this source), or build it yourself with `.\gradlew.bat installDebug`. Needs an arm64 phone with 4 GB+ RAM.
+2. **Import the model**: copy the two downloaded files to the phone, then in the app open **⋮ → AI model** and tap
+   **Import .pte** and **Import tokenizer** (developers can use `.\scripts\push_model.ps1 -Dir <folder>` over adb).
 3. Create a profile, or **Settings → Debug → Seed demo student** for the demo data.
+4. **Run Simulate night**: **Settings → Night Shift → Simulate night**, and leave it 10–15 minutes so the ready pool
+   and fix lessons are prepared and quiz questions appear without waiting.
 
-Or export the files yourself:
-
-## Model export (WSL2 Ubuntu)
+## Export the model yourself (WSL2 Ubuntu)
 
 ```bash
+hf auth login                   # needs access to the meta-llama repos on Hugging Face
 bash scripts/export_models.sh   # run from the repo root inside WSL
 ```
 
-Produces `tutor_1b_spinquant.pte`, `tutor_1b_8da4w.pte` and `tokenizer.model` (pip `executorch==1.5.1`, same as the AAR).
-EOS ids `128009, 128001` are baked into the `.pte` metadata, and context is set to 1024 (the export default is 128).
+The script installs `executorch==1.5.1` (same version as the Android AAR) in a venv, downloads
+`meta-llama/Llama-3.2-1B-Instruct-SpinQuant_INT4_EO8`, and runs:
 
-Install on the phone: **AI model → Import .pte / Import tokenizer**, or for dev:
-
-```powershell
-.\scripts\push_model.ps1 -Dir model-export\out
+```bash
+python -m executorch.extension.llm.export.export_llm \
+  --config <config dir inside the executorch wheel>/llama_xnnpack_spinquant.yaml \
+  ++base.checkpoint=spinquant/consolidated.00.pth \
+  ++base.params=spinquant/params.json \
+  "++base.metadata='{\"get_bos_id\":128000,\"get_eos_ids\":[128009,128001]}'" \
+  ++export.max_seq_length=1024 ++export.max_context_length=1024 \
+  ++export.output_name=tutor_1b_spinquant.pte
 ```
+
+Config: XNNPACK backend, SpinQuant INT4 weights, EOS ids `128009, 128001` in the metadata, context 1024 (the export
+default is 128). It also builds an optional `tutor_1b_8da4w.pte` (BF16 checkpoint, 8da4w, group size 128) for the RAM
+comparison. Output goes to `model-export/out/`; install it with `.\scripts\push_model.ps1 -Dir model-export\out`.
 
 ## Offline compliance
 

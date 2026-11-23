@@ -25,3 +25,6 @@ tokenizer.json
 tokenizer_config.json
 model-export/hf/
 model-export/venv/
+# release builds
+*.apk
+*.aab
