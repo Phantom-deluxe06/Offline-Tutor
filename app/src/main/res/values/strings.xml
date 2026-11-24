@@ -432,4 +432,31 @@
     <string name="ff_kutty_body">Explain a topic to a curious younger kid; see which key points you missed.</string>
     <string name="ff_textbook">Textbook mode</string>
     <string name="ff_textbook_body">Quiz questions use passages from textbook pages you photographed.</string>
+    <!-- Learner goals and the study plan -->
+    <string name="goal_title">Your goal</string>
+    <string name="goal_kind">What kind of goal is it?</string>
+    <string name="goal_exam">Exam preparation</string>
+    <string name="goal_skill">Skill development</string>
+    <string name="goal_career">Career guidance</string>
+    <string name="goal_certification">Certification</string>
+    <string name="goal_hint">In your own words, e.g. Score above 90 in the Class 10 maths board exam</string>
+    <string name="target_date">Target date</string>
+    <string name="pick_date">Pick a date</string>
+    <string name="clear_date">Clear</string>
+    <string name="current_level">How good are you now in each subject?</string>
+    <string name="level_beginner">Beginner</string>
+    <string name="level_some">Know some basics</string>
+    <string name="level_confident">Confident</string>
+    <string name="plan_this_week">This week\'s plan</string>
+    <string name="minutes_per_day">Study time per day</string>
+    <string name="min_n">%1$d min</string>
+    <string name="plan_today">Today</string>
+    <string name="plan_free">Free day</string>
+    <string name="plan_all_done">Everything on your roadmap is done!</string>
+    <string name="plan_target_passed">Your target date (%1$s) has passed. Set a new one in Settings.</string>
+    <string name="plan_no_target">At this pace you finish everything by %1$s. Set a target date in Settings.</string>
+    <string name="plan_on_track">On track: done by %1$s, before your target date %2$s.</string>
+    <string name="plan_behind">Behind: about %1$d min a day needed to finish by %2$s.</string>
+    <string name="plan_note">Unfinished work moves to the next day. The plan updates after every quiz.</string>
+    <string name="plan_updated">Last updated from your quiz on %1$s</string>
 </resources>

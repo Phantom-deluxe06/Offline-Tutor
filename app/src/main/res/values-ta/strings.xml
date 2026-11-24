@@ -417,4 +417,31 @@
     <string name="ff_kutty_body">ஆர்வமுள்ள சிறு குழந்தைக்கு ஒரு தலைப்பை விளக்குங்கள்; எந்த முக்கியக் கருத்துகளை விட்டீர்கள் எனப் பாருங்கள்.</string>
     <string name="ff_textbook">பாடநூல் முறை</string>
     <string name="ff_textbook_body">நீங்கள் படம் எடுத்த பாடநூல் பக்கங்களிலிருந்து வினாக்கள் உருவாகும்.</string>
+    <!-- Learner goals and the study plan -->
+    <string name="goal_title">உங்கள் இலக்கு</string>
+    <string name="goal_kind">இது எந்த வகை இலக்கு?</string>
+    <string name="goal_exam">தேர்வுக்குத் தயாராதல்</string>
+    <string name="goal_skill">திறன் வளர்ச்சி</string>
+    <string name="goal_career">தொழில் வழிகாட்டல்</string>
+    <string name="goal_certification">சான்றிதழ்</string>
+    <string name="goal_hint">உங்கள் சொந்த வார்த்தைகளில், எ.கா. 10ஆம் வகுப்பு கணிதப் பொதுத் தேர்வில் 90க்கு மேல் மதிப்பெண்</string>
+    <string name="target_date">இலக்குத் தேதி</string>
+    <string name="pick_date">தேதியைத் தேர்ந்தெடு</string>
+    <string name="clear_date">நீக்கு</string>
+    <string name="current_level">ஒவ்வொரு பாடத்திலும் இப்போது நீங்கள் எந்த நிலையில் இருக்கிறீர்கள்?</string>
+    <string name="level_beginner">தொடக்க நிலை</string>
+    <string name="level_some">சில அடிப்படைகள் தெரியும்</string>
+    <string name="level_confident">நம்பிக்கையுடன்</string>
+    <string name="plan_this_week">இந்த வாரத் திட்டம்</string>
+    <string name="minutes_per_day">நாள்தோறும் படிக்கும் நேரம்</string>
+    <string name="min_n">%1$d நிமி</string>
+    <string name="plan_today">இன்று</string>
+    <string name="plan_free">ஓய்வு நாள்</string>
+    <string name="plan_all_done">உங்கள் திட்டத்தில் உள்ள அனைத்தும் முடிந்தன!</string>
+    <string name="plan_target_passed">உங்கள் இலக்குத் தேதி (%1$s) கடந்துவிட்டது. அமைப்புகளில் புதிய தேதியை அமைக்கவும்.</string>
+    <string name="plan_no_target">இந்த வேகத்தில் %1$s க்குள் அனைத்தையும் முடிப்பீர்கள். அமைப்புகளில் இலக்குத் தேதியை அமைக்கவும்.</string>
+    <string name="plan_on_track">சரியான பாதையில்: %1$s க்குள் முடியும், உங்கள் இலக்குத் தேதி %2$s க்கு முன்பே.</string>
+    <string name="plan_behind">பின்தங்கியுள்ளீர்கள்: %2$s க்குள் முடிக்க நாளொன்றுக்கு சுமார் %1$d நிமிடம் தேவை.</string>
+    <string name="plan_note">முடிக்காத பணி அடுத்த நாளுக்குச் செல்லும். ஒவ்வொரு வினாடி வினாவுக்குப் பிறகும் திட்டம் புதுப்பிக்கப்படும்.</string>
+    <string name="plan_updated">உங்கள் வினாடி வினாவிலிருந்து கடைசியாகப் புதுப்பிக்கப்பட்டது: %1$s</string>
 </resources>

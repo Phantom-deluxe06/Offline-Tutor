@@ -26,9 +26,28 @@ Install the APK, then in the app open **⋮ → AI model** and import the model 
 
 ## Features
 
+What the tutor does, in the challenge brief's words:
+
+* **Understands goals.** Intake asks for the goal in the student's own words and its type (exam preparation, skill
+  development, career guidance or certification), a target date, and a self-rated level for each subject
+  (beginner / know some basics / confident). All of it is editable in Settings → Profile and goes into the roadmap prompt.
+* **Identifies skill gaps.** Every wrong MCQ option is tagged with the misconception behind it; Sure / Not sure
+  separates a deep misconception from a guess; a per-concept rating tracks mastery; when a student is stuck, earlier
+  topics are checked to find the root cause; the Progress tab lists weak spots.
+* **Recommends pathways.** On-device Llama 3.2 1B writes a step-by-step roadmap for the grade, subject, goal and
+  level, shown as a skill tree with prerequisites; fix and review steps are added where the gaps are.
+* **Generates study plans.** "This week's plan" on the Roadmap tab: the student picks minutes per day (default 20)
+  and Kotlin, not the model, schedules due fixes, reviews and roadmap steps day by day until the target date, and says
+  whether the student is on track or how many minutes a day are needed.
+* **Adapts over time.** The plan is recomputed from today after every quiz answer, so missed days roll forward and
+  correct answers shorten the remaining work; question difficulty follows the per-concept rating; new mistakes add
+  fix steps to the roadmap.
+
 | Feature | Where | Notes |
 |---|---|---|
 | Local profiles (grade + courses, optional PIN) | `ui/screens/ProfileScreens.kt` | PIN stored as salted PBKDF2-SHA256 hash |
+| Learner goals | `ui/Goals.kt`, `domain/StudyPlan.kt` (`LearnerContext`) | goal type + text, target date, self-rated level per course; added to the roadmap prompt (DB v9) |
+| Study plan ("This week's plan") | `domain/StudyPlan.kt` (`StudyPlanner`), `ui/screens/RoadmapScreen.kt` | Kotlin scheduler: minutes per day, fixes and reviews first, steps take turns between courses, missed days roll forward, re-plans after every quiz |
 | LLM step-by-step roadmap | `RoadmapRepository` | numbered plain-text lines (nested JSON failed at 1B), lenient parser, retry once, template fallback |
 | Adaptive MCQ quiz | `QuizRepository`, `domain/Adaptive.kt` | 2-up/1-down staircase (easy→medium→hard), weak-subtopic targeting |
 | No repeated questions | `domain/QuestionDeduper.kt` | normalised exact + Jaccard + Levenshtein vs. full Room history; prompt line is 2nd layer |
@@ -56,6 +75,8 @@ run **Settings → Night Shift → Simulate night** so the ready pool and fix le
 
 | Feature | Where |
 |---|---|
+| Goals: type, own words, target date, level per subject | New profile → step 4, or Settings → Profile → Your goal |
+| This week's plan, minutes per day, on track / behind | Roadmap tab (top card); answer a quiz question and come back to see it re-plan |
 | Skill tree, fix steps, review ("Stuck on X because Y is shaky") | Roadmap tab |
 | "Why the app thinks you know this" | Roadmap → tap a node |
 | Misconception tags, Sure / Not sure, "Fix step added" | Quiz tab → answer a question |

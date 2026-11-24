@@ -121,6 +121,22 @@ fun SettingsScreen(onBack: () -> Unit, switchProfile: () -> Unit) {
                     LanguagePicker(p.language) { code -> scope.launch { c.profiles.update(p.copy(language = code)) } }
                     Text(stringResource(R.string.pick_world), style = MaterialTheme.typography.titleSmall)
                     com.offlinetutor.ui.WorldPicker(p.world) { w -> scope.launch { c.profiles.update(p.copy(world = w)) } }
+                    Text(stringResource(R.string.goal_title), style = MaterialTheme.typography.titleSmall)
+                    // Typed text is saved after a short pause so the field does not fight the database round trip.
+                    var goalText by androidx.compose.runtime.saveable.rememberSaveable(p.id) { androidx.compose.runtime.mutableStateOf(p.goalText.orEmpty()) }
+                    androidx.compose.runtime.LaunchedEffect(goalText) {
+                        kotlinx.coroutines.delay(600)
+                        val latest = c.activeProfile.value ?: return@LaunchedEffect
+                        val v = goalText.trim().ifEmpty { null }
+                        if (latest.id == p.id && latest.goalText != v) c.profiles.update(latest.copy(goalText = v))
+                    }
+                    com.offlinetutor.ui.GoalEditor(
+                        p.goalType, { t -> scope.launch { c.profiles.update(p.copy(goalType = t)) } },
+                        goalText, { goalText = it },
+                        p.targetDate, { d -> scope.launch { c.profiles.update(p.copy(targetDate = d)) } },
+                        p.courseList, p.levelMap,
+                        { course, l -> scope.launch { c.profiles.update(p.copy(levels = com.offlinetutor.domain.CourseLevels.encode(p.levelMap + (course to l)))) } },
+                    )
                     if (com.offlinetutor.domain.ExplainLanguage.of(p.language).beta) {
                         Text(stringResource(R.string.beta_language_note), style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)

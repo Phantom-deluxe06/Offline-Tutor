@@ -20,9 +20,22 @@ data class Profile(
     val createdAt: Long = System.currentTimeMillis(),
     /** v6 (4b): analogy world picked at intake: village, city, cricket, cinema, kitchen, farm, festivals. */
     val world: String? = null,
+    // ---- v9: learner goals and the study plan. Nullable so older rows stay valid. ----
+    /** GoalType code: exam, skill, career or certification. */
+    val goalType: String? = null,
+    /** The goal in the learner's own words. */
+    val goalText: String? = null,
+    /** Target date as an epoch day (LocalDate.toEpochDay). */
+    val targetDate: Long? = null,
+    /** Self-rated level per course, "Mathematics=1|Science=3" (1 beginner, 2 some basics, 3 confident). */
+    val levels: String? = null,
+    /** Study minutes per day for the plan; null means the default (20). */
+    val minutesPerDay: Int? = null,
 ) {
     val courseList: List<String> get() = courses.split('|').map { it.trim() }.filter { it.isNotEmpty() }
     val hasPin: Boolean get() = pinHash != null
+    val levelMap: Map<String, Int> get() = com.offlinetutor.domain.CourseLevels.decode(levels)
+    val dailyMinutes: Int get() = minutesPerDay ?: com.offlinetutor.domain.StudyPlanner.DEFAULT_MINUTES
 }
 
 @Entity(

@@ -214,6 +214,10 @@ fun IntakeScreen(onBack: () -> Unit, onDone: () -> Unit) {
     var world by rememberSaveable { mutableStateOf("village") }
     var usePin by rememberSaveable { mutableStateOf(false) }
     var pin by rememberSaveable { mutableStateOf("") }
+    var goalType by rememberSaveable { mutableStateOf<String?>(null) }
+    var goalText by rememberSaveable { mutableStateOf("") }
+    var targetDate by rememberSaveable { mutableStateOf<Long?>(null) }
+    var levels by remember { mutableStateOf(mapOf<String, Int>()) }
     var saving by remember { mutableStateOf(false) }
     val pinOk = !usePin || PinHasher.isValidPin(pin)
     val canSave = name.isNotBlank() && courses.isNotEmpty() && pinOk && !saving
@@ -231,7 +235,9 @@ fun IntakeScreen(onBack: () -> Unit, onDone: () -> Unit) {
                 {
                     saving = true
                     scope.launch {
-                        withContext(Dispatchers.Default) { c.profiles.create(name, grade, courses, language, if (usePin) pin else null, world) }
+                        withContext(Dispatchers.Default) {
+                            c.profiles.create(name, grade, courses, language, if (usePin) pin else null, world, goalType, goalText, targetDate, levels)
+                        }
                         onDone()
                     }
                 },
@@ -255,19 +261,25 @@ fun IntakeScreen(onBack: () -> Unit, onDone: () -> Unit) {
             }
             StepCard(2, stringResource(R.string.which_grade), 1) { GradePicker(grade) { grade = it } }
             StepCard(3, stringResource(R.string.which_courses), 2) { CourseEditor(courses) { courses = it } }
-            StepCard(4, stringResource(R.string.explain_language), 3) {
+            StepCard(4, stringResource(R.string.goal_title), 3) {
+                com.offlinetutor.ui.GoalEditor(
+                    goalType, { goalType = it }, goalText, { goalText = it }, targetDate, { targetDate = it },
+                    courses, levels, { course, l -> levels = levels + (course to l) },
+                )
+            }
+            StepCard(5, stringResource(R.string.explain_language), 3) {
                 LanguagePicker(language) { language = it }
                 AnimatedVisibility(com.offlinetutor.domain.ExplainLanguage.of(language).beta, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
                     Text(stringResource(R.string.beta_language_note), style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            StepCard(5, stringResource(R.string.pick_world), 4) {
+            StepCard(6, stringResource(R.string.pick_world), 4) {
                 WorldPicker(world) { world = it }
                 Text(stringResource(R.string.pick_world_note), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            StepCard(6, stringResource(R.string.protect_with_pin), 5) {
+            StepCard(7, stringResource(R.string.protect_with_pin), 5) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.pin_note), style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))

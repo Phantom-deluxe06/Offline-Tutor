@@ -45,12 +45,17 @@ class ProfileRepository(private val dao: ProfileDao, val session: SessionStore) 
     fun observe(id: Long): Flow<Profile?> = dao.observe(id)
     suspend fun get(id: Long) = dao.get(id)
 
-    suspend fun create(name: String, grade: Int, courses: List<String>, language: String, pin: String?, world: String? = null): Long {
+    suspend fun create(
+        name: String, grade: Int, courses: List<String>, language: String, pin: String?, world: String? = null,
+        goalType: String? = null, goalText: String? = null, targetDate: Long? = null, levels: Map<String, Int> = emptyMap(),
+    ): Long {
         val salt = pin?.let { PinHasher.newSalt() }
         val id = dao.insert(
             Profile(
                 name = name.trim(), grade = grade, courses = courses.joinToString("|"), language = language,
                 world = world,
+                goalType = goalType, goalText = goalText?.trim()?.take(200)?.ifEmpty { null }, targetDate = targetDate,
+                levels = com.offlinetutor.domain.CourseLevels.encode(levels.filterKeys { it in courses }),
                 pinSalt = salt, pinHash = if (pin != null && salt != null) PinHasher.hash(pin, salt) else null,
             ),
         )
@@ -90,7 +95,11 @@ class RoadmapRepository(private val dao: RoadmapDao, private val ai: TutorAi) {
 
     /** Generate → parse; retry once; then fall back to a built-in template. */
     suspend fun generate(profile: Profile, course: String, onPartial: (String) -> Unit): Outcome {
-        val prompt = Prompts.roadmap(profile.grade, course)
+        val learner = com.offlinetutor.domain.LearnerContext.forPrompt(
+            com.offlinetutor.domain.GoalType.of(profile.goalType), profile.goalText, profile.targetDate,
+            com.offlinetutor.domain.StudyPlanner.todayEpochDay(), profile.levelMap[course],
+        )
+        val prompt = Prompts.roadmap(profile.grade, course, learner)
         repeat(2) { attempt ->
             var drafts: List<com.offlinetutor.domain.RoadmapDraft>? = null
             ai.run(

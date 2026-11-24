@@ -56,9 +56,11 @@ object Prompts {
     const val ROADMAP_PREFIX = "1. "
     const val ROADMAP_STEPS = 5
 
-    fun roadmap(grade: Int, course: String): String {
-        val user = """
-            Write a step-by-step study roadmap for a Grade $grade student in India learning $course.
+    /** [learner]: goal, target date and self-rated level from [LearnerContext.forPrompt]; empty when not given. */
+    fun roadmap(grade: Int, course: String, learner: String = ""): String {
+        val head = "Write a step-by-step study roadmap for a Grade $grade student in India learning $course." +
+            (if (learner.isBlank()) "" else "\n" + learner.trim())
+        val user = head + "\n" + """
             Order the steps from basics to advanced and match the Grade $grade syllabus (NCERT level).
             Write exactly $ROADMAP_STEPS numbered lines and nothing else. Each line has this format:
             number. Step title - one short sentence goal - Subtopics: subtopic, subtopic - Needs: earlier step numbers it builds on, or none

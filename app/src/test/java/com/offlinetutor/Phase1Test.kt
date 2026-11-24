@@ -309,6 +309,8 @@ class MigrationTest {
 
     @Test fun migration7to8MatchesExportedSchema() = checkMigration(Migrations.MIGRATION_7_8)
 
+    @Test fun migration8to9MatchesExportedSchema() = checkMigration(Migrations.MIGRATION_8_9)
+
     @Test fun migrationsCoverEveryVersion() {
         val versions = Migrations.ALL.map { it.startVersion to it.endVersion }
         val latest = File("schemas/com.offlinetutor.data.AppDatabase").listFiles()!!.mapNotNull { it.nameWithoutExtension.toIntOrNull() }.max()

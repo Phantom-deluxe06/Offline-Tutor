@@ -74,6 +74,10 @@ import com.offlinetutor.domain.MasteryModel
 import com.offlinetutor.domain.Misconception
 import com.offlinetutor.domain.PrereqGraph
 import com.offlinetutor.domain.SkillTreeRules
+import com.offlinetutor.domain.StudyPlanner
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.ui.text.style.TextOverflow
 import com.offlinetutor.ui.components.SkillTree
 import com.offlinetutor.ui.components.TreeEdge
 import com.offlinetutor.ui.components.TreeNode
@@ -124,6 +128,15 @@ class RoadmapVm(private val c: AppContainer) : ViewModel() {
     val flags = c.flags.state
     val mastery = profile.flatMapLatest { p -> p?.let { c.brain.observeMastery(it.id) } ?: flowOf(emptyList()) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<ConceptMastery>())
+    /** Answered quiz questions: every new answer re-runs the study plan. */
+    val answered = profile.flatMapLatest { p -> p?.let { c.quiz.observeAnswered(it.id) } ?: flowOf(emptyList()) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<QuizQuestion>())
+
+    fun setMinutes(m: Int) {
+        val p = profile.value ?: return
+        viewModelScope.launch { c.profiles.update(p.copy(minutesPerDay = m)) }
+    }
+
     /** 1g: evidence for the node opened in the sheet. */
     val evidence = MutableStateFlow<Evidence?>(null)
     private var job: Job? = null
@@ -186,6 +199,7 @@ fun RoadmapScreen(openQuiz: (String, String) -> Unit, openChat: (String) -> Unit
     val flags by vm.flags.collectAsStateWithLifecycle()
     val mastery by vm.mastery.collectAsStateWithLifecycle()
     val evidence by vm.evidence.collectAsStateWithLifecycle()
+    val answered by vm.answered.collectAsStateWithLifecycle()
     val p = profile ?: return
     val courses = p.courseList
     if (courses.isEmpty()) return
@@ -211,6 +225,27 @@ fun RoadmapScreen(openQuiz: (String, String) -> Unit, openChat: (String) -> Unit
             }
         }
         item { ModelStatusCard(engine, openModels) }
+        if (steps.isNotEmpty()) {
+            item {
+                val titles = repairTitles(steps)
+                val today = StudyPlanner.todayEpochDay()
+                val plan = remember(steps, answered, p, today) {
+                    val correct = answered.filter { it.correct == true && it.concept != null }.groupingBy { it.concept!! }.eachCount()
+                    val tasks = steps.filter { it.course in courses }.map { s ->
+                        StudyPlanner.Task(
+                            s.id, s.course, s.stepIndex, s.title,
+                            when (s.stepKind) { StepKind.MICRO_FIX -> StudyPlanner.Kind.FIX; StepKind.REVIEW -> StudyPlanner.Kind.REVIEW; else -> StudyPlanner.Kind.STEP },
+                            s.concept, s.done, s.subtopicList.firstOrNull() ?: s.title,
+                        )
+                    }
+                    StudyPlanner.schedule(tasks, courses, p.levelMap, correct, today, p.dailyMinutes, p.targetDate)
+                }
+                WeekPlanCard(
+                    plan, p.dailyMinutes, vm::setMinutes, titles, answered.maxOfOrNull { it.answeredAt ?: 0L }?.takeIf { it > 0 },
+                    onSlot = { s -> if (s.kind == StudyPlanner.Kind.FIX) openFix(s.stepId) else openQuiz(s.course, s.subtopic) },
+                )
+            }
+        }
 
         if (g != null && g.course == course) {
             item {
@@ -472,5 +507,69 @@ private fun ActionLink(icon: androidx.compose.ui.graphics.vector.ImageVector, te
         Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(5.dp))
         Text(text, style = MaterialTheme.typography.labelLarge, color = color)
+    }
+}
+
+/** "This week's plan": Kotlin-scheduled steps, fixes and reviews per day, with the minutes-per-day setting. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun WeekPlanCard(
+    plan: StudyPlanner.Plan, minutes: Int, onMinutes: (Int) -> Unit, titles: Map<Long, String>,
+    lastQuizAt: Long?, onSlot: (StudyPlanner.Slot) -> Unit,
+) {
+    val today = plan.days.firstOrNull()?.epochDay ?: StudyPlanner.todayEpochDay()
+    SoftCard {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.DateRange, null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(8.dp))
+            Text(stringResource(R.string.plan_this_week), style = MaterialTheme.typography.titleMedium)
+        }
+        val target = plan.targetDay
+        val finish = plan.finishDay ?: today
+        val (status, warn) = when {
+            plan.allDone -> stringResource(R.string.plan_all_done) to false
+            target != null && plan.targetPassed -> stringResource(R.string.plan_target_passed, StudyPlanner.format(target)) to true
+            target == null -> stringResource(R.string.plan_no_target, StudyPlanner.format(finish)) to false
+            plan.onTrack -> stringResource(R.string.plan_on_track, StudyPlanner.format(finish), StudyPlanner.format(target)) to false
+            else -> stringResource(R.string.plan_behind, plan.neededPerDay ?: minutes, StudyPlanner.format(target)) to true
+        }
+        Text(status, style = MaterialTheme.typography.bodyMedium,
+            color = if (warn) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+        Text(stringResource(R.string.minutes_per_day), style = MaterialTheme.typography.labelLarge)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            (StudyPlanner.MINUTE_CHOICES + minutes).distinct().sorted().forEach { m ->
+                ChoiceChip(stringResource(R.string.min_n, m), m == minutes, { onMinutes(m) })
+            }
+        }
+        plan.days.forEach { d ->
+            Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+                Text(
+                    if (d.epochDay == today) stringResource(R.string.plan_today) else StudyPlanner.formatShort(d.epochDay),
+                    style = MaterialTheme.typography.labelLarge, modifier = Modifier.width(72.dp),
+                    fontWeight = if (d.epochDay == today) FontWeight.Bold else FontWeight.Normal,
+                    color = if (d.epochDay == today) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                )
+                Column(Modifier.weight(1f)) {
+                    if (d.slots.isEmpty()) Text(stringResource(R.string.plan_free), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    d.slots.forEach { s ->
+                        Row(Modifier.fillMaxWidth().clickable { onSlot(s) }.padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(8.dp).background(subjectLook(s.course).color, CircleShape))
+                            Spacer(Modifier.width(6.dp))
+                            val name = (titles[s.stepId] ?: s.title) + if (s.parts > 1) " (${s.part}/${s.parts})" else ""
+                            Text(name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.weight(1f))
+                            Text(stringResource(R.string.min_n, s.minutes), style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        }
+        Text(stringResource(R.string.plan_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        lastQuizAt?.let {
+            Text(stringResource(R.string.plan_updated, java.text.SimpleDateFormat("d MMM, HH:mm", java.util.Locale.getDefault()).format(java.util.Date(it))),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }

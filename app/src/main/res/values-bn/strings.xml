@@ -417,4 +417,31 @@
     <string name="ff_kutty_body">কৌতূহলী ছোট বাচ্চাকে একটি বিষয় বোঝাও; কোন মূল কথা বাদ গেল দেখো।</string>
     <string name="ff_textbook">পাঠ্যবই মোড</string>
     <string name="ff_textbook_body">তোমার তোলা পাঠ্যবইয়ের পাতা থেকে প্রশ্ন তৈরি হবে।</string>
+    <!-- Learner goals and the study plan -->
+    <string name="goal_title">তোমার লক্ষ্য</string>
+    <string name="goal_kind">এটা কোন ধরনের লক্ষ্য?</string>
+    <string name="goal_exam">পরীক্ষার প্রস্তুতি</string>
+    <string name="goal_skill">দক্ষতা বৃদ্ধি</string>
+    <string name="goal_career">কেরিয়ার নির্দেশনা</string>
+    <string name="goal_certification">সার্টিফিকেশন</string>
+    <string name="goal_hint">নিজের ভাষায়, যেমন: দশম শ্রেণির বোর্ড পরীক্ষায় অঙ্কে ৯০-এর বেশি নম্বর</string>
+    <string name="target_date">লক্ষ্যের তারিখ</string>
+    <string name="pick_date">তারিখ বেছে নাও</string>
+    <string name="clear_date">মুছে দাও</string>
+    <string name="current_level">প্রতিটি বিষয়ে তুমি এখন কতটা ভালো?</string>
+    <string name="level_beginner">একেবারে নতুন</string>
+    <string name="level_some">কিছু মূল বিষয় জানি</string>
+    <string name="level_confident">আত্মবিশ্বাসী</string>
+    <string name="plan_this_week">এই সপ্তাহের পরিকল্পনা</string>
+    <string name="minutes_per_day">প্রতিদিন পড়ার সময়</string>
+    <string name="min_n">%1$d মিনিট</string>
+    <string name="plan_today">আজ</string>
+    <string name="plan_free">ছুটির দিন</string>
+    <string name="plan_all_done">তোমার পরিকল্পনার সব ধাপ শেষ!</string>
+    <string name="plan_target_passed">তোমার লক্ষ্যের তারিখ (%1$s) পেরিয়ে গেছে। সেটিংসে নতুন তারিখ দাও।</string>
+    <string name="plan_no_target">এই গতিতে তুমি %1$s-এর মধ্যে সব শেষ করবে। সেটিংসে লক্ষ্যের তারিখ দাও।</string>
+    <string name="plan_on_track">ঠিক পথে আছ: %1$s-এর মধ্যে শেষ হবে, লক্ষ্যের তারিখ %2$s-এর আগেই।</string>
+    <string name="plan_behind">পিছিয়ে আছ: %2$s-এর মধ্যে শেষ করতে প্রতিদিন প্রায় %1$d মিনিট লাগবে।</string>
+    <string name="plan_note">শেষ না হওয়া কাজ পরের দিনে চলে যায়। প্রতিটি কুইজের পরে পরিকল্পনা আপডেট হয়।</string>
+    <string name="plan_updated">তোমার কুইজ থেকে শেষ আপডেট: %1$s</string>
 </resources>

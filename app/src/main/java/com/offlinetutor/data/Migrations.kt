@@ -101,5 +101,16 @@ object Migrations {
         }
     }
 
-    val ALL = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+    // Learner goals (type, text, target date, self-rated level per course) and minutes per day for the plan.
+    val MIGRATION_8_9 = object : Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `profiles` ADD COLUMN `goalType` TEXT")
+            db.execSQL("ALTER TABLE `profiles` ADD COLUMN `goalText` TEXT")
+            db.execSQL("ALTER TABLE `profiles` ADD COLUMN `targetDate` INTEGER")
+            db.execSQL("ALTER TABLE `profiles` ADD COLUMN `levels` TEXT")
+            db.execSQL("ALTER TABLE `profiles` ADD COLUMN `minutesPerDay` INTEGER")
+        }
+    }
+
+    val ALL = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
 }
